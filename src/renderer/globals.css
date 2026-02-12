@@ -1,0 +1,929 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Vue.js風プログレスバーアニメーション */
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+/* Font definitions for better readability */
+:root {
+  /* Sans-serif fonts for UI (Japanese + English) */
+  --font-mono:
+    "JetBrains Mono", "Fira Code", "Cascadia Code", "Source Code Pro", Consolas,
+    Menlo, Monaco, "Courier New", monospace;
+  /* Sans-serif fonts for UI (Japanese + English) */
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+/* Apply monospace font to code elements */
+code,
+pre,
+.cm-editor {
+  font-family: var(--font-mono);
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1; /* Enable ligatures */
+}
+
+/* Custom gradient classes */
+.bg-gradient-blue {
+  background: linear-gradient(to bottom, rgb(37, 99, 235), rgb(29, 78, 216));
+}
+
+.dark .bg-gradient-blue {
+  background: linear-gradient(to bottom, rgb(31, 41, 55), rgb(17, 24, 39));
+}
+
+.bg-gradient-gray {
+  background: linear-gradient(
+    to bottom,
+    rgb(249, 250, 251),
+    rgb(255, 255, 255)
+  );
+}
+
+.dark .bg-gradient-gray {
+  background: linear-gradient(to bottom, rgb(3, 7, 18), rgb(2, 6, 23));
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html,
+  body {
+    user-select: none;
+    scroll-behavior: smooth;
+    -webkit-app-region: no-drag;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Markdown Preview Styles */
+.markdown-body {
+  color: inherit;
+  background-color: transparent;
+}
+
+.markdown-body[data-color-mode="dark"] {
+  color-scheme: dark;
+}
+
+.markdown-body[data-color-mode="light"] {
+  color-scheme: light;
+}
+
+.dark .markdown-body {
+  color-scheme: dark;
+}
+
+/* Allow text selection in editor and preview */
+.cm-editor,
+.markdown-body {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Hide scrollbar in split mode editor */
+.hide-scrollbar,
+.cm-scroller.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.cm-scroller.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Custom scrollbar styles */
+* {
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  scrollbar-width: thin;
+}
+
+.dark * {
+  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.7);
+}
+
+/* CodeMirror gutter (line numbers) background */
+.dark .cm-gutters {
+  background-color: rgb(3, 7, 18);
+  border-right-color: rgb(31, 41, 55);
+}
+
+/* CodeMirror Markdown styling */
+/* Headings */
+.cm-line:has(.cm-heading-1) {
+  padding-bottom: 0.3em;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.25;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.dark .cm-line:has(.cm-heading-1) {
+  border-bottom-color: #3d444d;
+}
+
+.cm-line:has(.cm-heading-2) {
+  padding-bottom: 0.3em;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.25;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.dark .cm-line:has(.cm-heading-2) {
+  border-bottom-color: #3d444d;
+}
+
+.cm-line:has(.cm-heading-3) {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  font-size: 1.25em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cm-line:has(.cm-heading-4) {
+  margin-top: 1.33em;
+  margin-bottom: 1.33em;
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cm-line:has(.cm-heading-5) {
+  margin-top: 1.67em;
+  margin-bottom: 1.67em;
+  font-size: 0.875em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cm-line:has(.cm-heading-6) {
+  margin-top: 2.33em;
+  margin-bottom: 2.33em;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #656d76;
+}
+
+.dark .cm-line:has(.cm-heading-6) {
+  color: #848d97;
+}
+
+/* Bold text */
+.cm-strong {
+  font-weight: 700;
+}
+
+/* Italic text */
+.cm-emphasis {
+  font-style: italic;
+}
+
+/* Strikethrough */
+.cm-strikethrough {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Inline code */
+.cm-line .cm-inline-code {
+  padding: 0.2em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background-color: rgba(175, 184, 193, 0.2);
+  border-radius: 6px;
+}
+
+.dark .cm-line .cm-inline-code {
+  background-color: rgba(110, 118, 129, 0.4);
+}
+
+/* Code blocks */
+.cm-line:has(.cm-meta) {
+  font-family: var(--font-mono);
+  background-color: rgba(175, 184, 193, 0.1);
+}
+
+.dark .cm-line:has(.cm-meta) {
+  background-color: rgba(110, 118, 129, 0.2);
+}
+
+/* Links */
+.cm-link {
+  color: #0969da;
+  text-decoration: underline;
+}
+
+.dark .cm-link {
+  color: #58a6ff;
+}
+
+/* Lists */
+.cm-line:has(.cm-list) {
+  line-height: 1.75;
+}
+
+/* Blockquotes */
+.cm-line:has(.cm-quote) {
+  padding-left: 1em;
+  color: #656d76;
+  border-left: 0.25em solid #d0d7de;
+}
+
+.dark .cm-line:has(.cm-quote) {
+  color: #848d97;
+  border-left-color: #3d444d;
+}
+
+/* Horizontal rule */
+.cm-line:has(.cm-hr) {
+  padding-bottom: 0.5em;
+  margin: 1.5em 0;
+  border-bottom: 2px solid #d0d7de;
+}
+
+.dark .cm-line:has(.cm-hr) {
+  border-bottom-color: #3d444d;
+}
+
+/* Markdown preview list styles */
+.markdown-body ul {
+  padding-left: 2em;
+  margin-bottom: 1em;
+  list-style-type: disc;
+}
+
+.markdown-body ol {
+  padding-left: 2em;
+  margin-bottom: 1em;
+  list-style-type: decimal;
+}
+
+.markdown-body li {
+  display: list-item;
+  margin-bottom: 0.25em;
+  line-height: 1.75;
+}
+
+.markdown-body ul ul {
+  list-style-type: circle;
+}
+
+.markdown-body ul ul ul {
+  list-style-type: square;
+}
+
+/* Enhanced Typography */
+.markdown-body h1 {
+  padding-bottom: 0.5em;
+  margin-top: 1.5em;
+  margin-bottom: 1em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(90deg, #a78bfa, #c084fc) 1;
+}
+
+.markdown-body h2 {
+  padding-bottom: 0.4em;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .markdown-body h2 {
+  border-bottom-color: #3d444d;
+}
+
+.markdown-body h3 {
+  margin-top: 1.25em;
+  margin-bottom: 0.6em;
+  font-weight: 600;
+}
+
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.markdown-body p {
+  margin-bottom: 1em;
+  line-height: 1.75;
+}
+
+/* Enhanced Links */
+.markdown-body a {
+  color: #8250df;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.markdown-body a:hover {
+  color: #a371f7;
+  text-decoration-color: #a371f7;
+}
+
+.dark .markdown-body a {
+  color: #a371f7;
+}
+
+.dark .markdown-body a:hover {
+  color: #c084fc;
+  text-decoration-color: #c084fc;
+}
+
+/* Horizontal Rule */
+.markdown-body hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 2em 0;
+  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  border: 0;
+}
+
+.dark .markdown-body hr {
+  background: linear-gradient(90deg, transparent, #3d444d, transparent);
+}
+
+/* Code block theme overrides */
+.markdown-body pre {
+  padding: 1em;
+  overflow-x: auto;
+  color: #24292f;
+  background-color: #f6f8fa;
+}
+
+.markdown-body code {
+  color: #24292f;
+  background-color: #f6f8fa;
+}
+
+.dark .markdown-body pre {
+  color: #e6edf3;
+  background-color: #0d1117;
+}
+
+.dark .markdown-body code {
+  color: #e6edf3;
+  background-color: #0d1117;
+}
+
+/* Inline code specific styling */
+.markdown-body :not(pre) > code {
+  padding: 0.2em 0.4em;
+  font-size: 0.9em;
+}
+
+/* Strikethrough */
+.markdown-body del {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.dark .markdown-body del {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Table theme overrides for dark mode */
+.markdown-body table {
+  border-collapse: collapse;
+  background-color: transparent;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid #d0d7de;
+}
+
+.markdown-body table th {
+  font-weight: 600;
+  background-color: #f6f8fa;
+}
+
+.markdown-body table tr {
+  background-color: #ffffff;
+  border-top: 1px solid #d0d7de;
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.dark .markdown-body table th,
+.dark .markdown-body table td {
+  border-color: #3d444d;
+}
+
+.dark .markdown-body table th {
+  color: #e6edf3;
+  background-color: #161b22;
+}
+
+.dark .markdown-body table tr {
+  background-color: #0d1117;
+  border-top-color: #3d444d;
+}
+
+.dark .markdown-body table tr:nth-child(2n) {
+  background-color: #161b22;
+}
+
+/* Pre code blocks - no background override */
+.markdown-body pre code {
+  padding: 0;
+  font-size: 100%;
+  background-color: transparent;
+  border: none;
+}
+
+/* Line numbers for code blocks */
+.markdown-body pre.has-line-numbers {
+  position: relative;
+  display: flex;
+  padding: 16px 0;
+}
+
+.markdown-body .line-numbers {
+  min-width: 2em;
+  padding: 0 16px 0 16px;
+  margin-right: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.3);
+  text-align: right;
+  white-space: pre;
+  user-select: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .markdown-body .line-numbers {
+  color: rgba(255, 255, 255, 0.3);
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+.markdown-body pre.has-line-numbers code {
+  flex: 1;
+  padding: 0 16px 0 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Copy button for code blocks */
+.copy-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  color: #24292f;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
+}
+
+.dark .copy-button {
+  color: #c9d1d9;
+  background-color: rgba(31, 35, 40, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.markdown-body pre:hover .copy-button {
+  opacity: 1;
+}
+
+.copy-button:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.dark .copy-button:hover {
+  background-color: rgba(48, 54, 61, 1);
+}
+
+.copy-button:active {
+  transform: scale(0.95);
+}
+
+/* Enhanced emphasis and strong */
+.markdown-body em {
+  font-style: italic;
+  color: inherit;
+}
+
+.markdown-body strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Enhanced task lists */
+.markdown-body input[type="checkbox"] {
+  margin-right: 0.5em;
+  cursor: pointer;
+}
+
+.markdown-body li.task-list-item {
+  list-style-type: none;
+}
+
+/* GitHub Alerts - blockquote styling */
+.markdown-body blockquote {
+  position: relative;
+  padding: 0.5em 1em 0.5em 1.5em;
+  margin: 0 0 16px 0;
+  color: #656d76;
+  border-left: none;
+}
+
+.markdown-body blockquote::before {
+  position: absolute;
+  top: 0.5em;
+  bottom: 0.5em;
+  left: 0.5em;
+  width: 4px;
+  content: "";
+  background-color: #d0d7de;
+  border-radius: 9999px;
+}
+
+.dark .markdown-body blockquote {
+  color: #848d97;
+}
+
+.dark .markdown-body blockquote::before {
+  background-color: #3d444d;
+}
+
+/* GitHub Alert Title */
+.markdown-body blockquote .alert-title {
+  display: flex;
+  gap: 0.4em;
+  align-items: center;
+  margin-bottom: 0.5em;
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+/* GitHub Alerts - Note (Blue) */
+.markdown-body blockquote.alert-note::before {
+  background-color: #0969da;
+}
+
+.markdown-body blockquote.alert-note .alert-title {
+  color: #0969da;
+}
+
+.dark .markdown-body blockquote.alert-note::before {
+  background-color: #4493f8;
+}
+
+.dark .markdown-body blockquote.alert-note .alert-title {
+  color: #4493f8;
+}
+
+/* GitHub Alerts - Tip (Green) */
+.markdown-body blockquote.alert-tip::before {
+  background-color: #1a7f37;
+}
+
+.markdown-body blockquote.alert-tip .alert-title {
+  color: #1a7f37;
+}
+
+.dark .markdown-body blockquote.alert-tip::before {
+  background-color: #3fb950;
+}
+
+.dark .markdown-body blockquote.alert-tip .alert-title {
+  color: #3fb950;
+}
+
+/* GitHub Alerts - Important (Purple) */
+.markdown-body blockquote.alert-important::before {
+  background-color: #8250df;
+}
+
+.markdown-body blockquote.alert-important .alert-title {
+  color: #8250df;
+}
+
+.dark .markdown-body blockquote.alert-important::before {
+  background-color: #a371f7;
+}
+
+.dark .markdown-body blockquote.alert-important .alert-title {
+  color: #a371f7;
+}
+
+/* GitHub Alerts - Warning (Orange) */
+.markdown-body blockquote.alert-warning::before {
+  background-color: #bf8700;
+}
+
+.markdown-body blockquote.alert-warning .alert-title {
+  color: #bf8700;
+}
+
+.dark .markdown-body blockquote.alert-warning::before {
+  background-color: #d29922;
+}
+
+.dark .markdown-body blockquote.alert-warning .alert-title {
+  color: #d29922;
+}
+
+/* GitHub Alerts - Caution (Red) */
+.markdown-body blockquote.alert-caution::before {
+  background-color: #d1242f;
+}
+
+.markdown-body blockquote.alert-caution .alert-title {
+  color: #d1242f;
+}
+
+.dark .markdown-body blockquote.alert-caution::before {
+  background-color: #f85149;
+}
+
+.dark .markdown-body blockquote.alert-caution .alert-title {
+  color: #f85149;
+}
+
+/* Custom title bar drag region */
+.drag-region {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+/* Prevent drag on interactive elements */
+.drag-region button,
+.drag-region input,
+.drag-region select,
+.drag-region textarea {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* Enhanced table styles for markdown preview */
+.markdown-body table {
+  overflow: hidden;
+  font-size: 0.95em;
+  border-spacing: 0;
+  border-collapse: separate;
+  border-radius: 8px;
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.dark .markdown-body table {
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.3),
+    0 1px 2px -1px rgb(0 0 0 / 0.2);
+}
+
+.markdown-body table th {
+  padding: 12px 16px;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  border: none;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.dark .markdown-body table th {
+  color: #d1d5db;
+  background: linear-gradient(to bottom, #1f2937, #111827);
+  border-bottom-color: #374151;
+}
+
+.markdown-body table td {
+  padding: 12px 16px;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dark .markdown-body table td {
+  border-bottom-color: #1f2937;
+}
+
+.markdown-body table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.markdown-body table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.dark .markdown-body table tbody tr:hover {
+  background-color: #1f2937;
+}
+
+.markdown-body table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.dark .markdown-body table tbody tr:nth-child(even) {
+  background-color: #0f1419;
+}
+
+.markdown-body table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table alignment */
+.markdown-body table th:first-child,
+.markdown-body table td:first-child {
+  padding-left: 20px;
+}
+
+.markdown-body table th:last-child,
+.markdown-body table td:last-child {
+  padding-right: 20px;
+}

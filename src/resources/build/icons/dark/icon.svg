@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea" />
+      <stop offset="50%" stop-color="#764ba2" />
+      <stop offset="100%" stop-color="#a78bfa" />
+    </linearGradient>
+  </defs>
+  <!-- 流れるようなドキュメントの形 -->
+  <path
+    d="M128 38.4C106.699 38.4 89.6 55.4989 89.6 76.8V435.2C89.6 456.501 106.699 473.6 128 473.6H384C405.301 473.6 422.4 456.501 422.4 435.2V166.4L294.4 38.4H128Z"
+    fill="url(#icon-gradient)"
+    opacity="0.9"
+  />
+  <path
+    d="M294.4 38.4V128C294.4 149.301 311.499 166.4 332.8 166.4H422.4"
+    fill="url(#icon-gradient)"
+    opacity="0.6"
+  />
+  <!-- マークダウン記号 -->
+  <path
+    d="M153.6 230.4H243.2M153.6 294.4H281.6M153.6 358.4H217.6"
+    stroke="white"
+    stroke-width="25.6"
+    stroke-linecap="round"
+  />
+  <circle cx="320" cy="294.4" r="25.6" fill="white" opacity="0.9" />
+  <circle cx="358.4" cy="358.4" r="19.2" fill="white" opacity="0.7" />
+</svg>

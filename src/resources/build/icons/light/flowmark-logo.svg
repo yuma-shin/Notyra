@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flowmark-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+  </defs>
+  <!-- 流れるようなドキュメントの形 -->
+  <path
+    d="M6 2C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2H6Z"
+    fill="#e5e7eb"
+  />
+  <path
+    d="M14 2V6C14 7.10457 14.8954 8 16 8H20"
+    fill="#d1d5db"
+  />
+  <!-- マークダウン記号 -->
+  <path
+    d="M7 11H11M7 14H13M7 17H10"
+    stroke="url(#flowmark-gradient)"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <circle cx="15" cy="14" r="1.5" fill="url(#flowmark-gradient)" />
+  <circle cx="17" cy="17" r="1" fill="url(#flowmark-gradient)" fill-opacity="0.6" />
+</svg>
