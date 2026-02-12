@@ -1,5 +1,7 @@
 <h1 align="center"><img src="https://raw.githubusercontent.com/yuma-shin/flowmark/heads/main/docs/images/icon.png" width="30" /> FlowMark</h1>
 
+![flowmark display](./docs/images/display.png)
+
 [English version](./README.en.md)
 
 FlowMark は、Electron + React で構築されたデスクトップ向け Markdown エディタです。  
