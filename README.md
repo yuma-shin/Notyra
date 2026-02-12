@@ -1,4 +1,4 @@
-# FlowMark
+<h1 align="center"><img src="https://raw.githubusercontent.com/yuma-shin/flowmark/heads/main/docs/images/icon.png" width="30" /> FlowMark</h1>
 
 [English version](./README.en.md)
 
