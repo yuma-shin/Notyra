@@ -41,15 +41,6 @@ export default {
     target: ['zip', 'dmg', 'dir'],
   },
 
-  /*
-  linux: {
-    artifactName,
-    category: 'Utilities',
-    synopsis: description,
-    target: ['AppImage', 'deb', 'pacman', 'freebsd', 'rpm'],
-  },
-  */
-
   win: {
     icon: `${resources}/build/icons/dark/win/icon.ico`,
     target: [
