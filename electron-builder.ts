@@ -72,4 +72,11 @@ export default {
   portable: {
     artifactName: `${name}-v${version}-\${os}-portable.\${ext}`,
   },
+
+  publish: [
+    {
+      provider: 'github',
+      releaseType: 'release',
+    },
+  ],
 } satisfies Configuration
