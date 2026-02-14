@@ -505,7 +505,7 @@ export function FolderTree({
       <div className="py-2 overflow-y-auto flex-1 min-h-0 relative">
         {onShowAllNotes && (
           <button
-            className={`flex items-center gap-2 px-3 py-2.5 mb-2 cursor-pointer transition-all duration-200 border-l-4 ${
+            className={`w-full flex justify-start items-center gap-2 px-3 py-2.5 mb-2 cursor-pointer transition-all duration-200 border-l-4 ${
               showAllNotes
                 ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-700 dark:text-purple-300 font-semibold shadow-sm border-purple-600 dark:border-purple-400'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
@@ -514,10 +514,10 @@ export function FolderTree({
             title="すべてのノートを表示"
             type="button"
           >
-            <span className="text-sm flex-1">すべてのノート</span>
+            <span className="text-sm">すべてのノート</span>
             {totalNotes > 0 && (
               <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
                   showAllNotes
                     ? 'bg-purple-600/20 dark:bg-purple-400/20 text-purple-700 dark:text-purple-300'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
