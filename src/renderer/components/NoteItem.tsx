@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiTrash2, FiTag, FiClock } from 'react-icons/fi'
 import type { MarkdownNoteMeta } from '@/shared/types'
 
@@ -16,6 +18,7 @@ export function NoteItem({
   onDoubleClick,
   onDelete,
 }: NoteItemProps) {
+  const { t } = useTranslation()
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return ''
     try {
@@ -88,10 +91,10 @@ export function NoteItem({
       </button>
       {onDelete && (
         <button
-          aria-label="削除"
+          aria-label={t('noteItem.delete')}
           className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400"
           onClick={onDelete}
-          title="削除"
+          title={t('noteItem.delete')}
           type="button"
         >
           <FiTrash2 size={14} />

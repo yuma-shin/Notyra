@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiFolder, FiZap, FiFileText, FiHeart } from 'react-icons/fi'
 
 interface WelcomeScreenProps {
@@ -6,6 +7,7 @@ interface WelcomeScreenProps {
 }
 
 export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
+  const { t } = useTranslation()
   const [isSelecting, setIsSelecting] = useState(false)
 
   const handleSelectFolder = async () => {
@@ -85,34 +87,34 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
 
           {/* タイトル */}
           <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-            FlowMark へようこそ
+            {t('welcome.title')}
           </h1>
           <p className="text-xl text-white/90 mb-8 font-light">
-            流れるような、心地よい執筆体験を
+            {t('welcome.subtitle')}
           </p>
 
           {/* 特徴カード */}
           <div className="grid grid-cols-3 gap-4 mb-10 px-8">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <FiZap className="text-white mx-auto mb-2" size={28} />
-              <p className="text-white text-sm font-medium">高速起動</p>
+              <p className="text-white text-sm font-medium">{t('welcome.features.speed')}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <FiFileText className="text-white mx-auto mb-2" size={28} />
               <p className="text-white text-sm font-medium">
-                リアルタイムプレビュー
+                {t('welcome.features.preview')}
               </p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <FiHeart className="text-white mx-auto mb-2" size={28} />
-              <p className="text-white text-sm font-medium">直感的なUI</p>
+              <p className="text-white text-sm font-medium">{t('welcome.features.ui')}</p>
             </div>
           </div>
 
           {/* フォルダ選択ボタン */}
           <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/30">
             <p className="text-gray-700 mb-6 text-lg">
-              まずは、ノートを保存するフォルダを選択しましょう
+              {t('welcome.selectFolderText')}
             </p>
             <button
               className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:cursor-not-allowed"
@@ -121,10 +123,10 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
               type="button"
             >
               <FiFolder size={24} />
-              {isSelecting ? '選択中...' : 'フォルダを選択して始める'}
+              {isSelecting ? t('welcome.selectButtonSelecting') : t('welcome.selectButtonText')}
             </button>
             <p className="text-gray-500 text-sm mt-4">
-              既存のフォルダを選択するか、新しいフォルダを作成してください
+              {t('welcome.selectFolderHint')}
             </p>
           </div>
         </div>

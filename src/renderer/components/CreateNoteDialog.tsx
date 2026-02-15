@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiX } from 'react-icons/fi'
 
 interface CreateNoteDialogProps {
@@ -13,6 +14,7 @@ export function CreateNoteDialog({
   onClose,
   onSubmit,
 }: CreateNoteDialogProps) {
+  const { t } = useTranslation()
   const [title, setTitle] = useState('')
 
   if (!isOpen) return null
@@ -30,7 +32,7 @@ export function CreateNoteDialog({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-lg font-semibold">新規ノートを作成</h2>
+          <h2 className="text-lg font-semibold">{t('dialog.createNote')}</h2>
           <button
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
             onClick={onClose}
@@ -45,13 +47,13 @@ export function CreateNoteDialog({
               className="block text-sm font-medium mb-2"
               htmlFor="note-title"
             >
-              ノートタイトル
+              {t('dialog.noteName')}
             </label>
             <input
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="note-title"
               onChange={e => setTitle(e.target.value)}
-              placeholder="ノートのタイトルを入力"
+              placeholder={t('dialog.noteName')}
               type="text"
               value={title}
             />
@@ -62,14 +64,14 @@ export function CreateNoteDialog({
               onClick={onClose}
               type="button"
             >
-              キャンセル
+              {t('common.cancel')}
             </button>
             <button
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-medium"
               disabled={!title.trim()}
               type="submit"
             >
-              作成
+              {t('common.create')}
             </button>
           </div>
         </form>

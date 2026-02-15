@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
 import { CustomTitleBar } from '../components/CustomTitleBar'
 import { FolderTree } from '../components/FolderTree'
@@ -11,6 +12,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { MarkdownNoteMeta, FolderNode } from '@/shared/types'
 
 export function MainScreen() {
+  const { t } = useTranslation()
   const { settings, updateSettings, isLoading: settingsLoading } = useApp()
   const [showRootDialog, setShowRootDialog] = useState(false)
   const [showCreateNoteDialog, setShowCreateNoteDialog] = useState(false)
@@ -1151,10 +1153,10 @@ export function MainScreen() {
                 </g>
               </svg>
               <p className="text-lg text-gray-400 dark:text-gray-500 font-medium">
-                ノートを選択してください
+                {t('editor.selectNote')}
               </p>
               <p className="text-sm text-gray-400 dark:text-gray-600 mt-2">
-                左側のリストからノートを選んでください
+                {t('editor.selectNoteHint')}
               </p>
             </div>
           )}
@@ -1168,19 +1170,19 @@ export function MainScreen() {
         onSubmit={handleCreateNote}
       />
       <CreateFolderDialog
-        currentPath={selectedFolder || '(ルート)'}
+        currentPath={selectedFolder || t('metadata.root')}
         isOpen={showCreateFolderDialog}
         onClose={() => setShowCreateFolderDialog(false)}
         onSubmit={handleCreateFolder}
       />
       <ConfirmDialog
-        confirmText="削除"
+        confirmText={t('common.delete')}
         isDanger={true}
         isOpen={showDeleteConfirm}
         message={
           deleteTarget?.type === 'note'
-            ? `「${(deleteTarget.data as MarkdownNoteMeta).title}」を削除しますか？\nこの操作は元に戻せません。`
-            : `フォルダ「${deleteTarget?.data}」とその中身をすべて削除しますか？\nこの操作は元に戻せません。`
+            ? `「${(deleteTarget.data as MarkdownNoteMeta).title}」${t('dialog.deleteNoteMessage')}`
+            : `「${deleteTarget?.data}」${t('dialog.deleteFolderMessage')}`
         }
         onCancel={() => {
           setShowDeleteConfirm(false)
@@ -1188,7 +1190,7 @@ export function MainScreen() {
         }}
         onConfirm={handleDeleteConfirm}
         title={
-          deleteTarget?.type === 'note' ? 'ノートを削除' : 'フォルダを削除'
+          deleteTarget?.type === 'note' ? t('dialog.deleteNote') : t('dialog.deleteFolder')
         }
       />
     </>

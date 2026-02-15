@@ -1,0 +1,131 @@
+{
+  "common": {
+    "appName": "FlowMark",
+    "search": "検索",
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "create": "作成",
+    "confirm": "確認",
+    "close": "閉じる",
+    "language": "言語"
+  },
+  "titleBar": {
+    "selectFolder": "フォルダを選択",
+    "toggleSidebar": "サイドバーを表示/非表示",
+    "toggleNoteList": "ノートリストを表示/非表示"
+  },
+  "sidebar": {
+    "folders": "フォルダ",
+    "notes": "ノート",
+    "noFolders": "利用可能なフォルダはありません",
+    "noNotes": "ノートはありません"
+  },
+  "editor": {
+    "placeholder": "入力を開始...",
+    "preview": "プレビュー",
+    "edit": "編集",
+    "split": "分割ビュー",
+    "unsavedChanges": "保存されていない変更があります",
+    "saving": "保存中...",
+    "saved": "保存しました",
+    "selectNote": "ノートを選択してください",
+    "selectNoteHint": "左側のリストからノートを選んでください"
+  },
+  "dialog": {
+    "createFolder": "フォルダを作成",
+    "folderName": "フォルダ名",
+    "createNote": "ノートを作成",
+    "noteName": "ノート名",
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "deleteConfirm": "削除してもよろしいですか？",
+    "error": "エラー",
+    "success": "成功",
+    "deleteNote": "ノートを削除",
+    "deleteNoteMessage": "を削除しますか？\nこの操作は元に戻せません。",
+    "deleteFolder": "フォルダを削除",
+    "deleteFolderMessage": "を削除しますか？\nこの操作は元に戻せません。",
+    "root": "ルート"
+  },
+  "errors": {
+    "folderNotFound": "フォルダが見つかりません",
+    "noteNotFound": "ノートが見つかりません",
+    "failedToLoad": "読み込みに失敗しました",
+    "failedToSave": "保存に失敗しました",
+    "invalidInput": "無効な入力です"
+  },
+  "shortcuts": {
+    "save": "保存",
+    "newNote": "新規ノート",
+    "newFolder": "新規フォルダ",
+    "togglePreview": "プレビューを切り替え"
+  },
+  "theme": {
+    "light": "ライトモード",
+    "dark": "ダークモード",
+    "system": "システム設定"
+  },
+  "welcome": {
+    "title": "FlowMark へようこそ",
+    "subtitle": "流れるような、心地よい執筆体験を",
+    "features": {
+      "speed": "高速起動",
+      "preview": "リアルタイムプレビュー",
+      "ui": "直感的なUI"
+    },
+    "selectFolderText": "まずは、ノートを保存するフォルダを選択しましょう",
+    "selectButtonSelecting": "選択中...",
+    "selectButtonText": "フォルダを選択して始める",
+    "selectFolderHint": "既存のフォルダを選択するか、新しいフォルダを作成してください"
+  },
+  "noteList": {
+    "title": "ノート",
+    "empty": "ノートがありません",
+    "sortBy": "並び替え",
+    "date": "日付",
+    "name": "名前",
+    "modified": "修正日",
+    "created": "作成日",
+    "searchPlaceholder": "検索...",
+    "root": "ルート",
+    "createNoteButton": "ノート作成",
+    "emptyHint": "上部の + ボタンで新しいノートを作成できます",
+    "searchEmpty": "検索結果が見つかりません",
+    "searchEmptyHint": "別のキーワードで検索してみてください",
+    "noNotesInFolder": "このフォルダにはノートがありません",
+    "noNotesHint": "上部の + ボタンで新しいノートを作成できます"
+  },
+  "noteItem": {
+    "delete": "削除"
+  },
+  "metadata": {
+    "title": "タイトル",
+    "tags": "タグ",
+    "created": "作成日",
+    "modified": "更新日",
+    "editMetadata": "メタデータを編集",
+    "addTag": "タグを追加",
+    "removeTag": "削除",
+    "moveFolder": "フォルダを移動",
+    "root": "ルート",
+    "titlePlaceholder": "タイトル",
+    "tagPlaceholder": "タグを追加...",
+    "clickCreateTag": "クリックしてタグを作成",
+    "addTagButton": "タグを追加"
+  },
+  "folderTree": {
+    "createSubfolder": "サブフォルダを作成",
+    "allNotes": "すべてのノート",
+    "allNotesTitle": "すべてのノートを表示"
+  },
+  "sortDropdown": {
+    "sortBy": "並び替え",
+    "dateDesc": "日付 (新しい順)",
+    "dateAsc": "日付 (古い順)",
+    "titleAsc": "タイトル (A-Z)",
+    "titleDesc": "タイトル (Z-A)"
+  }
+}

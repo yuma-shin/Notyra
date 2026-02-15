@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi'
+import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
 import type { AppSettings } from '@/shared/types'
 
 export function ThemeToggle() {
   const { settings, updateSettings } = useApp()
+  const { t } = useTranslation()
 
   useEffect(() => {
     const applyTheme = () => {
@@ -62,11 +64,11 @@ export function ThemeToggle() {
   const getLabel = () => {
     switch (settings.theme) {
       case 'light':
-        return 'ライトモード'
+        return t('theme.light')
       case 'dark':
-        return 'ダークモード'
+        return t('theme.dark')
       case 'system':
-        return 'システム設定'
+        return t('theme.system')
     }
   }
 
