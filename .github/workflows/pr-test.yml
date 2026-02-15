@@ -3,16 +3,42 @@ name: PR Test
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch: {}
 
 concurrency:
   group: pr-test-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    if: github.event.pull_request.draft == false
+  setup:
+    if: "(github.event_name == 'pull_request' && github.event.pull_request.draft == false) || (github.event_name == 'workflow_dispatch')"
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.0.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+  test-matrix:
+    needs: setup
+    if: "(github.event_name == 'pull_request' && github.event.pull_request.draft == false) || (github.event_name == 'workflow_dispatch')"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-type: [lint, typecheck, test]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,10 +59,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
+        if: matrix.test-type == 'lint'
         run: pnpm run lint
 
       - name: Typecheck
+        if: matrix.test-type == 'typecheck'
         run: pnpm run typecheck
 
       - name: Test
+        if: matrix.test-type == 'test'
         run: pnpm run test

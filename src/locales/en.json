@@ -1,0 +1,131 @@
+{
+  "common": {
+    "appName": "FlowMark",
+    "search": "Search",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "confirm": "Confirm",
+    "close": "Close",
+    "language": "Language"
+  },
+  "titleBar": {
+    "selectFolder": "Select Folder",
+    "toggleSidebar": "Toggle Sidebar",
+    "toggleNoteList": "Toggle Note List"
+  },
+  "sidebar": {
+    "folders": "Folders",
+    "notes": "Notes",
+    "noFolders": "No folders available",
+    "noNotes": "No notes available"
+  },
+  "editor": {
+    "placeholder": "Start typing...",
+    "preview": "Preview",
+    "edit": "Edit",
+    "split": "Split View",
+    "unsavedChanges": "You have unsaved changes",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "selectNote": "Please select a note",
+    "selectNoteHint": "Select a note from the list on the left"
+  },
+  "dialog": {
+    "createFolder": "Create Folder",
+    "folderName": "Folder Name",
+    "createNote": "Create Note",
+    "noteName": "Note Name",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "deleteConfirm": "Are you sure you want to delete?",
+    "error": "Error",
+    "success": "Success",
+    "deleteNote": "Delete Note",
+    "deleteNoteMessage": "will be deleted?\nThis action cannot be undone.",
+    "deleteFolder": "Delete Folder",
+    "deleteFolderMessage": "will delete the folder and all its contents?\nThis action cannot be undone.",
+    "root": "Root"
+  },
+  "errors": {
+    "folderNotFound": "Folder not found",
+    "noteNotFound": "Note not found",
+    "failedToLoad": "Failed to load",
+    "failedToSave": "Failed to save",
+    "invalidInput": "Invalid input"
+  },
+  "shortcuts": {
+    "save": "Save",
+    "newNote": "New Note",
+    "newFolder": "New Folder",
+    "togglePreview": "Toggle Preview"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "system": "System Setting"
+  },
+  "welcome": {
+    "title": "Welcome to FlowMark",
+    "subtitle": "A smooth and comfortable writing experience",
+    "features": {
+      "speed": "Fast Launch",
+      "preview": "Real-time Preview",
+      "ui": "Intuitive UI"
+    },
+    "selectFolderText": "First, select a folder to save your notes",
+    "selectButtonSelecting": "Selecting...",
+    "selectButtonText": "Select Folder and Start",
+    "selectFolderHint": "Select an existing folder or create a new one"
+  },
+  "noteList": {
+    "title": "Notes",
+    "empty": "No notes",
+    "sortBy": "Sort by",
+    "date": "Date",
+    "name": "Name",
+    "modified": "Modified",
+    "created": "Created",
+    "searchPlaceholder": "Search...",
+    "root": "Root",
+    "createNoteButton": "Create Note",
+    "emptyHint": "Create a new note with the + button at the top",
+    "searchEmpty": "No search results",
+    "searchEmptyHint": "Try searching with different keywords",
+    "noNotesInFolder": "No notes in this folder",
+    "noNotesHint": "Click the + button above to create a new note"
+  },
+  "noteItem": {
+    "delete": "Delete"
+  },
+  "metadata": {
+    "title": "Title",
+    "tags": "Tags",
+    "created": "Created",
+    "modified": "Modified",
+    "editMetadata": "Edit Metadata",
+    "addTag": "Add tag",
+    "removeTag": "Remove",
+    "moveFolder": "Move to folder",
+    "root": "Root",
+    "titlePlaceholder": "Title",
+    "tagPlaceholder": "Add tag...",
+    "clickCreateTag": "Click to create a tag",
+    "addTagButton": "Add tag"
+  },
+  "folderTree": {
+    "createSubfolder": "Create Subfolder",
+    "allNotes": "All Notes",
+    "allNotesTitle": "Show all notes"
+  },
+  "sortDropdown": {
+    "sortBy": "Sort by",
+    "dateDesc": "Date (Newest)",
+    "dateAsc": "Date (Oldest)",
+    "titleAsc": "Title (A-Z)",
+    "titleDesc": "Title (Z-A)"
+  }
+}

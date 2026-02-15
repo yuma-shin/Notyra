@@ -5,17 +5,20 @@ import {
   useEffect,
   type ReactNode,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { AppSettings } from '@/shared/types'
 
 interface AppContextType {
   settings: AppSettings
   updateSettings: (updates: Partial<AppSettings>) => void
   isLoading: boolean
+  changeLanguage: (language: 'en' | 'ja') => void
 }
 
 const defaultSettings: AppSettings = {
   editorLayoutMode: 'split',
   theme: 'system',
+  language: 'en',
   showSidebar: true,
   showNoteList: true,
 }
@@ -25,6 +28,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(true)
+  const { i18n } = useTranslation()
 
   // localStorageから設定を読み込む
   useEffect(() => {
@@ -35,6 +39,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(stored)
           const mergedSettings = { ...defaultSettings, ...parsed }
           setSettings(mergedSettings)
+          // 言語設定を反映
+          if (mergedSettings.language) {
+            i18n.changeLanguage(mergedSettings.language)
+          }
         }
       } catch (error) {
         console.error('Failed to load settings:', error)
@@ -52,6 +60,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(e.newValue)
           const mergedSettings = { ...defaultSettings, ...parsed }
           setSettings(mergedSettings)
+          if (mergedSettings.language) {
+            i18n.changeLanguage(mergedSettings.language)
+          }
         } catch (error) {
           console.error('Failed to sync settings:', error)
         }
@@ -63,7 +74,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [])
+  }, [i18n])
 
   // 設定を更新
   const updateSettings = (updates: Partial<AppSettings>) => {
@@ -79,8 +90,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  // 言語を変更
+  const changeLanguage = (language: 'en' | 'ja') => {
+    i18n.changeLanguage(language)
+    localStorage.setItem('appLanguage', language)
+    updateSettings({ language })
+  }
+
   return (
-    <AppContext.Provider value={{ settings, updateSettings, isLoading }}>
+    <AppContext.Provider
+      value={{ settings, updateSettings, isLoading, changeLanguage }}
+    >
       {children}
     </AppContext.Provider>
   )

@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiX } from 'react-icons/fi'
 
 interface CreateFolderDialogProps {
@@ -15,6 +16,7 @@ export function CreateFolderDialog({
   onSubmit,
   currentPath,
 }: CreateFolderDialogProps) {
+  const { t } = useTranslation()
   const [folderName, setFolderName] = useState('')
 
   if (!isOpen) return null
@@ -32,7 +34,7 @@ export function CreateFolderDialog({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-lg font-semibold">新規フォルダを作成</h2>
+          <h2 className="text-lg font-semibold">{t('dialog.createFolder')}</h2>
           <button
             className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
             onClick={onClose}
@@ -43,9 +45,11 @@ export function CreateFolderDialog({
         </div>
         <form className="p-6" onSubmit={handleSubmit}>
           <div className="mb-2">
-            <p className="block text-sm font-medium mb-2">作成場所</p>
+            <p className="block text-sm font-medium mb-2">
+              {t('dialog.folderName')}
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              {currentPath || '(ルート)'}
+              {currentPath || t('metadata.root')}
             </p>
           </div>
           <div className="mb-4">
@@ -53,13 +57,13 @@ export function CreateFolderDialog({
               className="block text-sm font-medium mb-2"
               htmlFor="folder-name"
             >
-              フォルダ名
+              {t('dialog.folderName')}
             </label>
             <input
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="folder-name"
               onChange={e => setFolderName(e.target.value)}
-              placeholder="フォルダ名を入力"
+              placeholder={t('dialog.folderName')}
               type="text"
               value={folderName}
             />
@@ -70,14 +74,14 @@ export function CreateFolderDialog({
               onClick={onClose}
               type="button"
             >
-              キャンセル
+              {t('common.cancel')}
             </button>
             <button
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-medium"
               disabled={!folderName.trim()}
               type="submit"
             >
-              作成
+              {t('common.create')}
             </button>
           </div>
         </form>

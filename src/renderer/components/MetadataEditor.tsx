@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FiX,
   FiPlus,
@@ -40,6 +41,7 @@ export function MetadataEditor({
   onSave,
   onMove,
 }: MetadataEditorProps) {
+  const { t } = useTranslation()
   const [editTitle, setEditTitle] = useState(title)
   const [editTags, setEditTags] = useState<string[]>(tags)
   const [newTag, setNewTag] = useState('')
@@ -128,7 +130,7 @@ export function MetadataEditor({
 
     folders.push({
       path: prefix,
-      name: prefix || 'ルート',
+      name: prefix || t('metadata.root'),
       depth,
       hasChildren: node.children.length > 0,
       parentPath,
@@ -179,7 +181,7 @@ export function MetadataEditor({
             className="w-full text-xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 p-0 text-gray-800 dark:text-gray-100"
             id="meta-title"
             onChange={e => setEditTitle(e.target.value)}
-            placeholder="タイトル"
+            placeholder={t('metadata.titlePlaceholder')}
             type="text"
             value={editTitle}
           />
@@ -193,11 +195,11 @@ export function MetadataEditor({
                   type="button"
                   {...getReferenceProps()}
                   className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-                  title="フォルダを移動"
+                  title={t('metadata.moveFolder')}
                 >
                   <FiFolder size={12} />
                   <span className="text-gray-600 dark:text-gray-400">
-                    {currentFolder || 'ルート'}
+                    {currentFolder || t('metadata.root')}
                   </span>
                 </button>
                 <span className="text-gray-400 dark:text-gray-500">/</span>
@@ -270,7 +272,7 @@ export function MetadataEditor({
                 type="button"
               >
                 <FiPlus size={12} />
-                クリックしてタグを作成
+                {t('metadata.clickCreateTag')}
               </button>
             ) : (
               <>
@@ -311,7 +313,7 @@ export function MetadataEditor({
                           setShowTagInput(false)
                         }
                       }}
-                      placeholder="タグを追加..."
+                      placeholder={t('metadata.tagPlaceholder')}
                       ref={tagInputRef}
                       type="text"
                       value={newTag}
@@ -322,7 +324,7 @@ export function MetadataEditor({
                   <button
                     className="p-0.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
                     onClick={() => setShowTagInput(true)}
-                    title="タグを追加"
+                    title={t('metadata.addTagButton')}
                     type="button"
                   >
                     <FiPlus size={14} />

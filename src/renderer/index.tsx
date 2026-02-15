@@ -3,6 +3,7 @@ import React from 'react'
 
 import { AppRoutes } from './routes'
 import { AppProvider } from './contexts/AppContext'
+import './i18n'
 
 import './globals.css'
 

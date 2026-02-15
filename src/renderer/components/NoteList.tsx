@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiFileText, FiPlus, FiSearch, FiX } from 'react-icons/fi'
 import type { MarkdownNoteMeta } from '@/shared/types'
 import { NoteItem } from './NoteItem'
@@ -23,6 +24,7 @@ export function NoteList({
   onCreateNote,
   onDeleteNote,
 }: NoteListProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOption, setSortOption] = useState<SortOption>('date-desc')
 
@@ -90,7 +92,7 @@ export function NoteList({
 
   const getFolderDisplayName = () => {
     if (!selectedFolder || selectedFolder === '') {
-      return 'ルート'
+      return t('noteList.root')
     }
     const parts = selectedFolder.split(/[\\/]/)
     return parts[parts.length - 1]
@@ -121,7 +123,7 @@ export function NoteList({
           <button
             className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
             onClick={onCreateNote}
-            title="ノート作成"
+            title={t('noteList.createNoteButton')}
             type="button"
           >
             <FiPlus size={16} />
@@ -141,7 +143,7 @@ export function NoteList({
             <input
               className="w-full pl-9 pr-8 py-1.5 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="検索..."
+              placeholder={t('noteList.searchPlaceholder')}
               type="text"
               value={searchQuery}
             />
@@ -324,10 +326,10 @@ export function NoteList({
               </g>
             </svg>
             <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">
-              このフォルダにはノートがありません
+              {t('noteList.noNotesInFolder')}
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-600 mt-2">
-              上部の + ボタンで新しいノートを作成できます
+              {t('noteList.noNotesHint')}
             </p>
           </div>
         )}
