@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiTag, FiX } from 'react-icons/fi'
 import type { MarkdownNoteMeta } from '@/shared/types'
 
@@ -17,6 +18,7 @@ export function TagListSection({
   showAllNotes,
   onSelectTag,
 }: TagListSectionProps) {
+  const { t } = useTranslation()
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>()
     // タグリストは常に現在のフィルタ対象のノートから生成
@@ -53,7 +55,7 @@ export function TagListSection({
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
             <FiTag className="text-purple-600 dark:text-purple-400" size={14} />
-            タグ
+            {t('metadata.tags')}
           </h3>
           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
             {tagCounts.length}
@@ -63,7 +65,7 @@ export function TagListSection({
           <button
             className="p-1 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-all duration-200 text-purple-600 dark:text-purple-400"
             onClick={() => onSelectTag(null)}
-            title="フィルターをクリア"
+            title={t('common.search')}
             type="button"
           >
             <FiX size={12} />
@@ -79,7 +81,7 @@ export function TagListSection({
               size={24}
             />
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              タグがありません
+              {t('noteList.empty')}
             </p>
           </div>
         ) : (

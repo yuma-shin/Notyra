@@ -8,8 +8,10 @@ import {
   FiSidebar,
   FiList,
 } from 'react-icons/fi'
+import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
 import { ThemeToggle } from './ThemeToggle'
+import { LanguageToggle } from './LanguageToggle'
 
 const { App } = window
 
@@ -30,6 +32,7 @@ export function CustomTitleBar({
 }: CustomTitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const { settings } = useApp()
+  const { t } = useTranslation()
 
   useEffect(() => {
     // Electron環境でのみ実行
@@ -144,10 +147,10 @@ export function CustomTitleBar({
                   <button
                     className="px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-all duration-200"
                     onClick={onChangeRootFolder}
-                    title="ルートフォルダを変更"
+                    title={t('titleBar.selectFolder')}
                     type="button"
                   >
-                    変更
+                    {t('titleBar.selectFolder')}
                   </button>
                 )}
               </div>
@@ -169,7 +172,7 @@ export function CustomTitleBar({
                 : 'text-gray-400 dark:text-gray-600'
             }`}
             onClick={onToggleSidebar}
-            title="サイドバー表示切替"
+            title={t('titleBar.toggleSidebar')}
             type="button"
           >
             <FiSidebar size={16} />
@@ -183,7 +186,7 @@ export function CustomTitleBar({
                 : 'text-gray-400 dark:text-gray-600'
             }`}
             onClick={onToggleNoteList}
-            title="ノートリスト表示切替"
+            title={t('titleBar.toggleNoteList')}
             type="button"
           >
             <FiList size={16} />
@@ -193,6 +196,7 @@ export function CustomTitleBar({
         <div className="scale-90">
           <ThemeToggle />
         </div>
+        <LanguageToggle />
       </div>
 
       {/* ウィンドウ操作ボタン */}
@@ -203,7 +207,7 @@ export function CustomTitleBar({
         <button
           className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           onClick={handleMinimize}
-          title="最小化"
+          title={t('common.close')}
           type="button"
         >
           <FiMinus className="text-gray-600 dark:text-gray-400" size={16} />
@@ -211,7 +215,7 @@ export function CustomTitleBar({
         <button
           className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           onClick={handleMaximize}
-          title={isMaximized ? '元に戻す' : '最大化'}
+          title={isMaximized ? t('common.close') : t('common.close')}
           type="button"
         >
           {isMaximized ? (
@@ -229,7 +233,7 @@ export function CustomTitleBar({
         <button
           className="p-1.5 rounded-md hover:bg-red-500 hover:text-white transition-colors"
           onClick={handleClose}
-          title="閉じる"
+          title={t('common.close')}
           type="button"
         >
           <FiX className="text-gray-600 dark:text-gray-400" size={16} />

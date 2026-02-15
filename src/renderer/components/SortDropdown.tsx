@@ -1,4 +1,5 @@
 import React, { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiFilter } from 'react-icons/fi'
 import {
   useFloating,
@@ -22,17 +23,21 @@ interface SortDropdownProps {
   onChange: (value: SortOption) => void
 }
 
-const sortOptions: Array<{ value: SortOption; label: string }> = [
-  { value: 'date-desc', label: '更新日 (新しい順)' },
-  { value: 'date-asc', label: '更新日 (古い順)' },
-  { value: 'title-asc', label: 'タイトル (昇順)' },
-  { value: 'title-desc', label: 'タイトル (降順)' },
+const getSortOptions = (
+  t: any
+): Array<{ value: SortOption; label: string }> => [
+  { value: 'date-desc', label: t('sortDropdown.dateDesc') },
+  { value: 'date-asc', label: t('sortDropdown.dateAsc') },
+  { value: 'title-asc', label: t('sortDropdown.titleAsc') },
+  { value: 'title-desc', label: t('sortDropdown.titleDesc') },
 ]
 
 export function SortDropdown({ value, onChange }: SortDropdownProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null)
   const listRef = useRef<Array<HTMLElement | null>>([])
+  const sortOptions = getSortOptions(t)
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -58,7 +63,8 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
   )
 
   const selectedLabel =
-    sortOptions.find(opt => opt.value === value)?.label || '並び替え'
+    sortOptions.find(opt => opt.value === value)?.label ||
+    t('sortDropdown.sortBy')
 
   const handleSelect = (selectedValue: SortOption) => {
     onChange(selectedValue)

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { FiAlertTriangle } from 'react-icons/fi'
 
 interface ConfirmDialogProps {
@@ -15,12 +16,15 @@ export function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmText = '確認',
-  cancelText = 'キャンセル',
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
   isDanger = false,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation()
+  const defaultConfirmText = confirmText || t('common.confirm')
+  const defaultCancelText = cancelText || t('common.cancel')
   if (!isOpen) return null
 
   return (
@@ -47,7 +51,7 @@ export function ConfirmDialog({
               onClick={onCancel}
               type="button"
             >
-              {cancelText}
+              {defaultCancelText}
             </button>
             <button
               className={`px-4 py-2 text-sm rounded-lg ${
@@ -58,7 +62,7 @@ export function ConfirmDialog({
               onClick={onConfirm}
               type="button"
             >
-              {confirmText}
+              {defaultConfirmText}
             </button>
           </div>
         </div>

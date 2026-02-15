@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   FiFolder,
   FiFolderPlus,
@@ -58,6 +59,7 @@ function FolderItem({
   onCreateFolder,
   onDeleteFolder,
 }: FolderItemProps) {
+  const { t } = useTranslation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
   const hasChildren = node.children.length > 0
@@ -167,7 +169,7 @@ function FolderItem({
                 type="button"
               >
                 <FiFolderPlus size={14} />
-                <span>サブフォルダを作成</span>
+                <span>{t('folderTree.createSubfolder')}</span>
               </button>
             )}
             {onDeleteFolder && node.relativePath !== '' && (
@@ -177,7 +179,7 @@ function FolderItem({
                 type="button"
               >
                 <FiTrash2 size={14} />
-                <span>このフォルダを削除</span>
+                <span>{t('common.delete')}</span>
               </button>
             )}
           </div>
@@ -201,6 +203,7 @@ export function FolderTree({
   selectedTag = null,
   onSelectTag,
 }: FolderTreeProps) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['']))
   const [currentPath, setCurrentPath] = useState<string>('')
   const [displayPath, setDisplayPath] = useState<string>('')
@@ -441,13 +444,13 @@ export function FolderTree({
               className="text-purple-600 dark:text-purple-400"
               size={16}
             />
-            フォルダ
+            {t('sidebar.folders')}
           </h2>
           {onCreateFolder && (
             <button
               className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
               onClick={() => onCreateFolder(currentPath)}
-              title="フォルダ作成"
+              title={t('common.create')}
               type="button"
             >
               <FiFolderPlus size={16} />
@@ -460,7 +463,7 @@ export function FolderTree({
             <button
               className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex-shrink-0"
               onClick={handleNavigateUp}
-              title="上へ戻る"
+              title={t('common.back')}
               type="button"
             >
               <FiArrowLeft size={14} />
@@ -511,10 +514,10 @@ export function FolderTree({
                 : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
             }`}
             onClick={onShowAllNotes}
-            title="すべてのノートを表示"
+            title={t('folderTree.allNotesTitle')}
             type="button"
           >
-            <span className="text-sm">すべてのノート</span>
+            <span className="text-sm">{t('folderTree.allNotes')}</span>
             {totalNotes > 0 && (
               <span
                 className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
