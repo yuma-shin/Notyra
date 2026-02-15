@@ -295,14 +295,14 @@ export function EditorView({
               onScroll={handlePreviewScroll}
               ref={previewScrollRef}
             >
-              <MarkdownPreview content={localContent} />
+              <MarkdownPreview content={localContent} onChange={handleChange} />
             </div>
           </>
         )}
 
         {layoutMode === 'preview' && (
           <div className="flex-1 overflow-auto">
-            <MarkdownPreview content={localContent} />
+            <MarkdownPreview content={localContent} onChange={handleChange} />
           </div>
         )}
       </div>
