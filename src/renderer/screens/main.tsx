@@ -96,13 +96,30 @@ export function MainScreen() {
 
       const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
       setFolderTree(tree)
+      const targetFolder = folderPath !== undefined ? folderPath : selectedFolder
 
       // 指定されたフォルダまたはselectedFolderに基づいてフィルタリング
-      const targetFolder =
-        folderPath !== undefined ? folderPath : selectedFolder
-      const filtered = notes.filter(note => {
-        if (targetFolder === '') {
-          // ルートフォルダの場合は直下のノートのみ
+      // ただし現在の表示が「すべてのノート」の場合はそのまま全件を表示する
+      if (showAllNotes && folderPath === undefined) {
+        setFilteredNotes(notes)
+        setFolderFilteredNotes(notes)
+      } else {
+        const filtered = notes.filter(note => {
+          if (targetFolder === '') {
+            // ルートフォルダの場合は直下のノートのみ
+            const dir =
+              note.relativePath.includes('/') || note.relativePath.includes('\\')
+                ? note.relativePath.substring(
+                    0,
+                    Math.max(
+                      note.relativePath.lastIndexOf('/'),
+                      note.relativePath.lastIndexOf('\\')
+                    )
+                  )
+                : ''
+            return dir === ''
+          }
+          // 選択されたフォルダ直下のノートのみ
           const dir =
             note.relativePath.includes('/') || note.relativePath.includes('\\')
               ? note.relativePath.substring(
@@ -113,26 +130,14 @@ export function MainScreen() {
                   )
                 )
               : ''
-          return dir === ''
-        }
-        // 選択されたフォルダ直下のノートのみ
-        const dir =
-          note.relativePath.includes('/') || note.relativePath.includes('\\')
-            ? note.relativePath.substring(
-                0,
-                Math.max(
-                  note.relativePath.lastIndexOf('/'),
-                  note.relativePath.lastIndexOf('\\')
-                )
-              )
-            : ''
-        // パス区切り文字を統一して比較
-        const normalizedDir = dir.replace(/\\/g, '/')
-        const normalizedTargetFolder = targetFolder.replace(/\\/g, '/')
-        return normalizedDir === normalizedTargetFolder
-      })
-      setFilteredNotes(filtered)
-      setFolderFilteredNotes(filtered)
+          // パス区切り文字を統一して比較
+          const normalizedDir = dir.replace(/\\/g, '/')
+          const normalizedTargetFolder = targetFolder.replace(/\\/g, '/')
+          return normalizedDir === normalizedTargetFolder
+        })
+        setFilteredNotes(filtered)
+        setFolderFilteredNotes(filtered)
+      }
 
       // 前回開いていたノートを開く（現在のフォルダ内にある場合のみ）
       if (settings.lastOpenedNotePath) {
