@@ -1,3 +1,5 @@
+name: Create Package and Release
+
 on:
   push:
     tags: ["*"]
@@ -37,3 +39,23 @@ jobs:
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           release: true
+
+  trigger-vercel:
+    needs: release
+    runs-on: ubuntu-latest
+    if: ${{ needs.release.result == 'success' }}
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "VERCEL_DEPLOY_HOOK secret is not set, skipping Vercel trigger"
+            exit 0
+          fi
+          echo "Triggering Vercel deploy for tag: $TAG"
+          curl -sS -X POST "$VERCEL_DEPLOY_HOOK" -H "Content-Type: application/json" -d "{\"trigger\":\"release\",\"tag\":\"${TAG}\",\"repo\":\"${REPO}\"}"
+
+      # Vercel trigger moved to a separate job that runs after the release matrix completes
