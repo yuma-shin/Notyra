@@ -2,7 +2,7 @@
   "displayName": "FlowMark",
   "name": "flowmark",
   "description": "A lightweight markdown editor built with Electron and React.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "./node_modules/.dev/main/index.mjs",
   "resources": "src/resources",
   "author": {

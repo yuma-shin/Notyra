@@ -1,0 +1,26 @@
+name: Trigger Website Build on Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+jobs:
+  trigger-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        env:
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          TAG: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+          PR_BODY: ${{ github.event.release.body }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "VERCEL_DEPLOY_HOOK secret is not set"
+            exit 1
+          fi
+          echo "Triggering Vercel deploy for tag: $TAG"
+          # POST は空 body で十分。必要なら JSON を送る。
+          # jq がない環境でも動作するように、出力をそのまま表示する
+          curl -sS -X POST "$HOOK_URL" -H "Content-Type: application/json" -d "{\"trigger\":\"release\",\"tag\":\"${TAG}\",\"repo\":\"${REPO}\"}"
