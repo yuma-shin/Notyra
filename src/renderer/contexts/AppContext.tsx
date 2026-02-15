@@ -98,7 +98,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AppContext.Provider value={{ settings, updateSettings, isLoading, changeLanguage }}>
+    <AppContext.Provider
+      value={{ settings, updateSettings, isLoading, changeLanguage }}
+    >
       {children}
     </AppContext.Provider>
   )

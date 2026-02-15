@@ -1190,7 +1190,9 @@ export function MainScreen() {
         }}
         onConfirm={handleDeleteConfirm}
         title={
-          deleteTarget?.type === 'note' ? t('dialog.deleteNote') : t('dialog.deleteFolder')
+          deleteTarget?.type === 'note'
+            ? t('dialog.deleteNote')
+            : t('dialog.deleteFolder')
         }
       />
     </>

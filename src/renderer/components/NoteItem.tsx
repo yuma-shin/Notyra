@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiTrash2, FiTag, FiClock } from 'react-icons/fi'
 import type { MarkdownNoteMeta } from '@/shared/types'

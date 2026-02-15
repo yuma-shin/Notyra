@@ -18,12 +18,12 @@ const getInitialLanguage = (): string => {
 
   // 2. ブラウザ/システムの言語設定を確認
   const systemLang = navigator.language.toLowerCase()
-  
+
   // 日本語のバリエーション（ja, ja-JP, ja-JP-u-ca-japanese など）
   if (systemLang.startsWith('ja') || systemLang.includes('ja')) {
     return 'ja'
   }
-  
+
   // デフォルトは英語
   return 'en'
 }

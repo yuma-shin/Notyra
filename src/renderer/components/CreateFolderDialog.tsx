@@ -45,7 +45,9 @@ export function CreateFolderDialog({
         </div>
         <form className="p-6" onSubmit={handleSubmit}>
           <div className="mb-2">
-            <p className="block text-sm font-medium mb-2">{t('dialog.folderName')}</p>
+            <p className="block text-sm font-medium mb-2">
+              {t('dialog.folderName')}
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               {currentPath || t('metadata.root')}
             </p>

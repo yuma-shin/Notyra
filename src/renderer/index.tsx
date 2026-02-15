@@ -14,4 +14,3 @@ ReactDom.createRoot(document.querySelector('app') as HTMLElement).render(
     </AppProvider>
   </React.StrictMode>
 )
-

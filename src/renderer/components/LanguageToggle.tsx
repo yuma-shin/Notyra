@@ -25,8 +25,6 @@ export function LanguageToggle() {
     { code: 'ja', name: '日本語' },
   ] as const
 
-  const currentLanguage = languages.find((lang) => lang.code === settings.language)
-
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -40,14 +38,14 @@ export function LanguageToggle() {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-white/10 rounded-md shadow-lg overflow-hidden z-50">
-          {languages.map((lang) => (
+          {languages.map(lang => (
             <button
-              key={lang.code}
               className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-white/20 transition-colors ${
                 settings.language === lang.code
                   ? 'bg-blue-100 dark:bg-blue-600 text-blue-900 dark:text-white'
                   : 'text-gray-700 dark:text-white'
               }`}
+              key={lang.code}
               onClick={() => {
                 changeLanguage(lang.code)
                 setIsOpen(false)

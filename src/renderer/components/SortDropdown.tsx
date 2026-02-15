@@ -23,7 +23,9 @@ interface SortDropdownProps {
   onChange: (value: SortOption) => void
 }
 
-const getSortOptions = (t: any): Array<{ value: SortOption; label: string }> => [
+const getSortOptions = (
+  t: any
+): Array<{ value: SortOption; label: string }> => [
   { value: 'date-desc', label: t('sortDropdown.dateDesc') },
   { value: 'date-asc', label: t('sortDropdown.dateAsc') },
   { value: 'title-asc', label: t('sortDropdown.titleAsc') },
@@ -61,7 +63,8 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
   )
 
   const selectedLabel =
-    sortOptions.find(opt => opt.value === value)?.label || t('sortDropdown.sortBy')
+    sortOptions.find(opt => opt.value === value)?.label ||
+    t('sortDropdown.sortBy')
 
   const handleSelect = (selectedValue: SortOption) => {
     onChange(selectedValue)

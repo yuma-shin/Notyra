@@ -97,7 +97,9 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
           <div className="grid grid-cols-3 gap-4 mb-10 px-8">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <FiZap className="text-white mx-auto mb-2" size={28} />
-              <p className="text-white text-sm font-medium">{t('welcome.features.speed')}</p>
+              <p className="text-white text-sm font-medium">
+                {t('welcome.features.speed')}
+              </p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <FiFileText className="text-white mx-auto mb-2" size={28} />
@@ -107,7 +109,9 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <FiHeart className="text-white mx-auto mb-2" size={28} />
-              <p className="text-white text-sm font-medium">{t('welcome.features.ui')}</p>
+              <p className="text-white text-sm font-medium">
+                {t('welcome.features.ui')}
+              </p>
             </div>
           </div>
 
@@ -123,7 +127,9 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
               type="button"
             >
               <FiFolder size={24} />
-              {isSelecting ? t('welcome.selectButtonSelecting') : t('welcome.selectButtonText')}
+              {isSelecting
+                ? t('welcome.selectButtonSelecting')
+                : t('welcome.selectButtonText')}
             </button>
             <p className="text-gray-500 text-sm mt-4">
               {t('welcome.selectFolderHint')}
