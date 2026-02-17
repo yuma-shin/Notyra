@@ -1,5 +1,7 @@
-import { app, ipcMain, shell, BrowserWindow } from 'electron'
+import { app, ipcMain, shell, BrowserWindow, protocol, net } from 'electron'
 import * as fs from 'node:fs'
+import * as nodePath from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { makeAppWithSingleInstanceLock } from 'lib/electron-app/factories/app/instance'
 import { makeAppSetup } from 'lib/electron-app/factories/app/setup'
@@ -8,14 +10,43 @@ import { ENVIRONMENT } from 'shared/constants'
 import { MainWindow } from './windows/main'
 import { waitFor } from 'shared/utils'
 import { MarkdownService } from './services/markdown-service'
+import { ImageService } from './services/image-service'
 
 const markdownService = new MarkdownService()
+const imageService = new ImageService()
 let mainWindow: BrowserWindow | null = null
+let lastKnownRootDir: string | null = null
 const fileWatchers = new Map<string, fs.FSWatcher>()
 const openWindows = new Set<BrowserWindow>()
 
+// Register custom protocol scheme before app is ready
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'local-resource',
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: false,
+      stream: true,
+    },
+  },
+])
+
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
+
+  // Register local-resource:// protocol handler for serving local images
+  protocol.handle('local-resource', request => {
+    const url = new URL(request.url)
+    // URL format: local-resource://host/path (host is drive letter on Windows)
+    let filePath = decodeURIComponent(url.pathname)
+    // On Windows, reconstruct the full path from host + pathname
+    if (process.platform === 'win32' && url.host) {
+      filePath = `${url.host}:${filePath}`
+    }
+    const resolved = nodePath.resolve(filePath)
+    return net.fetch(pathToFileURL(resolved).toString())
+  })
 
   const window = await makeAppSetup(MainWindow)
   mainWindow = window
@@ -23,6 +54,20 @@ makeAppWithSingleInstanceLock(async () => {
 
   window.on('closed', () => {
     openWindows.delete(window)
+  })
+
+  // アプリ終了時に未使用画像をクリーンアップ
+  app.on('before-quit', async event => {
+    if (lastKnownRootDir) {
+      event.preventDefault()
+      try {
+        await imageService.cleanupAllUnusedImages(lastKnownRootDir)
+      } catch (error) {
+        console.error('Failed to cleanup unused images on quit:', error)
+      }
+      lastKnownRootDir = null // prevent re-entry
+      app.quit()
+    }
   })
 
   // ウィンドウ作成後にIPCハンドラを登録
@@ -57,6 +102,7 @@ function setupIpcHandlers() {
 
   // ノート一覧を取得
   ipcMain.handle('markdown:scanNotes', async (_event, rootDir: string) => {
+    lastKnownRootDir = rootDir
     return await markdownService.scanNotes(rootDir)
   })
 
@@ -277,4 +323,68 @@ function setupIpcHandlers() {
     }
     return false
   })
+
+  // 画像操作 IPC ハンドラ
+  ipcMain.handle(
+    'image:saveFromFile',
+    async (
+      _event,
+      rootDir: string,
+      noteBaseName: string,
+      sourceFilePath: string
+    ) => {
+      lastKnownRootDir = rootDir
+      return await imageService.saveImageFromFile(
+        rootDir,
+        noteBaseName,
+        sourceFilePath
+      )
+    }
+  )
+
+  ipcMain.handle(
+    'image:saveFromBuffer',
+    async (
+      _event,
+      rootDir: string,
+      noteBaseName: string,
+      buffer: ArrayBuffer,
+      extension: string
+    ) => {
+      lastKnownRootDir = rootDir
+      return await imageService.saveImageFromBuffer(
+        rootDir,
+        noteBaseName,
+        Buffer.from(buffer),
+        extension
+      )
+    }
+  )
+
+  ipcMain.handle('image:selectFile', async () => {
+    return await imageService.selectImageFile()
+  })
+
+  ipcMain.handle(
+    'image:cleanupUnused',
+    async (
+      _event,
+      rootDir: string,
+      noteBaseName: string,
+      markdownContent: string
+    ) => {
+      return await imageService.cleanupUnusedImages(
+        rootDir,
+        noteBaseName,
+        markdownContent
+      )
+    }
+  )
+
+  ipcMain.handle(
+    'image:deleteNoteImages',
+    async (_event, rootDir: string, noteBaseName: string) => {
+      return await imageService.deleteNoteImages(rootDir, noteBaseName)
+    }
+  )
 }

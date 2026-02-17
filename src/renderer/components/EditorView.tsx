@@ -13,6 +13,7 @@ import { FloatingViewButtons } from './editor/FloatingViewButtons'
 import { useTextSelection } from '@/renderer/hooks/useTextSelection'
 import { useEditorScrollSync } from '@/renderer/hooks/useEditorScrollSync'
 import { useSplitView } from '@/renderer/hooks/useSplitView'
+import { useImageInsertion } from '@/renderer/hooks/useImageInsertion'
 import type { AppSettings, MarkdownNoteMeta, FolderNode } from '@/shared/types'
 
 const lineWrapping = CodemirrorEditorView.lineWrapping
@@ -52,6 +53,7 @@ interface EditorViewProps {
   folderTree?: FolderNode
   currentFolder?: string
   isSaving?: boolean
+  rootDir?: string
 }
 
 export function EditorView({
@@ -70,6 +72,7 @@ export function EditorView({
   folderTree,
   currentFolder,
   isSaving = false,
+  rootDir,
 }: EditorViewProps) {
   const [localContent, setLocalContent] = useState(content)
   const [currentTheme, setCurrentTheme] = useState(() => {
@@ -100,6 +103,22 @@ export function EditorView({
     applyAlert,
     applyList,
   } = useTextSelection()
+
+  // Derive noteBaseName from noteMeta filePath (filename without extension)
+  const noteBaseName = noteMeta
+    ? noteMeta.filePath
+        .replace(/\\/g, '/')
+        .split('/')
+        .pop()
+        ?.replace(/\.md$/, '')
+    : undefined
+
+  const { imageHandlerExtension, handleToolbarImageInsert, isInserting } =
+    useImageInsertion({
+      rootDir,
+      noteBaseName,
+      editorViewRef,
+    })
 
   useEffect(() => {
     setLocalContent(content)
@@ -238,6 +257,7 @@ export function EditorView({
                 markdown({ codeLanguages: languages }),
                 lineWrapping,
                 syntaxHighlighting(markdownStyle),
+                imageHandlerExtension,
               ]}
               onChange={handleChange}
               onCreateEditor={handleEditorCreate}
@@ -268,6 +288,7 @@ export function EditorView({
                   markdown({ codeLanguages: languages }),
                   lineWrapping,
                   syntaxHighlighting(markdownStyle),
+                  imageHandlerExtension,
                 ]}
                 onChange={handleChange}
                 onCreateEditor={handleEditorCreate}
@@ -295,14 +316,22 @@ export function EditorView({
               onScroll={handlePreviewScroll}
               ref={previewScrollRef}
             >
-              <MarkdownPreview content={localContent} onChange={handleChange} />
+              <MarkdownPreview
+                content={localContent}
+                noteDir={rootDir}
+                onChange={handleChange}
+              />
             </div>
           </>
         )}
 
         {layoutMode === 'preview' && (
           <div className="flex-1 overflow-auto">
-            <MarkdownPreview content={localContent} onChange={handleChange} />
+            <MarkdownPreview
+              content={localContent}
+              noteDir={rootDir}
+              onChange={handleChange}
+            />
           </div>
         )}
       </div>
@@ -323,7 +352,9 @@ export function EditorView({
       )}
 
       <FloatingViewButtons
+        isImageInserting={isInserting}
         layoutMode={layoutMode}
+        onImageInsert={handleToolbarImageInsert}
         onLayoutModeChange={onLayoutModeChange}
       />
     </div>
