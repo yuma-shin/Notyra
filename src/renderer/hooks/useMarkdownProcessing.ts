@@ -5,17 +5,24 @@ import remarkGithubAlerts from 'remark-github-alerts'
 import remarkRehype from 'remark-rehype'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeStringify from 'rehype-stringify'
+import { rehypeLocalImages } from '@/renderer/plugins/rehypeLocalImages'
 
-export function useMarkdownProcessing(content: string) {
+export function useMarkdownProcessing(content: string, noteDir?: string) {
   const [html, setHtml] = useState('')
 
   useEffect(() => {
     const processMarkdown = async () => {
       try {
-        const result = await remark()
+        let pipeline = remark()
           .use(remarkGfm)
           .use(remarkGithubAlerts)
           .use(remarkRehype, { allowDangerousHtml: true })
+
+        if (noteDir) {
+          pipeline = pipeline.use(rehypeLocalImages, { noteDir })
+        }
+
+        const result = await pipeline
           .use(rehypeHighlight)
           .use(rehypeStringify, { allowDangerousHtml: true })
           .process(content)
@@ -53,7 +60,7 @@ export function useMarkdownProcessing(content: string) {
     }
 
     processMarkdown()
-  }, [content])
+  }, [content, noteDir])
 
   return html
 }

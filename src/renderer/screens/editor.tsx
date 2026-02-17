@@ -160,6 +160,7 @@ export function EditorScreen() {
           noteMeta={note}
           onChange={handleContentChange}
           onLayoutModeChange={setLayoutMode}
+          rootDir={settings.rootDir}
         />
       </div>
     </div>

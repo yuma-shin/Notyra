@@ -53,3 +53,17 @@ export interface NoteContent {
   content: string
   rawContent: string // front matterを含む生のファイル内容
 }
+
+// Image Service Types
+
+export interface ImageSaveResult {
+  success: boolean
+  relativePath: string | null
+  error?: string
+}
+
+export interface CleanupResult {
+  success: boolean
+  deletedFiles: string[]
+  errors: string[]
+}
