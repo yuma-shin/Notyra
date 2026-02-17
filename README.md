@@ -1,10 +1,10 @@
-<h1 align="center"><img src="./docs/images/icon.png" width="30" /> FlowMark</h1>
+<h1 align="center"><img src="./docs/images/icon.png" width="30" /> Notyra</h1>
 
-![flowmark display](./docs/images/display.png)
+![notyra display](./docs/images/display.png)
 
 [English version](./README.en.md)
 
-FlowMark は、Electron + React で構築されたデスクトップ向け Markdown エディタです。  
+Notyra は、Electron + React で構築されたデスクトップ向け Markdown エディタです。  
 ローカルフォルダをルートにして `.md` ファイルを管理し、編集とプレビューを1つの画面で行えます。
 
 ## 利用者向け
@@ -33,14 +33,14 @@ FlowMark は、Electron + React で構築されたデスクトップ向け Markd
 
 ### ノート形式
 
-FlowMark は Markdown ファイルの front matter を読み取り、メタデータとして扱います。
+Notyra は Markdown ファイルの front matter を読み取り、メタデータとして扱います。
 
 ```yaml
 ---
 title: サンプル
 tags:
   - memo
-  - flowmark
+  - notyra
 createdAt: 2026-02-12T00:00:00.000Z
 updatedAt: 2026-02-12T00:00:00.000Z
 ---

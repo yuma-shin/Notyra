@@ -1,8 +1,8 @@
-<h1 align="center"><img src="./docs/images/icon.png" width="30" /> FlowMark</h1>
+<h1 align="center"><img src="./docs/images/icon.png" width="30" /> Notyra</h1>
 
 [日本語版](./README.md)
 
-FlowMark is a desktop Markdown editor built with Electron + React.  
+Notyra is a desktop Markdown editor built with Electron + React.  
 It uses a local folder as the root workspace and lets you edit and preview `.md` files in a single app.
 
 ## For Users
@@ -31,14 +31,14 @@ It uses a local folder as the root workspace and lets you edit and preview `.md`
 
 ### Note Format
 
-FlowMark reads Markdown front matter as note metadata.
+Notyra reads Markdown front matter as note metadata.
 
 ```yaml
 ---
 title: Sample
 tags:
   - memo
-  - flowmark
+  - notyra
 createdAt: 2026-02-12T00:00:00.000Z
 updatedAt: 2026-02-12T00:00:00.000Z
 ---

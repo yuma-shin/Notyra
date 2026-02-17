@@ -24,8 +24,8 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
     }
   }
 
-  // FlowMarkロゴSVG（大きめ）
-  const FlowMarkLogo = () => (
+  // NotyraロゴSVG（大きめ）
+  const NotyraLogo = () => (
     <svg
       fill="none"
       height="80"
@@ -82,7 +82,7 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
         <div className="text-center mb-8">
           {/* ロゴ */}
           <div className="flex justify-center mb-6">
-            <FlowMarkLogo />
+            <NotyraLogo />
           </div>
 
           {/* タイトル */}
