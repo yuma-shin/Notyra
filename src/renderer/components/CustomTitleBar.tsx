@@ -65,8 +65,8 @@ export function CustomTitleBar({
     return parts[parts.length - 1]
   }
 
-  // FlowMarkロゴSVG
-  const FlowMarkLogo = () => (
+  // NotyraロゴSVG
+  const NotyraLogo = () => (
     <svg
       fill="none"
       height="24"
@@ -76,7 +76,7 @@ export function CustomTitleBar({
     >
       <defs>
         <linearGradient
-          id="flowmark-gradient"
+          id="notyra-gradient"
           x1="0%"
           x2="100%"
           y1="0%"
@@ -100,15 +100,15 @@ export function CustomTitleBar({
       {/* マークダウン記号 */}
       <path
         d="M7 11H11M7 14H13M7 17H10"
-        stroke="url(#flowmark-gradient)"
+        stroke="url(#notyra-gradient)"
         strokeLinecap="round"
         strokeWidth="2"
       />
-      <circle cx="15" cy="14" fill="url(#flowmark-gradient)" r="1.5" />
+      <circle cx="15" cy="14" fill="url(#notyra-gradient)" r="1.5" />
       <circle
         cx="17"
         cy="17"
-        fill="url(#flowmark-gradient)"
+        fill="url(#notyra-gradient)"
         fillOpacity="0.6"
         r="1"
       />
@@ -124,9 +124,9 @@ export function CustomTitleBar({
       >
         <div className="flex items-center h-full px-4 gap-3">
           <div className="flex items-center gap-2">
-            <FlowMarkLogo />
+            <NotyraLogo />
             <span className="text-base font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent tracking-wide">
-              FlowMark
+              Notyra
             </span>
           </div>
           {settings.rootDir && (

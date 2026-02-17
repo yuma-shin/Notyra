@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "FlowMark",
+    "appName": "Notyra",
     "search": "Search",
     "back": "Back",
     "cancel": "Cancel",
@@ -69,7 +69,7 @@
     "system": "System Setting"
   },
   "welcome": {
-    "title": "Welcome to FlowMark",
+    "title": "Welcome to Notyra",
     "subtitle": "A smooth and comfortable writing experience",
     "features": {
       "speed": "Fast Launch",
