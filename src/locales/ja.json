@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "FlowMark",
+    "appName": "Notyra",
     "search": "検索",
     "back": "戻る",
     "cancel": "キャンセル",
@@ -69,7 +69,7 @@
     "system": "システム設定"
   },
   "welcome": {
-    "title": "FlowMark へようこそ",
+    "title": "Notyra へようこそ",
     "subtitle": "流れるような、心地よい執筆体験を",
     "features": {
       "speed": "高速起動",

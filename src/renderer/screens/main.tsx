@@ -867,7 +867,7 @@ export function MainScreen() {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="flex flex-col items-center justify-center gap-6">
-          {/* FlowMark Logo with pulse animation */}
+          {/* Notyra Logo with pulse animation */}
           <div className="relative flex items-center justify-center">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
             <svg
@@ -925,7 +925,7 @@ export function MainScreen() {
           {/* Loading text */}
           <div className="flex flex-col items-center justify-center gap-2">
             <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-              FlowMark
+              Notyra
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
               読み込み中...
