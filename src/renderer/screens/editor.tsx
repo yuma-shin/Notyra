@@ -5,6 +5,8 @@ import { EditorView } from '../components/EditorView'
 import { useApp } from '../contexts/AppContext'
 import type { MarkdownNoteMeta } from '@/shared/types'
 
+const EXTERNAL_CHANGE_COOLDOWN_MS = 5000
+
 export function EditorScreen() {
   const { App } = window
   const [searchParams] = useSearchParams()
@@ -15,6 +17,8 @@ export function EditorScreen() {
   )
   const saveTimeoutRef = useRef<number | undefined>(undefined)
   const lastSaveTimeRef = useRef<number>(0)
+  const lastLocalEditTimeRef = useRef<number>(0)
+  const lastLocalWriteTimeRef = useRef<number>(0)
   const reloadTimeoutRef = useRef<number | undefined>(undefined)
   const { settings } = useApp()
 
@@ -72,6 +76,17 @@ export function EditorScreen() {
             return
           }
 
+          const timeSinceLastEdit = Date.now() - lastLocalEditTimeRef.current
+          if (timeSinceLastEdit < 2000) {
+            return
+          }
+
+          const timeSinceLastLocalWrite =
+            Date.now() - lastLocalWriteTimeRef.current
+          if (timeSinceLastLocalWrite < EXTERNAL_CHANGE_COOLDOWN_MS) {
+            return
+          }
+
           const timeSinceLastSave = Date.now() - lastSaveTimeRef.current
           if (timeSinceLastSave < 1000) {
             return
@@ -111,6 +126,7 @@ export function EditorScreen() {
   }, [searchParams])
 
   const handleContentChange = (content: string) => {
+    lastLocalEditTimeRef.current = Date.now()
     setNoteContent(content)
 
     // デバウンス処理
@@ -123,6 +139,7 @@ export function EditorScreen() {
       try {
         await App.markdown.saveNote(note.filePath, content)
         lastSaveTimeRef.current = Date.now()
+        lastLocalWriteTimeRef.current = Date.now()
       } catch (error) {
         console.error('Failed to save note:', error)
       }
