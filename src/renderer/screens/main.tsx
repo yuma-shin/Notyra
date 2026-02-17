@@ -11,6 +11,8 @@ import { CreateFolderDialog } from '../components/CreateFolderDialog'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { MarkdownNoteMeta, FolderNode } from '@/shared/types'
 
+const EXTERNAL_CHANGE_COOLDOWN_MS = 5000
+
 export function MainScreen() {
   const { t } = useTranslation()
   const { settings, updateSettings, isLoading: settingsLoading } = useApp()
@@ -46,6 +48,8 @@ export function MainScreen() {
   >('forward')
   const [showAllNotes, setShowAllNotes] = useState(false)
   const lastSaveTimeRef = useRef<number>(0)
+  const lastLocalEditTimeRef = useRef<number>(0)
+  const lastLocalWriteTimeRef = useRef<number>(0)
   const reloadTimeoutRef = useRef<number | undefined>(undefined)
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const App = window.App
@@ -384,6 +388,17 @@ export function MainScreen() {
           return
         }
 
+        const timeSinceLastEdit = Date.now() - lastLocalEditTimeRef.current
+        if (timeSinceLastEdit < 2000) {
+          return
+        }
+
+        const timeSinceLastLocalWrite =
+          Date.now() - lastLocalWriteTimeRef.current
+        if (timeSinceLastLocalWrite < EXTERNAL_CHANGE_COOLDOWN_MS) {
+          return
+        }
+
         const timeSinceLastSave = Date.now() - lastSaveTimeRef.current
         if (timeSinceLastSave < 1000) {
           return
@@ -420,6 +435,7 @@ export function MainScreen() {
 
   // ノート内容の変更
   const handleContentChange = (content: string) => {
+    lastLocalEditTimeRef.current = Date.now()
     setNoteContent(content)
     debouncedSave(content)
   }
@@ -461,6 +477,7 @@ export function MainScreen() {
                     contentToSave
                   )
                   lastSaveTimeRef.current = Date.now()
+                  lastLocalWriteTimeRef.current = Date.now()
                   setIsSaving(false)
                   saveTimeoutRef.current = undefined
 
@@ -473,6 +490,7 @@ export function MainScreen() {
           // front matterが既に含まれている場合はそのまま保存
           await App.markdown.saveNote(selectedNote.filePath, content)
           lastSaveTimeRef.current = Date.now()
+          lastLocalWriteTimeRef.current = Date.now()
         } catch (error) {
           console.error('Failed to save note:', error)
         } finally {
