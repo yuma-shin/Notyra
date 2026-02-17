@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { MarkdownNoteMeta, FolderNode, NoteContent } from '@/shared/types'
+import type {
+  MarkdownNoteMeta,
+  FolderNode,
+  NoteContent,
+  ImageSaveResult,
+  CleanupResult,
+} from '@/shared/types'
 
 declare global {
   interface Window {
@@ -80,6 +86,55 @@ const API = {
       ipcRenderer.on('markdown:fileChanged', listener)
       return () => ipcRenderer.removeListener('markdown:fileChanged', listener)
     },
+  },
+
+  // 画像操作API
+  image: {
+    saveFromFile: (
+      rootDir: string,
+      noteBaseName: string,
+      sourceFilePath: string
+    ): Promise<ImageSaveResult> =>
+      ipcRenderer.invoke(
+        'image:saveFromFile',
+        rootDir,
+        noteBaseName,
+        sourceFilePath
+      ),
+
+    saveFromBuffer: (
+      rootDir: string,
+      noteBaseName: string,
+      buffer: ArrayBuffer,
+      extension: string
+    ): Promise<ImageSaveResult> =>
+      ipcRenderer.invoke(
+        'image:saveFromBuffer',
+        rootDir,
+        noteBaseName,
+        buffer,
+        extension
+      ),
+
+    selectFile: (): Promise<string[]> => ipcRenderer.invoke('image:selectFile'),
+
+    cleanupUnused: (
+      rootDir: string,
+      noteBaseName: string,
+      markdownContent: string
+    ): Promise<CleanupResult> =>
+      ipcRenderer.invoke(
+        'image:cleanupUnused',
+        rootDir,
+        noteBaseName,
+        markdownContent
+      ),
+
+    deleteNoteImages: (
+      rootDir: string,
+      noteBaseName: string
+    ): Promise<CleanupResult> =>
+      ipcRenderer.invoke('image:deleteNoteImages', rootDir, noteBaseName),
   },
 
   // Shell関連のAPI

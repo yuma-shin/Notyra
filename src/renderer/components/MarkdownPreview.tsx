@@ -4,6 +4,7 @@ import { useMarkdownProcessing } from '@/renderer/hooks/useMarkdownProcessing'
 import { useCodeCopyHandler } from '@/renderer/hooks/useCodeCopyHandler'
 import { useCheckboxHandler } from '@/renderer/hooks/useCheckboxHandler'
 import { useLinkHandler } from '@/renderer/hooks/useLinkHandler'
+import { useImageLightbox } from '@/renderer/hooks/useImageLightbox'
 import 'github-markdown-css/github-markdown-light.css'
 import 'github-markdown-css/github-markdown-dark.css'
 
@@ -16,6 +17,7 @@ interface MarkdownPreviewProps {
     clientHeight: number
   ) => void
   onChange?: (content: string) => void
+  noteDir?: string
 }
 
 export function MarkdownPreview({
@@ -23,15 +25,17 @@ export function MarkdownPreview({
   scrollRef,
   onScroll,
   onChange,
+  noteDir,
 }: MarkdownPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   // Custom hooks
-  const html = useMarkdownProcessing(content)
+  const html = useMarkdownProcessing(content, noteDir)
   useCodeCopyHandler(html, contentRef)
   useCheckboxHandler(content, contentRef, onChange)
   useLinkHandler(html, contentRef)
+  const { lightboxSrc, closeLightbox } = useImageLightbox(html, contentRef)
 
   // highlight.jsのテーマを動的に読み込む
   useEffect(() => {
@@ -110,6 +114,21 @@ export function MarkdownPreview({
             : 'light',
         }}
       />
+
+      {lightboxSrc && (
+        <button
+          aria-label="拡大画像を閉じる"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-zoom-out"
+          onClick={closeLightbox}
+          type="button"
+        >
+          <img
+            alt="拡大画像"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            src={lightboxSrc}
+          />
+        </button>
+      )}
     </div>
   )
 }

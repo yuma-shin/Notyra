@@ -35,6 +35,25 @@ export function createMockWindowApp(): Window['App'] {
         Promise.resolve(true),
       ),
     },
+    image: {
+      saveFromFile: vi.fn(
+        (_rootDir: string, _noteBaseName: string, _sourceFilePath: string) =>
+          Promise.resolve({ success: true, relativePath: 'images/test_001.png' }),
+      ),
+      saveFromBuffer: vi.fn(
+        (_rootDir: string, _noteBaseName: string, _buffer: ArrayBuffer, _extension: string) =>
+          Promise.resolve({ success: true, relativePath: 'images/test_001.png' }),
+      ),
+      selectFile: vi.fn(() => Promise.resolve([])),
+      cleanupUnused: vi.fn(
+        (_rootDir: string, _noteBaseName: string, _markdownContent: string) =>
+          Promise.resolve({ success: true, deletedFiles: [], errors: [] }),
+      ),
+      deleteNoteImages: vi.fn(
+        (_rootDir: string, _noteBaseName: string) =>
+          Promise.resolve({ success: true, deletedFiles: [], errors: [] }),
+      ),
+    },
     shell: {
       openExternal: vi.fn((_url: string) => Promise.resolve()),
     },

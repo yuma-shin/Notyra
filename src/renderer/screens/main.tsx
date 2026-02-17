@@ -96,7 +96,8 @@ export function MainScreen() {
 
       const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
       setFolderTree(tree)
-      const targetFolder = folderPath !== undefined ? folderPath : selectedFolder
+      const targetFolder =
+        folderPath !== undefined ? folderPath : selectedFolder
 
       // 指定されたフォルダまたはselectedFolderに基づいてフィルタリング
       // ただし現在の表示が「すべてのノート」の場合はそのまま全件を表示する
@@ -108,7 +109,8 @@ export function MainScreen() {
           if (targetFolder === '') {
             // ルートフォルダの場合は直下のノートのみ
             const dir =
-              note.relativePath.includes('/') || note.relativePath.includes('\\')
+              note.relativePath.includes('/') ||
+              note.relativePath.includes('\\')
                 ? note.relativePath.substring(
                     0,
                     Math.max(
@@ -461,6 +463,7 @@ export function MainScreen() {
                   lastSaveTimeRef.current = Date.now()
                   setIsSaving(false)
                   saveTimeoutRef.current = undefined
+
                   return
                 }
               }
@@ -773,6 +776,16 @@ export function MainScreen() {
         const note = deleteTarget.data as MarkdownNoteMeta
         const success = await App.markdown.deleteNote(note.filePath)
         if (success) {
+          // ノートに紐づく画像を削除
+          const noteBaseName =
+            note.filePath.replace(/\.md$/i, '').split(/[/\\]/).pop() || ''
+          if (noteBaseName) {
+            App.image
+              .deleteNoteImages(settings.rootDir, noteBaseName)
+              .catch((err: unknown) =>
+                console.error('Failed to delete note images:', err)
+              )
+          }
           // 削除されたノートが選択中の場合はクリア
           if (selectedNote?.filePath === note.filePath) {
             setSelectedNote(null)
@@ -970,6 +983,7 @@ export function MainScreen() {
                 onNoteMove={handleNoteMove}
                 onToggleNoteList={toggleNoteList}
                 onToggleSidebar={toggleSidebar}
+                rootDir={settings.rootDir}
                 showNoteList={showNoteList}
                 showSidebar={showSidebar}
               />
