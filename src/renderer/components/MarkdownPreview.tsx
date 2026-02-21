@@ -90,7 +90,9 @@ export function MarkdownPreview({
     contentRef.current.innerHTML = html
 
     // Mermaid 図を描画
-    const placeholders = contentRef.current.querySelectorAll<HTMLElement>('.mermaid-placeholder')
+    const placeholders = contentRef.current.querySelectorAll<HTMLElement>(
+      '.mermaid-placeholder'
+    )
     if (placeholders.length === 0) return
 
     const isDark = document.documentElement.classList.contains('dark')

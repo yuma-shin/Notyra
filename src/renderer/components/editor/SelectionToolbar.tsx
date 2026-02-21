@@ -41,15 +41,20 @@ export function SelectionToolbar({
   const [showColorPalette, setShowColorPalette] = useState(false)
   const [showAlertPalette, setShowAlertPalette] = useState(false)
 
-  const btn = 'p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
-  const sep = <div className="w-px h-6 bg-gray-200 dark:bg-gray-600 self-center" />
+  const btn =
+    'p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
+  const sep = (
+    <div className="w-px h-6 bg-gray-200 dark:bg-gray-600 self-center" />
+  )
 
   const handleColorApply = (color: string) => {
     setShowColorPalette(false)
     onApplyColor(color)
   }
 
-  const handleAlertApply = (type: 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION') => {
+  const handleAlertApply = (
+    type: 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION'
+  ) => {
     setShowAlertPalette(false)
     onApplyAlert(type)
   }
@@ -72,50 +77,96 @@ export function SelectionToolbar({
       role="toolbar"
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
     >
-      <button className={btn} onClick={() => onApplyFormat('**')} title="太字" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('**')}
+        title="太字"
+        type="button"
+      >
         <GoBold size={16} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('*')} title="斜体" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('*')}
+        title="斜体"
+        type="button"
+      >
         <GoItalic size={16} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('`')} title="コード" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('`')}
+        title="コード"
+        type="button"
+      >
         <GoCodeSquare size={16} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('~~')} title="取り消し線" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('~~')}
+        title="取り消し線"
+        type="button"
+      >
         <GoStrikethrough size={16} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('[', '](url)')} title="リンク" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('[', '](url)')}
+        title="リンク"
+        type="button"
+      >
         <GoLink size={16} />
       </button>
       {sep}
       <button className={btn} onClick={onApplyQuote} title="引用" type="button">
         <GoQuote size={16} />
       </button>
-      <button className={btn} onClick={onApplyCheckbox} title="チェックボックス" type="button">
+      <button
+        className={btn}
+        onClick={onApplyCheckbox}
+        title="チェックボックス"
+        type="button"
+      >
         <GoTasklist size={16} />
       </button>
-      <button className={btn} onClick={() => onApplyList('bullet')} title="箇条書きリスト" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyList('bullet')}
+        title="箇条書きリスト"
+        type="button"
+      >
         <GoListUnordered size={16} />
       </button>
-      <button className={btn} onClick={() => onApplyList('ordered')} title="番号付きリスト" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyList('ordered')}
+        title="番号付きリスト"
+        type="button"
+      >
         <GoListOrdered size={16} />
       </button>
       {sep}
       <div className="relative self-center">
-        <button className={btn} onClick={toggleColor} title="文字色" type="button">
+        <button
+          className={btn}
+          onClick={toggleColor}
+          title="文字色"
+          type="button"
+        >
           <FiDroplet size={15} />
         </button>
-        {showColorPalette && (
-          <ColorPalette onApplyColor={handleColorApply} />
-        )}
+        {showColorPalette && <ColorPalette onApplyColor={handleColorApply} />}
       </div>
       <div className="relative self-center">
-        <button className={btn} onClick={toggleAlert} title="アラート" type="button">
+        <button
+          className={btn}
+          onClick={toggleAlert}
+          title="アラート"
+          type="button"
+        >
           <GoInfo size={15} />
         </button>
-        {showAlertPalette && (
-          <AlertPalette onApplyAlert={handleAlertApply} />
-        )}
+        {showAlertPalette && <AlertPalette onApplyAlert={handleAlertApply} />}
       </div>
     </div>
   )
@@ -175,7 +226,11 @@ function AlertPalette({ onApplyAlert }: AlertPaletteProps) {
   const alerts = [
     { type: 'NOTE' as const, label: '📘 Note', color: 'bg-blue-500' },
     { type: 'TIP' as const, label: '💡 Tip', color: 'bg-green-500' },
-    { type: 'IMPORTANT' as const, label: '⚠️ Important', color: 'bg-purple-500' },
+    {
+      type: 'IMPORTANT' as const,
+      label: '⚠️ Important',
+      color: 'bg-purple-500',
+    },
     { type: 'WARNING' as const, label: '⚡ Warning', color: 'bg-yellow-500' },
     { type: 'CAUTION' as const, label: '🚨 Caution', color: 'bg-red-500' },
   ]

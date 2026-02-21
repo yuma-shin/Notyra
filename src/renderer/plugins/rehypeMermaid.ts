@@ -23,7 +23,7 @@ export function rehypeMermaid() {
       // Extract raw diagram text from the code element
       const text = codeEl.children
         .filter((c): c is Text => c.type === 'text')
-        .map((c) => c.value)
+        .map(c => c.value)
         .join('')
         .trim()
 

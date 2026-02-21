@@ -56,8 +56,11 @@ export function MarkdownToolbar({
   onApplyColor,
   onApplyAlert,
 }: MarkdownToolbarProps) {
-  const btn = 'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
-  const sep = <div className="w-px h-5 bg-gray-200 dark:bg-gray-600 self-center mx-0.5" />
+  const btn =
+    'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
+  const sep = (
+    <div className="w-px h-5 bg-gray-200 dark:bg-gray-600 self-center mx-0.5" />
+  )
 
   return (
     <div
@@ -67,7 +70,12 @@ export function MarkdownToolbar({
     >
       {/* Heading */}
       <div className="relative self-center">
-        <button className={btn} onClick={onToggleHeadingPalette} title="見出し" type="button">
+        <button
+          className={btn}
+          onClick={onToggleHeadingPalette}
+          title="見出し"
+          type="button"
+        >
           <GoHeading size={15} />
         </button>
         {showHeadingPalette && (
@@ -78,19 +86,44 @@ export function MarkdownToolbar({
       {sep}
 
       {/* Inline formats */}
-      <button className={btn} onClick={() => onApplyFormat('**')} title="太字" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('**')}
+        title="太字"
+        type="button"
+      >
         <GoBold size={15} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('*')} title="斜体" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('*')}
+        title="斜体"
+        type="button"
+      >
         <GoItalic size={15} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('`')} title="コード" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('`')}
+        title="コード"
+        type="button"
+      >
         <GoCodeSquare size={15} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('~~')} title="取り消し線" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('~~')}
+        title="取り消し線"
+        type="button"
+      >
         <GoStrikethrough size={15} />
       </button>
-      <button className={btn} onClick={() => onApplyFormat('[', '](url)')} title="リンク" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyFormat('[', '](url)')}
+        title="リンク"
+        type="button"
+      >
         <GoLink size={15} />
       </button>
 
@@ -100,46 +133,70 @@ export function MarkdownToolbar({
       <button className={btn} onClick={onApplyQuote} title="引用" type="button">
         <GoQuote size={15} />
       </button>
-      <button className={btn} onClick={onApplyCheckbox} title="チェックボックス" type="button">
+      <button
+        className={btn}
+        onClick={onApplyCheckbox}
+        title="チェックボックス"
+        type="button"
+      >
         <GoTasklist size={15} />
       </button>
-      <button className={btn} onClick={() => onApplyList('bullet')} title="箇条書きリスト" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyList('bullet')}
+        title="箇条書きリスト"
+        type="button"
+      >
         <GoListUnordered size={15} />
       </button>
-      <button className={btn} onClick={() => onApplyList('ordered')} title="番号付きリスト" type="button">
+      <button
+        className={btn}
+        onClick={() => onApplyList('ordered')}
+        title="番号付きリスト"
+        type="button"
+      >
         <GoListOrdered size={15} />
       </button>
 
       {/* Table */}
       <div className="relative self-center">
-        <button className={btn} onClick={onToggleTablePicker} title="テーブル" type="button">
+        <button
+          className={btn}
+          onClick={onToggleTablePicker}
+          title="テーブル"
+          type="button"
+        >
           <GoTable size={15} />
         </button>
-        {showTablePicker && (
-          <TablePicker onApplyTable={onApplyTable} />
-        )}
+        {showTablePicker && <TablePicker onApplyTable={onApplyTable} />}
       </div>
 
       {sep}
 
       {/* Color */}
       <div className="relative self-center">
-        <button className={btn} onClick={onToggleColorPalette} title="文字色" type="button">
+        <button
+          className={btn}
+          onClick={onToggleColorPalette}
+          title="文字色"
+          type="button"
+        >
           <FiDroplet size={15} />
         </button>
-        {showColorPalette && (
-          <ColorPalette onApplyColor={onApplyColor} />
-        )}
+        {showColorPalette && <ColorPalette onApplyColor={onApplyColor} />}
       </div>
 
       {/* Alert */}
       <div className="relative self-center">
-        <button className={btn} onClick={onToggleAlertPalette} title="アラート" type="button">
+        <button
+          className={btn}
+          onClick={onToggleAlertPalette}
+          title="アラート"
+          type="button"
+        >
           <GoInfo size={15} />
         </button>
-        {showAlertPalette && (
-          <AlertPalette onApplyAlert={onApplyAlert} />
-        )}
+        {showAlertPalette && <AlertPalette onApplyAlert={onApplyAlert} />}
       </div>
     </div>
   )
@@ -171,7 +228,9 @@ function HeadingPalette({ onApplyHeading }: HeadingPaletteProps) {
           title={`見出し${level}`}
           type="button"
         >
-          <span className="text-gray-400 dark:text-gray-500 text-[10px] font-normal w-4">{label}</span>
+          <span className="text-gray-400 dark:text-gray-500 text-[10px] font-normal w-4">
+            {label}
+          </span>
           <span style={{ fontSize: size }}>{`見出し${level}`}</span>
         </button>
       ))}
@@ -185,33 +244,37 @@ interface TablePickerProps {
   onApplyTable: (dataRows: number, cols: number) => void
 }
 
+const TABLE_ROW_KEYS = [0, 1, 2, 3, 4, 5]
+const TABLE_COL_KEYS = [0, 1, 2, 3, 4, 5, 6, 7]
+
 function TablePicker({ onApplyTable }: TablePickerProps) {
   const [hovered, setHovered] = useState({ rows: 0, cols: 0 })
-  const MAX_ROWS = 6
-  const MAX_COLS = 8
 
   return (
-    <div
+    <fieldset
       className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-3 z-50"
       onMouseLeave={() => setHovered({ rows: 0, cols: 0 })}
     >
+      <legend className="sr-only">テーブルサイズを選択</legend>
       <div className="flex flex-col gap-1">
-        {Array.from({ length: MAX_ROWS }, (_, rowIdx) => (
-          <div key={rowIdx} className="flex gap-1">
-            {Array.from({ length: MAX_COLS }, (_, colIdx) => (
+        {TABLE_ROW_KEYS.map(rowIdx => (
+          <div className="flex gap-1" key={rowIdx}>
+            {TABLE_COL_KEYS.map(colIdx => (
               <button
-                key={colIdx}
                 className={`w-5 h-5 border rounded-sm transition-colors ${
                   rowIdx < hovered.rows && colIdx < hovered.cols
                     ? 'bg-blue-400 border-blue-500'
                     : 'bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-500 hover:bg-blue-200 hover:border-blue-400'
                 }`}
-                onMouseEnter={() => setHovered({ rows: rowIdx + 1, cols: colIdx + 1 })}
+                key={`${rowIdx}-${colIdx}`}
                 onClick={() => {
                   if (hovered.rows > 0 && hovered.cols > 0) {
                     onApplyTable(hovered.rows, hovered.cols)
                   }
                 }}
+                onMouseEnter={() =>
+                  setHovered({ rows: rowIdx + 1, cols: colIdx + 1 })
+                }
                 type="button"
               />
             ))}
@@ -223,7 +286,7 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
           ? `${hovered.rows}行 × ${hovered.cols}列`
           : 'サイズを選択'}
       </div>
-    </div>
+    </fieldset>
   )
 }
 
@@ -281,7 +344,11 @@ function AlertPalette({ onApplyAlert }: AlertPaletteProps) {
   const alerts = [
     { type: 'NOTE' as const, label: '📘 Note', color: 'bg-blue-500' },
     { type: 'TIP' as const, label: '💡 Tip', color: 'bg-green-500' },
-    { type: 'IMPORTANT' as const, label: '⚠️ Important', color: 'bg-purple-500' },
+    {
+      type: 'IMPORTANT' as const,
+      label: '⚠️ Important',
+      color: 'bg-purple-500',
+    },
     { type: 'WARNING' as const, label: '⚡ Warning', color: 'bg-yellow-500' },
     { type: 'CAUTION' as const, label: '🚨 Caution', color: 'bg-red-500' },
   ]

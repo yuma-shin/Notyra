@@ -75,8 +75,16 @@ export function useTextSelection() {
         // フォーマット解除
         view.dispatch({
           changes: [
-            { from: selection.from - prefix.length, to: selection.from, insert: '' },
-            { from: selection.to, to: selection.to + suffix.length, insert: '' },
+            {
+              from: selection.from - prefix.length,
+              to: selection.from,
+              insert: '',
+            },
+            {
+              from: selection.to,
+              to: selection.to + suffix.length,
+              insert: '',
+            },
           ],
           selection: {
             anchor: selection.from - prefix.length,
@@ -87,7 +95,11 @@ export function useTextSelection() {
         // フォーマット適用
         const formatted = `${prefix}${text}${suffix}`
         view.dispatch({
-          changes: { from: selection.from, to: selection.to, insert: formatted },
+          changes: {
+            from: selection.from,
+            to: selection.to,
+            insert: formatted,
+          },
           selection: {
             anchor: selection.from + prefix.length,
             head: selection.to + prefix.length,
@@ -144,14 +156,25 @@ export function useTextSelection() {
         // 選択なし: テンプレートを挿入
         formatted = `> [!${type}]\n> `
         view.dispatch({
-          changes: { from: selection.from, to: selection.from, insert: formatted },
+          changes: {
+            from: selection.from,
+            to: selection.from,
+            insert: formatted,
+          },
           selection: { anchor: selection.from + formatted.length },
         })
       } else {
         formatted = `> [!${type}]\n> ${text.split('\n').join('\n> ')}`
         view.dispatch({
-          changes: { from: selection.from, to: selection.to, insert: formatted },
-          selection: { anchor: selection.from, head: selection.from + formatted.length },
+          changes: {
+            from: selection.from,
+            to: selection.to,
+            insert: formatted,
+          },
+          selection: {
+            anchor: selection.from,
+            head: selection.from + formatted.length,
+          },
         })
       }
 
@@ -234,7 +257,10 @@ export function useTextSelection() {
       const result = transformed.join('\n')
       view.dispatch({
         changes: { from: selection.from, to: selection.to, insert: result },
-        selection: { anchor: selection.from, head: selection.from + result.length },
+        selection: {
+          anchor: selection.from,
+          head: selection.from + result.length,
+        },
       })
 
       onComplete?.()
@@ -291,7 +317,10 @@ export function useTextSelection() {
       const result = transformed.join('\n')
       view.dispatch({
         changes: { from: selection.from, to: selection.to, insert: result },
-        selection: { anchor: selection.from, head: selection.from + result.length },
+        selection: {
+          anchor: selection.from,
+          head: selection.from + result.length,
+        },
       })
       onComplete?.()
       view.focus()
@@ -313,7 +342,9 @@ export function useTextSelection() {
         const line = view.state.doc.lineAt(selection.from)
         const lineText = line.text
         const alreadyPrefixed = lineText.startsWith(prefix)
-        const newText = alreadyPrefixed ? lineText.slice(prefix.length) : `${prefix}${lineText}`
+        const newText = alreadyPrefixed
+          ? lineText.slice(prefix.length)
+          : `${prefix}${lineText}`
         view.dispatch({
           changes: { from: line.from, to: line.to, insert: newText },
           selection: { anchor: line.from + newText.length },
@@ -338,7 +369,10 @@ export function useTextSelection() {
       const result = transformed.join('\n')
       view.dispatch({
         changes: { from: selection.from, to: selection.to, insert: result },
-        selection: { anchor: selection.from, head: selection.from + result.length },
+        selection: {
+          anchor: selection.from,
+          head: selection.from + result.length,
+        },
       })
       onComplete?.()
       view.focus()
@@ -390,7 +424,10 @@ export function useTextSelection() {
       const result = transformed.join('\n')
       view.dispatch({
         changes: { from: selection.from, to: selection.to, insert: result },
-        selection: { anchor: selection.from, head: selection.from + result.length },
+        selection: {
+          anchor: selection.from,
+          head: selection.from + result.length,
+        },
       })
       onComplete?.()
       view.focus()

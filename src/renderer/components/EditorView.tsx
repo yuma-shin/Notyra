@@ -88,7 +88,10 @@ export function EditorView({
   const [showHeadingPalette, setShowHeadingPalette] = useState(false)
   const [showTablePicker, setShowTablePicker] = useState(false)
   const [showSelectionToolbar, setShowSelectionToolbar] = useState(false)
-  const [selectionToolbarPos, setSelectionToolbarPos] = useState({ top: 0, left: 0 })
+  const [selectionToolbarPos, setSelectionToolbarPos] = useState({
+    top: 0,
+    left: 0,
+  })
 
   // Custom hooks
   const { splitPosition, isDragging, containerRef, setIsDragging } =
@@ -170,17 +173,14 @@ export function EditorView({
 
     // テキスト選択でフローティングツールバーを表示
     const onSelectionChange = () => {
-      handleTextSelection(
-        editorViewRef.current,
-        (hasSelection, coords) => {
-          if (hasSelection && coords) {
-            setSelectionToolbarPos(coords)
-            setShowSelectionToolbar(true)
-          } else {
-            setShowSelectionToolbar(false)
-          }
+      handleTextSelection(editorViewRef.current, (hasSelection, coords) => {
+        if (hasSelection && coords) {
+          setSelectionToolbarPos(coords)
+          setShowSelectionToolbar(true)
+        } else {
+          setShowSelectionToolbar(false)
         }
-      )
+      })
     }
     view.dom.addEventListener('mouseup', onSelectionChange)
     view.dom.addEventListener('keyup', onSelectionChange)
@@ -263,10 +263,30 @@ export function EditorView({
           onApplyList={handleApplyList}
           onApplyQuote={handleApplyQuote}
           onApplyTable={handleApplyTable}
-          onToggleAlertPalette={() => { setShowColorPalette(false); setShowHeadingPalette(false); setShowTablePicker(false); setShowAlertPalette(v => !v) }}
-          onToggleColorPalette={() => { setShowAlertPalette(false); setShowHeadingPalette(false); setShowTablePicker(false); setShowColorPalette(v => !v) }}
-          onToggleHeadingPalette={() => { setShowColorPalette(false); setShowAlertPalette(false); setShowTablePicker(false); setShowHeadingPalette(v => !v) }}
-          onToggleTablePicker={() => { setShowColorPalette(false); setShowAlertPalette(false); setShowHeadingPalette(false); setShowTablePicker(v => !v) }}
+          onToggleAlertPalette={() => {
+            setShowColorPalette(false)
+            setShowHeadingPalette(false)
+            setShowTablePicker(false)
+            setShowAlertPalette(v => !v)
+          }}
+          onToggleColorPalette={() => {
+            setShowAlertPalette(false)
+            setShowHeadingPalette(false)
+            setShowTablePicker(false)
+            setShowColorPalette(v => !v)
+          }}
+          onToggleHeadingPalette={() => {
+            setShowColorPalette(false)
+            setShowAlertPalette(false)
+            setShowTablePicker(false)
+            setShowHeadingPalette(v => !v)
+          }}
+          onToggleTablePicker={() => {
+            setShowColorPalette(false)
+            setShowAlertPalette(false)
+            setShowHeadingPalette(false)
+            setShowTablePicker(v => !v)
+          }}
           showAlertPalette={showAlertPalette}
           showColorPalette={showColorPalette}
           showHeadingPalette={showHeadingPalette}
