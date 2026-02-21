@@ -158,6 +158,12 @@ export class MarkdownService {
         if (entry.isDirectory()) {
           const fullPath = path.join(currentDir, entry.name)
           const relativePath = path.relative(rootDir, fullPath)
+          const isRootImagesDir =
+            currentDir === rootDir && entry.name === 'images'
+
+          if (isRootImagesDir) {
+            continue
+          }
 
           // 既にマップに存在しない場合のみ作成
           if (!folderMap.has(relativePath)) {
