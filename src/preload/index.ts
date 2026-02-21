@@ -137,6 +137,19 @@ const API = {
       ipcRenderer.invoke('image:deleteNoteImages', rootDir, noteBaseName),
   },
 
+  // エクスポートAPI
+  export: {
+    pdf: (
+      html: string,
+      title: string
+    ): Promise<{
+      success: boolean
+      filePath?: string
+      canceled?: boolean
+      error?: string
+    }> => ipcRenderer.invoke('export:pdf', { html, title }),
+  },
+
   // Shell関連のAPI
   shell: {
     openExternal: (url: string): Promise<boolean> =>

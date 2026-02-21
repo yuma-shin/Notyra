@@ -14,6 +14,7 @@ import {
   GoTasklist,
   GoTable,
 } from 'react-icons/go'
+import { ImagePlus, FileDown } from 'lucide-react'
 
 type ListType = 'bullet' | 'ordered'
 
@@ -36,6 +37,10 @@ interface MarkdownToolbarProps {
   onApplyAlert: (
     type: 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION'
   ) => void
+  onImageInsert?: () => void
+  isImageInserting?: boolean
+  onPdfExport?: () => void
+  isPdfExporting?: boolean
 }
 
 export function MarkdownToolbar({
@@ -55,6 +60,10 @@ export function MarkdownToolbar({
   onToggleTablePicker,
   onApplyColor,
   onApplyAlert,
+  onImageInsert,
+  isImageInserting = false,
+  onPdfExport,
+  isPdfExporting = false,
 }: MarkdownToolbarProps) {
   const btn =
     'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
@@ -198,6 +207,34 @@ export function MarkdownToolbar({
         </button>
         {showAlertPalette && <AlertPalette onApplyAlert={onApplyAlert} />}
       </div>
+
+      {(onImageInsert || onPdfExport) && sep}
+
+      {/* 画像挿入 */}
+      {onImageInsert && (
+        <button
+          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
+          disabled={isImageInserting}
+          onClick={onImageInsert}
+          title="画像を挿入"
+          type="button"
+        >
+          <ImagePlus size={15} />
+        </button>
+      )}
+
+      {/* PDF エクスポート */}
+      {onPdfExport && (
+        <button
+          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
+          disabled={isPdfExporting}
+          onClick={onPdfExport}
+          title={isPdfExporting ? 'エクスポート中...' : 'PDFとしてエクスポート'}
+          type="button"
+        >
+          <FileDown size={15} />
+        </button>
+      )}
     </div>
   )
 }

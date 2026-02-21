@@ -1,6 +1,15 @@
-import { app, ipcMain, shell, BrowserWindow, protocol, net } from 'electron'
+import {
+  app,
+  ipcMain,
+  shell,
+  BrowserWindow,
+  protocol,
+  net,
+  dialog,
+} from 'electron'
 import * as fs from 'node:fs'
 import * as nodePath from 'node:path'
+import * as os from 'node:os'
 import { pathToFileURL } from 'node:url'
 
 import { makeAppWithSingleInstanceLock } from 'lib/electron-app/factories/app/instance'
@@ -385,6 +394,61 @@ function setupIpcHandlers() {
     'image:deleteNoteImages',
     async (_event, rootDir: string, noteBaseName: string) => {
       return await imageService.deleteNoteImages(rootDir, noteBaseName)
+    }
+  )
+
+  // PDFエクスポート
+  ipcMain.handle(
+    'export:pdf',
+    async (_event, { html, title }: { html: string; title: string }) => {
+      const { filePath, canceled } = await dialog.showSaveDialog({
+        defaultPath: `${title}.pdf`,
+        filters: [{ name: 'PDFファイル', extensions: ['pdf'] }],
+      })
+
+      if (canceled || !filePath) return { success: false, canceled: true }
+
+      const pdfWindow = new BrowserWindow({
+        width: 1200,
+        height: 900,
+        show: false,
+        webPreferences: {
+          contextIsolation: true,
+          nodeIntegration: false,
+        },
+      })
+
+      const tmpFile = nodePath.join(
+        os.tmpdir(),
+        `notyra-pdf-${Date.now()}.html`
+      )
+      try {
+        await fs.promises.writeFile(tmpFile, html, 'utf-8')
+        await pdfWindow.loadFile(tmpFile)
+
+        // レンダリング完了まで少し待機
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        const pdfBuffer = await pdfWindow.webContents.printToPDF({
+          pageSize: 'A4',
+          printBackground: true,
+          margins: {
+            marginType: 'custom',
+            top: 0.5,
+            bottom: 0.5,
+            left: 0.5,
+            right: 0.5,
+          },
+        })
+
+        await fs.promises.writeFile(filePath, pdfBuffer)
+        return { success: true, filePath }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      } finally {
+        pdfWindow.destroy()
+        await fs.promises.unlink(tmpFile).catch(() => {})
+      }
     }
   )
 }

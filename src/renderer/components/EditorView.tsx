@@ -15,6 +15,7 @@ import { useTextSelection } from '@/renderer/hooks/useTextSelection'
 import { useEditorScrollSync } from '@/renderer/hooks/useEditorScrollSync'
 import { useSplitView } from '@/renderer/hooks/useSplitView'
 import { useImageInsertion } from '@/renderer/hooks/useImageInsertion'
+import { usePdfExport } from '@/renderer/hooks/usePdfExport'
 import type { AppSettings, MarkdownNoteMeta, FolderNode } from '@/shared/types'
 
 const lineWrapping = CodemirrorEditorView.lineWrapping
@@ -128,6 +129,13 @@ export function EditorView({
       noteBaseName,
       editorViewRef,
     })
+
+  const { exportPdf, isExporting: isPdfExporting } = usePdfExport()
+
+  const handleExportPdf = async () => {
+    const title = noteMeta?.title || noteBaseName || 'untitled'
+    await exportPdf(localContent, rootDir, title)
+  }
 
   useEffect(() => {
     setLocalContent(content)
@@ -255,6 +263,8 @@ export function EditorView({
       {/* 固定ツールバー (プレビューモード以外で表示) */}
       {layoutMode !== 'preview' && (
         <MarkdownToolbar
+          isImageInserting={isInserting}
+          isPdfExporting={isPdfExporting}
           onApplyAlert={handleApplyAlert}
           onApplyCheckbox={handleApplyCheckbox}
           onApplyColor={handleApplyColor}
@@ -263,6 +273,8 @@ export function EditorView({
           onApplyList={handleApplyList}
           onApplyQuote={handleApplyQuote}
           onApplyTable={handleApplyTable}
+          onImageInsert={handleToolbarImageInsert}
+          onPdfExport={handleExportPdf}
           onToggleAlertPalette={() => {
             setShowColorPalette(false)
             setShowHeadingPalette(false)
@@ -402,9 +414,7 @@ export function EditorView({
       )}
 
       <FloatingViewButtons
-        isImageInserting={isInserting}
         layoutMode={layoutMode}
-        onImageInsert={handleToolbarImageInsert}
         onLayoutModeChange={onLayoutModeChange}
       />
     </div>
