@@ -9,6 +9,7 @@ import { languages } from '@codemirror/language-data'
 import { MarkdownPreview } from './MarkdownPreview'
 import { MetadataEditor } from './MetadataEditor'
 import { MarkdownToolbar } from './editor/MarkdownToolbar'
+import { SelectionToolbar } from './editor/SelectionToolbar'
 import { FloatingViewButtons } from './editor/FloatingViewButtons'
 import { useTextSelection } from '@/renderer/hooks/useTextSelection'
 import { useEditorScrollSync } from '@/renderer/hooks/useEditorScrollSync'
@@ -82,11 +83,12 @@ export function EditorView({
   const editorViewRef = useRef<CodemirrorEditorView | null>(null)
   const editorScrollRef = useRef<HTMLDivElement | null>(null)
   const previewScrollRef = useRef<HTMLDivElement | null>(null)
-  const [showToolbar, setShowToolbar] = useState(false)
-  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 })
   const [showColorPalette, setShowColorPalette] = useState(false)
   const [showAlertPalette, setShowAlertPalette] = useState(false)
-  const [paletteOpenUpward, setPaletteOpenUpward] = useState(false)
+  const [showHeadingPalette, setShowHeadingPalette] = useState(false)
+  const [showTablePicker, setShowTablePicker] = useState(false)
+  const [showSelectionToolbar, setShowSelectionToolbar] = useState(false)
+  const [selectionToolbarPos, setSelectionToolbarPos] = useState({ top: 0, left: 0 })
 
   // Custom hooks
   const { splitPosition, isDragging, containerRef, setIsDragging } =
@@ -102,6 +104,10 @@ export function EditorView({
     applyColor,
     applyAlert,
     applyList,
+    applyHeading,
+    applyQuote,
+    applyCheckbox,
+    applyTable,
   } = useTextSelection()
 
   // Derive noteBaseName from noteMeta filePath (filename without extension)
@@ -148,65 +154,70 @@ export function EditorView({
     onChange(value)
   }
 
+  const closeAllPalettes = () => {
+    setShowColorPalette(false)
+    setShowAlertPalette(false)
+    setShowHeadingPalette(false)
+    setShowTablePicker(false)
+  }
+
   // エディタインスタンスを保存
   const handleEditorCreate = (view: CodemirrorEditorView) => {
     editorViewRef.current = view
 
-    const textSelectionHandler = () => {
+    // エディタをクリックしたらパレットをすべて閉じる
+    view.dom.addEventListener('mousedown', closeAllPalettes)
+
+    // テキスト選択でフローティングツールバーを表示
+    const onSelectionChange = () => {
       handleTextSelection(
         editorViewRef.current,
-        (hasSelection, coords, spaceBelow) => {
-          if (hasSelection && coords && spaceBelow !== undefined) {
-            setShowColorPalette(false)
-            setShowAlertPalette(false)
-            setPaletteOpenUpward(spaceBelow < 400)
-            setToolbarPosition(coords)
-            setShowToolbar(true)
+        (hasSelection, coords) => {
+          if (hasSelection && coords) {
+            setSelectionToolbarPos(coords)
+            setShowSelectionToolbar(true)
           } else {
-            setShowToolbar(false)
-            setShowColorPalette(false)
-            setShowAlertPalette(false)
+            setShowSelectionToolbar(false)
           }
         }
       )
     }
-
-    view.dom.addEventListener('mouseup', textSelectionHandler)
-    view.dom.addEventListener('keyup', textSelectionHandler)
+    view.dom.addEventListener('mouseup', onSelectionChange)
+    view.dom.addEventListener('keyup', onSelectionChange)
   }
 
   const handleApplyFormat = (prefix: string, suffix?: string) => {
-    applyFormat(editorViewRef.current, prefix, suffix, () => {
-      setShowToolbar(false)
-      setShowColorPalette(false)
-      setShowAlertPalette(false)
-    })
+    applyFormat(editorViewRef.current, prefix, suffix, closeAllPalettes)
   }
 
   const handleApplyColor = (color: string) => {
-    applyColor(editorViewRef.current, color, () => {
-      setShowToolbar(false)
-      setShowColorPalette(false)
-      setShowAlertPalette(false)
-    })
+    applyColor(editorViewRef.current, color, closeAllPalettes)
   }
 
   const handleApplyAlert = (
     type: 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION'
   ) => {
-    applyAlert(editorViewRef.current, type, () => {
-      setShowToolbar(false)
-      setShowColorPalette(false)
-      setShowAlertPalette(false)
-    })
+    applyAlert(editorViewRef.current, type, closeAllPalettes)
   }
 
   const handleApplyList = (type: 'bullet' | 'ordered') => {
-    applyList(editorViewRef.current, type, () => {
-      setShowToolbar(false)
-      setShowColorPalette(false)
-      setShowAlertPalette(false)
-    })
+    applyList(editorViewRef.current, type, closeAllPalettes)
+  }
+
+  const handleApplyHeading = (level: 1 | 2 | 3 | 4 | 5 | 6) => {
+    applyHeading(editorViewRef.current, level, closeAllPalettes)
+  }
+
+  const handleApplyQuote = () => {
+    applyQuote(editorViewRef.current, closeAllPalettes)
+  }
+
+  const handleApplyCheckbox = () => {
+    applyCheckbox(editorViewRef.current, closeAllPalettes)
+  }
+
+  const handleApplyTable = (dataRows: number, cols: number) => {
+    applyTable(editorViewRef.current, dataRows, cols, closeAllPalettes)
   }
 
   return (
@@ -238,6 +249,28 @@ export function EditorView({
           }
           tags={noteMeta.tags || []}
           title={noteMeta.title}
+        />
+      )}
+
+      {/* 固定ツールバー (プレビューモード以外で表示) */}
+      {layoutMode !== 'preview' && (
+        <MarkdownToolbar
+          onApplyAlert={handleApplyAlert}
+          onApplyCheckbox={handleApplyCheckbox}
+          onApplyColor={handleApplyColor}
+          onApplyFormat={handleApplyFormat}
+          onApplyHeading={handleApplyHeading}
+          onApplyList={handleApplyList}
+          onApplyQuote={handleApplyQuote}
+          onApplyTable={handleApplyTable}
+          onToggleAlertPalette={() => { setShowColorPalette(false); setShowHeadingPalette(false); setShowTablePicker(false); setShowAlertPalette(v => !v) }}
+          onToggleColorPalette={() => { setShowAlertPalette(false); setShowHeadingPalette(false); setShowTablePicker(false); setShowColorPalette(v => !v) }}
+          onToggleHeadingPalette={() => { setShowColorPalette(false); setShowAlertPalette(false); setShowTablePicker(false); setShowHeadingPalette(v => !v) }}
+          onToggleTablePicker={() => { setShowColorPalette(false); setShowAlertPalette(false); setShowHeadingPalette(false); setShowTablePicker(v => !v) }}
+          showAlertPalette={showAlertPalette}
+          showColorPalette={showColorPalette}
+          showHeadingPalette={showHeadingPalette}
+          showTablePicker={showTablePicker}
         />
       )}
 
@@ -336,18 +369,15 @@ export function EditorView({
         )}
       </div>
 
-      {showToolbar && (
-        <MarkdownToolbar
+      {showSelectionToolbar && (
+        <SelectionToolbar
           onApplyAlert={handleApplyAlert}
+          onApplyCheckbox={handleApplyCheckbox}
           onApplyColor={handleApplyColor}
           onApplyFormat={handleApplyFormat}
           onApplyList={handleApplyList}
-          onToggleAlertPalette={() => setShowAlertPalette(!showAlertPalette)}
-          onToggleColorPalette={() => setShowColorPalette(!showColorPalette)}
-          paletteOpenUpward={paletteOpenUpward}
-          position={toolbarPosition}
-          showAlertPalette={showAlertPalette}
-          showColorPalette={showColorPalette}
+          onApplyQuote={handleApplyQuote}
+          position={selectionToolbarPos}
         />
       )}
 

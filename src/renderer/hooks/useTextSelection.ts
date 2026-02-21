@@ -49,9 +49,19 @@ export function useTextSelection() {
       const selection = view.state.selection.main
       const text = view.state.sliceDoc(selection.from, selection.to)
 
-      if (!text) return
+      if (!text) {
+        // 選択なし: カーソル位置にマーカーを挿入しカーソルを内側に置く
+        const insert = `${prefix}${suffix}`
+        view.dispatch({
+          changes: { from: selection.from, to: selection.from, insert },
+          selection: { anchor: selection.from + prefix.length },
+        })
+        onComplete?.()
+        view.focus()
+        return
+      }
 
-      // Check if already formatted
+      // 既にフォーマット済みか確認
       const beforeText = view.state.sliceDoc(
         Math.max(0, selection.from - prefix.length),
         selection.from
@@ -62,19 +72,11 @@ export function useTextSelection() {
       )
 
       if (beforeText === prefix && afterText === suffix) {
-        // Remove formatting
+        // フォーマット解除
         view.dispatch({
           changes: [
-            {
-              from: selection.from - prefix.length,
-              to: selection.from,
-              insert: '',
-            },
-            {
-              from: selection.to,
-              to: selection.to + suffix.length,
-              insert: '',
-            },
+            { from: selection.from - prefix.length, to: selection.from, insert: '' },
+            { from: selection.to, to: selection.to + suffix.length, insert: '' },
           ],
           selection: {
             anchor: selection.from - prefix.length,
@@ -82,15 +84,10 @@ export function useTextSelection() {
           },
         })
       } else {
-        // Add formatting
+        // フォーマット適用
         const formatted = `${prefix}${text}${suffix}`
-
         view.dispatch({
-          changes: {
-            from: selection.from,
-            to: selection.to,
-            insert: formatted,
-          },
+          changes: { from: selection.from, to: selection.to, insert: formatted },
           selection: {
             anchor: selection.from + prefix.length,
             head: selection.to + prefix.length,
@@ -117,11 +114,7 @@ export function useTextSelection() {
       const formatted = `<span style="color: ${color};">${text}</span>`
 
       view.dispatch({
-        changes: {
-          from: selection.from,
-          to: selection.to,
-          insert: formatted,
-        },
+        changes: { from: selection.from, to: selection.to, insert: formatted },
         selection: {
           anchor: selection.from,
           head: selection.from + formatted.length,
@@ -146,21 +139,21 @@ export function useTextSelection() {
       const selection = view.state.selection.main
       const text = view.state.sliceDoc(selection.from, selection.to)
 
-      if (!text) return
-
-      const formatted = `> [!${type}]\n> ${text.split('\n').join('\n> ')}`
-
-      view.dispatch({
-        changes: {
-          from: selection.from,
-          to: selection.to,
-          insert: formatted,
-        },
-        selection: {
-          anchor: selection.from,
-          head: selection.from + formatted.length,
-        },
-      })
+      let formatted: string
+      if (!text) {
+        // 選択なし: テンプレートを挿入
+        formatted = `> [!${type}]\n> `
+        view.dispatch({
+          changes: { from: selection.from, to: selection.from, insert: formatted },
+          selection: { anchor: selection.from + formatted.length },
+        })
+      } else {
+        formatted = `> [!${type}]\n> ${text.split('\n').join('\n> ')}`
+        view.dispatch({
+          changes: { from: selection.from, to: selection.to, insert: formatted },
+          selection: { anchor: selection.from, head: selection.from + formatted.length },
+        })
+      }
 
       onComplete?.()
       view.focus()
@@ -180,11 +173,30 @@ export function useTextSelection() {
       const selection = view.state.selection.main
       const text = view.state.sliceDoc(selection.from, selection.to)
 
-      if (!text) return
+      if (!text) {
+        // 選択なし: 現在行に適用
+        const line = view.state.doc.lineAt(selection.from)
+        const lineText = line.text
+        let newText: string
+        if (type === 'bullet') {
+          newText = /^- /.test(lineText)
+            ? lineText.slice(2)
+            : `- ${lineText.replace(/^(- |\d+\. )/, '')}`
+        } else {
+          newText = /^\d+\. /.test(lineText)
+            ? lineText.replace(/^\d+\. /, '')
+            : `1. ${lineText.replace(/^(- |\d+\. )/, '')}`
+        }
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newText },
+          selection: { anchor: line.from + newText.length },
+        })
+        onComplete?.()
+        view.focus()
+        return
+      }
 
       const lines = text.split('\n')
-
-      // Analyze each line
       const nonEmptyLines = lines.filter(line => !/^\s*$/.test(line))
       const allBullet =
         nonEmptyLines.length > 0 &&
@@ -196,24 +208,20 @@ export function useTextSelection() {
       let transformed: string[]
 
       if (type === 'bullet' && allBullet) {
-        // Toggle off: remove bullet prefix
         transformed = lines.map(line =>
           /^- /.test(line) ? line.slice(2) : line
         )
       } else if (type === 'ordered' && allOrdered) {
-        // Toggle off: remove ordered prefix
         transformed = lines.map(line =>
           /^\d+\. /.test(line) ? line.replace(/^\d+\. /, '') : line
         )
       } else if (type === 'bullet') {
-        // Apply bullet: strip any existing list prefix, add `- `
         transformed = lines.map(line => {
           if (/^\s*$/.test(line)) return line
           const content = line.replace(/^(- |\d+\. )/, '')
           return `- ${content}`
         })
       } else {
-        // Apply ordered: strip any existing list prefix, add `N. `
         let counter = 0
         transformed = lines.map(line => {
           if (/^\s*$/.test(line)) return line
@@ -224,17 +232,193 @@ export function useTextSelection() {
       }
 
       const result = transformed.join('\n')
+      view.dispatch({
+        changes: { from: selection.from, to: selection.to, insert: result },
+        selection: { anchor: selection.from, head: selection.from + result.length },
+      })
+
+      onComplete?.()
+      view.focus()
+    },
+    []
+  )
+
+  const applyHeading = useCallback(
+    (
+      editorView: EditorView | null,
+      level: 1 | 2 | 3 | 4 | 5 | 6,
+      onComplete?: () => void
+    ) => {
+      if (!editorView) return
+      const view = editorView
+      const selection = view.state.selection.main
+      const text = view.state.sliceDoc(selection.from, selection.to)
+
+      const prefix = `${'#'.repeat(level)} `
+
+      if (!text) {
+        // 選択なし: 現在行に適用
+        const line = view.state.doc.lineAt(selection.from)
+        const lineText = line.text
+        const alreadyPrefixed = lineText.startsWith(prefix)
+        const newText = alreadyPrefixed
+          ? lineText.slice(prefix.length)
+          : `${prefix}${lineText.replace(/^#{1,6} /, '')}`
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newText },
+          selection: { anchor: line.from + newText.length },
+        })
+        onComplete?.()
+        view.focus()
+        return
+      }
+
+      const lines = text.split('\n')
+      const nonEmptyLines = lines.filter(line => !/^\s*$/.test(line))
+      const allPrefixed =
+        nonEmptyLines.length > 0 &&
+        nonEmptyLines.every(line => line.startsWith(prefix))
+
+      const transformed = allPrefixed
+        ? lines.map(line =>
+            line.startsWith(prefix) ? line.slice(prefix.length) : line
+          )
+        : lines.map(line => {
+            if (/^\s*$/.test(line)) return line
+            return `${prefix}${line.replace(/^#{1,6} /, '')}`
+          })
+
+      const result = transformed.join('\n')
+      view.dispatch({
+        changes: { from: selection.from, to: selection.to, insert: result },
+        selection: { anchor: selection.from, head: selection.from + result.length },
+      })
+      onComplete?.()
+      view.focus()
+    },
+    []
+  )
+
+  const applyQuote = useCallback(
+    (editorView: EditorView | null, onComplete?: () => void) => {
+      if (!editorView) return
+      const view = editorView
+      const selection = view.state.selection.main
+      const text = view.state.sliceDoc(selection.from, selection.to)
+
+      const prefix = '> '
+
+      if (!text) {
+        // 選択なし: 現在行に適用
+        const line = view.state.doc.lineAt(selection.from)
+        const lineText = line.text
+        const alreadyPrefixed = lineText.startsWith(prefix)
+        const newText = alreadyPrefixed ? lineText.slice(prefix.length) : `${prefix}${lineText}`
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newText },
+          selection: { anchor: line.from + newText.length },
+        })
+        onComplete?.()
+        view.focus()
+        return
+      }
+
+      const lines = text.split('\n')
+      const nonEmptyLines = lines.filter(line => !/^\s*$/.test(line))
+      const allPrefixed =
+        nonEmptyLines.length > 0 &&
+        nonEmptyLines.every(line => line.startsWith(prefix))
+
+      const transformed = allPrefixed
+        ? lines.map(line =>
+            line.startsWith(prefix) ? line.slice(prefix.length) : line
+          )
+        : lines.map(line => (/^\s*$/.test(line) ? line : `${prefix}${line}`))
+
+      const result = transformed.join('\n')
+      view.dispatch({
+        changes: { from: selection.from, to: selection.to, insert: result },
+        selection: { anchor: selection.from, head: selection.from + result.length },
+      })
+      onComplete?.()
+      view.focus()
+    },
+    []
+  )
+
+  const applyCheckbox = useCallback(
+    (editorView: EditorView | null, onComplete?: () => void) => {
+      if (!editorView) return
+      const view = editorView
+      const selection = view.state.selection.main
+      const text = view.state.sliceDoc(selection.from, selection.to)
+
+      if (!text) {
+        // 選択なし: 現在行に適用
+        const line = view.state.doc.lineAt(selection.from)
+        const lineText = line.text
+        let newText: string
+        if (/^- \[[ x]\] /.test(lineText)) {
+          newText = lineText.replace(/^- \[[ x]\] /, '')
+        } else {
+          const content = lineText.replace(/^(- \[[ x]\] |[-*+] |\d+\. )/, '')
+          newText = `- [ ] ${content}`
+        }
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newText },
+          selection: { anchor: line.from + newText.length },
+        })
+        onComplete?.()
+        view.focus()
+        return
+      }
+
+      const lines = text.split('\n')
+      const nonEmptyLines = lines.filter(line => !/^\s*$/.test(line))
+      const allCheckbox =
+        nonEmptyLines.length > 0 &&
+        nonEmptyLines.every(line => /^- \[[ x]\] /.test(line))
+
+      const transformed = allCheckbox
+        ? lines.map(line => line.replace(/^- \[[ x]\] /, ''))
+        : lines.map(line => {
+            if (/^\s*$/.test(line)) return line
+            const content = line.replace(/^(- \[[ x]\] |[-*+] |\d+\. )/, '')
+            return `- [ ] ${content}`
+          })
+
+      const result = transformed.join('\n')
+      view.dispatch({
+        changes: { from: selection.from, to: selection.to, insert: result },
+        selection: { anchor: selection.from, head: selection.from + result.length },
+      })
+      onComplete?.()
+      view.focus()
+    },
+    []
+  )
+
+  const applyTable = useCallback(
+    (
+      editorView: EditorView | null,
+      dataRows: number,
+      cols: number,
+      onComplete?: () => void
+    ) => {
+      if (!editorView) return
+      const view = editorView
+      const selection = view.state.selection.main
+
+      const headerCells = Array.from({ length: cols }, (_, i) => `Col${i + 1}`)
+      const header = `| ${headerCells.join(' | ')} |`
+      const separator = `| ${Array(cols).fill('---').join(' | ')} |`
+      const dataRow = `| ${Array(cols).fill('   ').join(' | ')} |`
+      const rows = [header, separator, ...Array(dataRows).fill(dataRow)]
+      const table = `${rows.join('\n')}\n`
 
       view.dispatch({
-        changes: {
-          from: selection.from,
-          to: selection.to,
-          insert: result,
-        },
-        selection: {
-          anchor: selection.from,
-          head: selection.from + result.length,
-        },
+        changes: { from: selection.from, to: selection.to, insert: table },
+        selection: { anchor: selection.from + table.length },
       })
 
       onComplete?.()
@@ -249,5 +433,9 @@ export function useTextSelection() {
     applyColor,
     applyAlert,
     applyList,
+    applyHeading,
+    applyQuote,
+    applyCheckbox,
+    applyTable,
   }
 }
