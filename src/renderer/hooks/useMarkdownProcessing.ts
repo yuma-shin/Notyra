@@ -6,6 +6,7 @@ import remarkRehype from 'remark-rehype'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeStringify from 'rehype-stringify'
 import { rehypeLocalImages } from '@/renderer/plugins/rehypeLocalImages'
+import { rehypeMermaid } from '@/renderer/plugins/rehypeMermaid'
 
 export function useMarkdownProcessing(content: string, noteDir?: string) {
   const [html, setHtml] = useState('')
@@ -23,6 +24,7 @@ export function useMarkdownProcessing(content: string, noteDir?: string) {
         }
 
         const result = await pipeline
+          .use(rehypeMermaid)
           .use(rehypeHighlight)
           .use(rehypeStringify, { allowDangerousHtml: true })
           .process(content)

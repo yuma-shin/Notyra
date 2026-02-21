@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useEffect, useRef } from 'react'
+import mermaid from 'mermaid'
 import { useMarkdownProcessing } from '@/renderer/hooks/useMarkdownProcessing'
 import { useCodeCopyHandler } from '@/renderer/hooks/useCodeCopyHandler'
 import { useCheckboxHandler } from '@/renderer/hooks/useCheckboxHandler'
@@ -84,9 +85,46 @@ export function MarkdownPreview({
   }, [])
 
   useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.innerHTML = html
-    }
+    if (!contentRef.current) return
+
+    contentRef.current.innerHTML = html
+
+    // Mermaid 図を描画
+    const placeholders = contentRef.current.querySelectorAll<HTMLElement>(
+      '.mermaid-placeholder'
+    )
+    if (placeholders.length === 0) return
+
+    const isDark = document.documentElement.classList.contains('dark')
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose',
+    })
+
+    placeholders.forEach(async (el, i) => {
+      const encoded = el.getAttribute('data-diagram')
+      if (!encoded) return
+      const diagram = decodeURIComponent(encoded)
+      const id = `mermaid-${Date.now()}-${i}`
+      try {
+        const { svg } = await mermaid.render(id, diagram)
+        el.innerHTML = svg
+        el.style.textAlign = 'center'
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        el.innerHTML = `<pre style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 14px;font-size:0.8rem;white-space:pre-wrap;overflow-x:auto;">${errorMessage}</pre>`
+      } finally {
+        // mermaid.render() がエラー時に document.body へ残す要素を確実に削除
+        // ただしビュアー内の要素（描画済み SVG）は削除しない
+        for (const strayId of [id, `d${id}`]) {
+          const stray = document.getElementById(strayId)
+          if (stray && !contentRef.current?.contains(stray)) {
+            stray.remove()
+          }
+        }
+      }
+    })
   }, [html])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
