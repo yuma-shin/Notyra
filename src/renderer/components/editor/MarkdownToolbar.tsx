@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiDroplet } from 'react-icons/fi'
 import {
   GoBold,
@@ -15,6 +16,7 @@ import {
   GoTable,
 } from 'react-icons/go'
 import { ImagePlus, FileDown } from 'lucide-react'
+import { SimpleTooltip } from './Tooltip'
 
 type ListType = 'bullet' | 'ordered'
 
@@ -65,6 +67,7 @@ export function MarkdownToolbar({
   onPdfExport,
   isPdfExporting = false,
 }: MarkdownToolbarProps) {
+  const { t } = useTranslation()
   const btn =
     'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
   const sep = (
@@ -79,14 +82,15 @@ export function MarkdownToolbar({
     >
       {/* Heading */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleHeadingPalette}
-          title="見出し"
-          type="button"
-        >
-          <GoHeading size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.heading')}>
+          <button
+            className={btn}
+            onClick={onToggleHeadingPalette}
+            type="button"
+          >
+            <GoHeading size={15} />
+          </button>
+        </SimpleTooltip>
         {showHeadingPalette && (
           <HeadingPalette onApplyHeading={onApplyHeading} />
         )}
@@ -95,88 +99,91 @@ export function MarkdownToolbar({
       {sep}
 
       {/* Inline formats */}
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('**')}
-        title="太字"
-        type="button"
-      >
-        <GoBold size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('*')}
-        title="斜体"
-        type="button"
-      >
-        <GoItalic size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('`')}
-        title="コード"
-        type="button"
-      >
-        <GoCodeSquare size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('~~')}
-        title="取り消し線"
-        type="button"
-      >
-        <GoStrikethrough size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('[', '](url)')}
-        title="リンク"
-        type="button"
-      >
-        <GoLink size={15} />
-      </button>
+      <SimpleTooltip content={t('editor.toolbar.bold')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('**')}
+          type="button"
+        >
+          <GoBold size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.italic')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('*')}
+          type="button"
+        >
+          <GoItalic size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.code')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('`')}
+          type="button"
+        >
+          <GoCodeSquare size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.strikethrough')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('~~')}
+          type="button"
+        >
+          <GoStrikethrough size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.link')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('[', '](url)')}
+          type="button"
+        >
+          <GoLink size={15} />
+        </button>
+      </SimpleTooltip>
 
       {sep}
 
       {/* Block formats */}
-      <button className={btn} onClick={onApplyQuote} title="引用" type="button">
-        <GoQuote size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={onApplyCheckbox}
-        title="チェックボックス"
-        type="button"
-      >
-        <GoTasklist size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyList('bullet')}
-        title="箇条書きリスト"
-        type="button"
-      >
-        <GoListUnordered size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyList('ordered')}
-        title="番号付きリスト"
-        type="button"
-      >
-        <GoListOrdered size={15} />
-      </button>
+      <SimpleTooltip content={t('editor.toolbar.quote')}>
+        <button className={btn} onClick={onApplyQuote} type="button">
+          <GoQuote size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.checkbox')}>
+        <button className={btn} onClick={onApplyCheckbox} type="button">
+          <GoTasklist size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.bulletList')}>
+        <button
+          className={btn}
+          onClick={() => onApplyList('bullet')}
+          type="button"
+        >
+          <GoListUnordered size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.orderedList')}>
+        <button
+          className={btn}
+          onClick={() => onApplyList('ordered')}
+          type="button"
+        >
+          <GoListOrdered size={15} />
+        </button>
+      </SimpleTooltip>
 
       {/* Table */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleTablePicker}
-          title="テーブル"
-          type="button"
-        >
-          <GoTable size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.table')}>
+          <button className={btn} onClick={onToggleTablePicker} type="button">
+            <GoTable size={15} />
+          </button>
+        </SimpleTooltip>
         {showTablePicker && <TablePicker onApplyTable={onApplyTable} />}
       </div>
 
@@ -184,56 +191,61 @@ export function MarkdownToolbar({
 
       {/* Color */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleColorPalette}
-          title="文字色"
-          type="button"
-        >
-          <FiDroplet size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.color')}>
+          <button className={btn} onClick={onToggleColorPalette} type="button">
+            <FiDroplet size={15} />
+          </button>
+        </SimpleTooltip>
         {showColorPalette && <ColorPalette onApplyColor={onApplyColor} />}
       </div>
 
       {/* Alert */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleAlertPalette}
-          title="アラート"
-          type="button"
-        >
-          <GoInfo size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.alert')}>
+          <button className={btn} onClick={onToggleAlertPalette} type="button">
+            <GoInfo size={15} />
+          </button>
+        </SimpleTooltip>
         {showAlertPalette && <AlertPalette onApplyAlert={onApplyAlert} />}
       </div>
 
-      {(onImageInsert || onPdfExport) && sep}
+      {onImageInsert && sep}
 
       {/* 画像挿入 */}
       {onImageInsert && (
-        <button
-          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          disabled={isImageInserting}
-          onClick={onImageInsert}
-          title="画像を挿入"
-          type="button"
-        >
-          <ImagePlus size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.imageInsert')}>
+          <button
+            className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
+            disabled={isImageInserting}
+            onClick={onImageInsert}
+            type="button"
+          >
+            <ImagePlus size={15} />
+          </button>
+        </SimpleTooltip>
       )}
 
       {/* PDF エクスポート */}
       {onPdfExport && (
-        <button
-          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          disabled={isPdfExporting}
-          onClick={onPdfExport}
-          title={isPdfExporting ? 'エクスポート中...' : 'PDFとしてエクスポート'}
-          type="button"
-        >
-          <FileDown size={15} />
-        </button>
+        <div className="ml-auto flex items-center gap-0.5">
+          {sep}
+          <SimpleTooltip
+            content={
+              isPdfExporting
+                ? t('editor.toolbar.pdfExporting')
+                : t('editor.toolbar.pdfExport')
+            }
+          >
+            <button
+              className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
+              disabled={isPdfExporting}
+              onClick={onPdfExport}
+              type="button"
+            >
+              <FileDown size={15} />
+            </button>
+          </SimpleTooltip>
+        </div>
       )}
     </div>
   )

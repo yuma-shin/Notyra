@@ -32,7 +32,30 @@
     "saving": "保存中...",
     "saved": "保存しました",
     "selectNote": "ノートを選択してください",
-    "selectNoteHint": "左側のリストからノートを選んでください"
+    "selectNoteHint": "左側のリストからノートを選んでください",
+    "toolbar": {
+      "heading": "見出し",
+      "bold": "太字",
+      "italic": "斜体",
+      "code": "コード",
+      "strikethrough": "取り消し線",
+      "link": "リンク",
+      "quote": "引用",
+      "checkbox": "チェックボックス",
+      "bulletList": "箇条書きリスト",
+      "orderedList": "番号付きリスト",
+      "table": "テーブル",
+      "color": "文字色",
+      "alert": "アラート",
+      "imageInsert": "画像を挿入",
+      "pdfExport": "PDFとしてエクスポート",
+      "pdfExporting": "エクスポート中..."
+    },
+    "layoutMode": {
+      "editorOnly": "エディタのみ",
+      "splitView": "分割表示",
+      "previewOnly": "プレビューのみ"
+    }
   },
   "dialog": {
     "createFolder": "フォルダを作成",

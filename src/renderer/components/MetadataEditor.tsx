@@ -20,6 +20,7 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react'
+import { SimpleTooltip } from './editor/Tooltip'
 import type { FolderNode } from '@/shared/types'
 
 interface MetadataEditorProps {
@@ -190,18 +191,19 @@ export function MetadataEditor({
           <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
             {onMove && folderTree && (
               <>
-                <button
-                  ref={refs.setReference}
-                  type="button"
-                  {...getReferenceProps()}
-                  className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-                  title={t('metadata.moveFolder')}
-                >
-                  <FiFolder size={12} />
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {currentFolder || t('metadata.root')}
-                  </span>
-                </button>
+                <SimpleTooltip content={t('metadata.moveFolder')}>
+                  <button
+                    ref={refs.setReference}
+                    type="button"
+                    {...getReferenceProps()}
+                    className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                  >
+                    <FiFolder size={12} />
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {currentFolder || t('metadata.root')}
+                    </span>
+                  </button>
+                </SimpleTooltip>
                 <span className="text-gray-400 dark:text-gray-500">/</span>
                 {isMenuOpen && (
                   <FloatingPortal>
@@ -321,14 +323,15 @@ export function MetadataEditor({
                   </form>
                 )}
                 {editTags.length > 0 && !showTagInput && (
-                  <button
-                    className="p-0.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
-                    onClick={() => setShowTagInput(true)}
-                    title={t('metadata.addTagButton')}
-                    type="button"
-                  >
-                    <FiPlus size={14} />
-                  </button>
+                  <SimpleTooltip content={t('metadata.addTagButton')}>
+                    <button
+                      className="p-0.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                      onClick={() => setShowTagInput(true)}
+                      type="button"
+                    >
+                      <FiPlus size={14} />
+                    </button>
+                  </SimpleTooltip>
                 )}
               </>
             )}

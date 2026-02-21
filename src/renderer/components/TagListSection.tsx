@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiTag, FiX } from 'react-icons/fi'
+import { SimpleTooltip } from './editor/Tooltip'
 import type { MarkdownNoteMeta } from '@/shared/types'
 
 interface TagListSectionProps {
@@ -62,14 +63,15 @@ export function TagListSection({
           </span>
         </div>
         {selectedTag && (
-          <button
-            className="p-1 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-all duration-200 text-purple-600 dark:text-purple-400"
-            onClick={() => onSelectTag(null)}
-            title={t('common.search')}
-            type="button"
-          >
-            <FiX size={12} />
-          </button>
+          <SimpleTooltip content={t('common.search')}>
+            <button
+              className="p-1 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-all duration-200 text-purple-600 dark:text-purple-400"
+              onClick={() => onSelectTag(null)}
+              type="button"
+            >
+              <FiX size={12} />
+            </button>
+          </SimpleTooltip>
         )}
       </div>
 

@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
+import { SimpleTooltip } from './editor/Tooltip'
 import { ThemeToggle } from './ThemeToggle'
 import { LanguageToggle } from './LanguageToggle'
 
@@ -144,14 +145,15 @@ export function CustomTitleBar({
                   {getRootFolderName()}
                 </span>
                 {onChangeRootFolder && (
-                  <button
-                    className="px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-all duration-200"
-                    onClick={onChangeRootFolder}
-                    title={t('titleBar.selectFolder')}
-                    type="button"
-                  >
-                    {t('titleBar.selectFolder')}
-                  </button>
+                  <SimpleTooltip content={t('titleBar.selectFolder')}>
+                    <button
+                      className="px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-all duration-200"
+                      onClick={onChangeRootFolder}
+                      type="button"
+                    >
+                      {t('titleBar.selectFolder')}
+                    </button>
+                  </SimpleTooltip>
                 )}
               </div>
             </>
@@ -165,32 +167,34 @@ export function CustomTitleBar({
         style={{ WebkitAppRegion: 'no-drag' } as any}
       >
         {onToggleSidebar && (
-          <button
-            className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${
-              showSidebar
-                ? 'text-purple-600 dark:text-purple-400'
-                : 'text-gray-400 dark:text-gray-600'
-            }`}
-            onClick={onToggleSidebar}
-            title={t('titleBar.toggleSidebar')}
-            type="button"
-          >
-            <FiSidebar size={16} />
-          </button>
+          <SimpleTooltip content={t('titleBar.toggleSidebar')}>
+            <button
+              className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${
+                showSidebar
+                  ? 'text-purple-600 dark:text-purple-400'
+                  : 'text-gray-400 dark:text-gray-600'
+              }`}
+              onClick={onToggleSidebar}
+              type="button"
+            >
+              <FiSidebar size={16} />
+            </button>
+          </SimpleTooltip>
         )}
         {onToggleNoteList && (
-          <button
-            className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${
-              showNoteList
-                ? 'text-purple-600 dark:text-purple-400'
-                : 'text-gray-400 dark:text-gray-600'
-            }`}
-            onClick={onToggleNoteList}
-            title={t('titleBar.toggleNoteList')}
-            type="button"
-          >
-            <FiList size={16} />
-          </button>
+          <SimpleTooltip content={t('titleBar.toggleNoteList')}>
+            <button
+              className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${
+                showNoteList
+                  ? 'text-purple-600 dark:text-purple-400'
+                  : 'text-gray-400 dark:text-gray-600'
+              }`}
+              onClick={onToggleNoteList}
+              type="button"
+            >
+              <FiList size={16} />
+            </button>
+          </SimpleTooltip>
         )}
         <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
         <div className="scale-90">
@@ -204,40 +208,46 @@ export function CustomTitleBar({
         className="flex items-center gap-0.5 mr-1.5"
         style={{ WebkitAppRegion: 'no-drag' } as any}
       >
-        <button
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          onClick={handleMinimize}
-          title={t('common.close')}
-          type="button"
-        >
-          <FiMinus className="text-gray-600 dark:text-gray-400" size={16} />
-        </button>
-        <button
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          onClick={handleMaximize}
-          title={isMaximized ? t('common.close') : t('common.close')}
-          type="button"
-        >
-          {isMaximized ? (
-            <FiMinimize
-              className="text-gray-600 dark:text-gray-400"
+        <SimpleTooltip content={t('common.back')}>
+          <button
+            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={handleMinimize}
+            type="button"
+          >
+            <FiMinus className="text-gray-600 dark:text-gray-400" size={16} />
+          </button>
+        </SimpleTooltip>
+        <SimpleTooltip content={t('common.close')}>
+          <button
+            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={handleMaximize}
+            type="button"
+          >
+            {isMaximized ? (
+              <FiMinimize
+                className="text-gray-600 dark:text-gray-400"
+                size={16}
+              />
+            ) : (
+              <FiMaximize
+                className="text-gray-600 dark:text-gray-400"
+                size={16}
+              />
+            )}
+          </button>
+        </SimpleTooltip>
+        <SimpleTooltip content={t('common.close')}>
+          <button
+            className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
+            onClick={handleClose}
+            type="button"
+          >
+            <FiX
+              className="text-gray-600 dark:text-gray-400 group-hover:text-white"
               size={16}
             />
-          ) : (
-            <FiMaximize
-              className="text-gray-600 dark:text-gray-400"
-              size={16}
-            />
-          )}
-        </button>
-        <button
-          className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
-          onClick={handleClose}
-          title={t('common.close')}
-          type="button"
-        >
-          <FiX className="text-gray-600 dark:text-gray-400 group-hover:text-white" size={16} />
-        </button>
+          </button>
+        </SimpleTooltip>
       </div>
     </div>
   )

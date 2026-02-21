@@ -32,7 +32,30 @@
     "saving": "Saving...",
     "saved": "Saved",
     "selectNote": "Please select a note",
-    "selectNoteHint": "Select a note from the list on the left"
+    "selectNoteHint": "Select a note from the list on the left",
+    "toolbar": {
+      "heading": "Heading",
+      "bold": "Bold",
+      "italic": "Italic",
+      "code": "Code",
+      "strikethrough": "Strikethrough",
+      "link": "Link",
+      "quote": "Quote",
+      "checkbox": "Checkbox",
+      "bulletList": "Bullet List",
+      "orderedList": "Ordered List",
+      "table": "Table",
+      "color": "Text Color",
+      "alert": "Alert",
+      "imageInsert": "Insert Image",
+      "pdfExport": "Export as PDF",
+      "pdfExporting": "Exporting..."
+    },
+    "layoutMode": {
+      "editorOnly": "Editor Only",
+      "splitView": "Split View",
+      "previewOnly": "Preview Only"
+    }
   },
   "dialog": {
     "createFolder": "Create Folder",

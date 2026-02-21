@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { FiTrash2, FiTag, FiClock } from 'react-icons/fi'
+import { SimpleTooltip } from './editor/Tooltip'
 import type { MarkdownNoteMeta } from '@/shared/types'
 
 interface NoteItemProps {
@@ -89,15 +90,16 @@ export function NoteItem({
         </div>
       </button>
       {onDelete && (
-        <button
-          aria-label={t('noteItem.delete')}
-          className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400"
-          onClick={onDelete}
-          title={t('noteItem.delete')}
-          type="button"
-        >
-          <FiTrash2 size={14} />
-        </button>
+        <SimpleTooltip content={t('noteItem.delete')} placement="top">
+          <button
+            aria-label={t('noteItem.delete')}
+            className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600 dark:text-red-400"
+            onClick={onDelete}
+            type="button"
+          >
+            <FiTrash2 size={14} />
+          </button>
+        </SimpleTooltip>
       )}
     </div>
   )

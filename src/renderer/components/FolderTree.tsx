@@ -18,6 +18,7 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react'
+import { SimpleTooltip } from './editor/Tooltip'
 import type { FolderNode, MarkdownNoteMeta } from '@/shared/types'
 import { TagListSection } from './TagListSection'
 
@@ -447,27 +448,29 @@ export function FolderTree({
             {t('sidebar.folders')}
           </h2>
           {onCreateFolder && (
-            <button
-              className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
-              onClick={() => onCreateFolder(currentPath)}
-              title={t('common.create')}
-              type="button"
-            >
-              <FiFolderPlus size={16} />
-            </button>
+            <SimpleTooltip content={t('common.create')}>
+              <button
+                className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
+                onClick={() => onCreateFolder(currentPath)}
+                type="button"
+              >
+                <FiFolderPlus size={16} />
+              </button>
+            </SimpleTooltip>
           )}
         </div>
 
         <div className="px-4 pb-3 flex items-center gap-2">
           {currentPath !== '' && (
-            <button
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex-shrink-0"
-              onClick={handleNavigateUp}
-              title={t('common.back')}
-              type="button"
-            >
-              <FiArrowLeft size={14} />
-            </button>
+            <SimpleTooltip content={t('common.back')}>
+              <button
+                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex-shrink-0"
+                onClick={handleNavigateUp}
+                type="button"
+              >
+                <FiArrowLeft size={14} />
+              </button>
+            </SimpleTooltip>
           )}
           <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 min-w-0 flex-1">
             {breadcrumbs.map((crumb, index) => (
@@ -507,29 +510,30 @@ export function FolderTree({
 
       <div className="py-2 overflow-y-auto flex-1 min-h-0 relative">
         {onShowAllNotes && (
-          <button
-            className={`w-full flex justify-start items-center gap-2 px-3 py-2.5 mb-2 cursor-pointer transition-all duration-200 border-l-4 ${
-              showAllNotes
-                ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-700 dark:text-purple-300 font-semibold shadow-sm border-purple-600 dark:border-purple-400'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
-            }`}
-            onClick={onShowAllNotes}
-            title={t('folderTree.allNotesTitle')}
-            type="button"
-          >
-            <span className="text-sm">{t('folderTree.allNotes')}</span>
-            {totalNotes > 0 && (
-              <span
-                className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
-                  showAllNotes
-                    ? 'bg-purple-600/20 dark:bg-purple-400/20 text-purple-700 dark:text-purple-300'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                }`}
-              >
-                {totalNotes}
-              </span>
-            )}
-          </button>
+          <SimpleTooltip content={t('folderTree.allNotesTitle')}>
+            <button
+              className={`w-full flex justify-start items-center gap-2 px-3 py-2.5 mb-2 cursor-pointer transition-all duration-200 border-l-4 ${
+                showAllNotes
+                  ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-700 dark:text-purple-300 font-semibold shadow-sm border-purple-600 dark:border-purple-400'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
+              }`}
+              onClick={onShowAllNotes}
+              type="button"
+            >
+              <span className="text-sm">{t('folderTree.allNotes')}</span>
+              {totalNotes > 0 && (
+                <span
+                  className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
+                    showAllNotes
+                      ? 'bg-purple-600/20 dark:bg-purple-400/20 text-purple-700 dark:text-purple-300'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  {totalNotes}
+                </span>
+              )}
+            </button>
+          </SimpleTooltip>
         )}
         {/* 古いコンテンツ（アニメーション中のみ表示） */}
         {animationDirection && prevPath !== '' && (

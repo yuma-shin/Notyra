@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
+import { SimpleTooltip } from './editor/Tooltip'
 import type { AppSettings } from '@/shared/types'
 
 export function ThemeToggle() {
@@ -73,13 +74,14 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
-      className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/15 transition-all duration-200 text-gray-600 dark:text-white"
-      onClick={cycleTheme}
-      title={getLabel()}
-      type="button"
-    >
-      {getIcon()}
-    </button>
+    <SimpleTooltip content={getLabel()}>
+      <button
+        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/15 transition-all duration-200 text-gray-600 dark:text-white"
+        onClick={cycleTheme}
+        type="button"
+      >
+        {getIcon()}
+      </button>
+    </SimpleTooltip>
   )
 }

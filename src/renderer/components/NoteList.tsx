@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiFileText, FiPlus, FiSearch, FiX } from 'react-icons/fi'
 import type { MarkdownNoteMeta } from '@/shared/types'
+import { SimpleTooltip } from './editor/Tooltip'
 import { NoteItem } from './NoteItem'
 import { SortDropdown, type SortOption } from './SortDropdown'
 
@@ -120,14 +121,15 @@ export function NoteList({
           </span>
         </div>
         {onCreateNote && (
-          <button
-            className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
-            onClick={onCreateNote}
-            title={t('noteList.createNoteButton')}
-            type="button"
-          >
-            <FiPlus size={16} />
-          </button>
+          <SimpleTooltip content={t('noteList.createNoteButton')}>
+            <button
+              className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
+              onClick={onCreateNote}
+              type="button"
+            >
+              <FiPlus size={16} />
+            </button>
+          </SimpleTooltip>
         )}
       </div>
 
