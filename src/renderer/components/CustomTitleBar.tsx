@@ -125,13 +125,13 @@ export function CustomTitleBar({
         <div className="flex items-center h-full px-4 gap-3">
           <div className="flex items-center gap-2">
             <NotyraLogo />
-            <span className="text-base font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent tracking-wide">
+            {/*<span className="text-base font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent tracking-wide">
               Notyra
-            </span>
+            </span>*/}
           </div>
           {settings.rootDir && (
             <>
-              <span className="text-gray-300 dark:text-gray-700">|</span>
+              <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
               <div
                 className="flex items-center gap-1.5"
                 style={{ WebkitAppRegion: 'no-drag' } as any}
@@ -231,12 +231,12 @@ export function CustomTitleBar({
           )}
         </button>
         <button
-          className="p-1.5 rounded-md hover:bg-red-500 hover:text-white transition-colors"
+          className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
           onClick={handleClose}
           title={t('common.close')}
           type="button"
         >
-          <FiX className="text-gray-600 dark:text-gray-400" size={16} />
+          <FiX className="text-gray-600 dark:text-gray-400 group-hover:text-white" size={16} />
         </button>
       </div>
     </div>
