@@ -2,14 +2,12 @@
   "common": {
     "appName": "Notyra",
     "search": "Search",
-    "back": "Back",
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
     "confirm": "Confirm",
-    "close": "Close",
     "language": "Language"
   },
   "titleBar": {
@@ -48,6 +46,10 @@
       "color": "Text Color",
       "alert": "Alert",
       "imageInsert": "Insert Image",
+      "export": "Export",
+      "exportPdf": "Export as PDF",
+      "exportHtml": "Export as HTML",
+      "exporting": "Exporting...",
       "pdfExport": "Export as PDF",
       "pdfExporting": "Exporting..."
     },
