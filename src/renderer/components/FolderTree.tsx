@@ -431,7 +431,7 @@ export function FolderTree({
   const breadcrumbs = getBreadcrumbs()
 
   return (
-    <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-950 flex flex-col h-full">
+    <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-sidebar flex flex-col h-full">
       <div
         className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0"
         style={{

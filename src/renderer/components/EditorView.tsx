@@ -336,7 +336,7 @@ export function EditorView({
         />
       )}
 
-      <div className="flex-1 flex min-h-0 bg-white dark:bg-[#0d1117]">
+      <div className="flex-1 flex min-h-0 bg-background">
         {layoutMode === 'editor' && (
           <div className="flex-1 overflow-auto">
             <CodeMirror

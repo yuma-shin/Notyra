@@ -852,7 +852,7 @@ export function MainScreen() {
 
   if (!App) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Electronアプリとして実行してください
@@ -869,7 +869,7 @@ export function MainScreen() {
 
   if (isLoading || settingsLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center justify-center gap-6">
           {/* Notyra Logo with pulse animation */}
           <div className="relative flex items-center justify-center">
@@ -972,7 +972,7 @@ export function MainScreen() {
 
   return (
     <>
-      <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-gray-900">
+      <div className="h-screen flex flex-col overflow-hidden bg-background">
         <CustomTitleBar
           onChangeRootFolder={handleChangeRootFolder}
           onToggleNoteList={toggleNoteList}
@@ -1033,7 +1033,7 @@ export function MainScreen() {
               />
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-gray-950">
+            <div className="flex-1 flex flex-col items-center justify-center bg-background">
               <svg
                 className="mb-6"
                 fill="none"

@@ -223,7 +223,7 @@ export function MetadataEditor({
   })
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
+    <div className="border-b border-gray-200 dark:border-gray-700 p-3 bg-background">
       <div className="space-y-2">
         <div>
           <input

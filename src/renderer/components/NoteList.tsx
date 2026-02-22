@@ -100,7 +100,7 @@ export function NoteList({
   }
 
   return (
-    <div className="w-80 border-r border-gray-200 dark:border-gray-700 overflow-y-auto bg-white dark:bg-gray-900 flex flex-col">
+    <div className="w-80 border-r border-gray-200 dark:border-gray-700 overflow-y-auto bg-background flex flex-col">
       <div
         className="flex-shrink-0 h-12 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4"
         style={{
@@ -138,7 +138,7 @@ export function NoteList({
       </div>
 
       {/* 検索バー & ソートボタン */}
-      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-muted/50">
         <div className="flex gap-2">
           <SortDropdown onChange={setSortOption} value={sortOption} />
           <div className="flex-1 relative">

@@ -283,10 +283,19 @@ pre,
   background-color: rgba(75, 85, 99, 0.7);
 }
 
-/* CodeMirror gutter (line numbers) background */
-.dark .cm-gutters {
-  background-color: rgb(3, 7, 18);
-  border-right-color: rgb(31, 41, 55);
+/* CodeMirror background — follows the active color theme */
+/* Use doubled/nested selectors (specificity 0,2,0) to override CodeMirror's defaults without !important */
+.cm-editor.cm-editor {
+  background-color: var(--background);
+}
+
+.cm-editor .cm-scroller {
+  background-color: var(--background);
+}
+
+.cm-editor .cm-gutters {
+  background-color: var(--background);
+  border-right-color: var(--border);
 }
 
 /* CodeMirror Markdown styling */

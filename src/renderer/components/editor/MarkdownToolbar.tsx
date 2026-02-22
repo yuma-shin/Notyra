@@ -90,16 +90,13 @@ export function MarkdownToolbar({
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [showExportMenu])
-  const btn =
-    'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
-  const sep = (
-    <div className="w-px h-5 bg-gray-200 dark:bg-gray-600 self-center mx-0.5" />
-  )
+  const btn = 'p-1.5 hover:bg-accent rounded transition-colors'
+  const sep = <div className="w-px h-5 bg-border self-center mx-0.5" />
 
   return (
     <div
       aria-label="Markdown formatting toolbar"
-      className="flex items-center gap-0.5 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0d1117] flex-shrink-0 flex-wrap"
+      className="flex items-center gap-0.5 px-2 py-1 border-b border-border bg-background flex-shrink-0 flex-wrap"
       role="toolbar"
     >
       {/* Heading */}
@@ -296,16 +293,16 @@ function HeadingPalette({ onApplyHeading }: HeadingPaletteProps) {
   ]
 
   return (
-    <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-1 flex flex-col gap-0.5 z-50 min-w-[130px]">
+    <div className="absolute left-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-1 flex flex-col gap-0.5 z-50 min-w-[130px]">
       {headings.map(({ level, label, size }) => (
         <button
-          className="px-3 py-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left flex items-center gap-2 font-bold"
+          className="px-3 py-1.5 rounded hover:bg-accent transition-colors text-left flex items-center gap-2 font-bold"
           key={level}
           onClick={() => onApplyHeading(level)}
           title={`見出し${level}`}
           type="button"
         >
-          <span className="text-gray-400 dark:text-gray-500 text-[10px] font-normal w-4">
+          <span className="text-muted-foreground text-[10px] font-normal w-4">
             {label}
           </span>
           <span style={{ fontSize: size }}>{`見出し${level}`}</span>
@@ -329,7 +326,7 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
 
   return (
     <fieldset
-      className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-3 z-50"
+      className="absolute left-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-3 z-50"
       onMouseLeave={() => setHovered({ rows: 0, cols: 0 })}
     >
       <legend className="sr-only">テーブルサイズを選択</legend>
@@ -340,8 +337,8 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
               <button
                 className={`w-5 h-5 border rounded-sm transition-colors ${
                   rowIdx < hovered.rows && colIdx < hovered.cols
-                    ? 'bg-blue-400 border-blue-500'
-                    : 'bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-500 hover:bg-blue-200 hover:border-blue-400'
+                    ? 'bg-[var(--theme-accent)] border-[var(--theme-accent)]'
+                    : 'bg-muted border-border hover:bg-[var(--theme-accent-subtle-hover)] hover:border-[var(--theme-accent)]'
                 }`}
                 key={`${rowIdx}-${colIdx}`}
                 onClick={() => {
@@ -358,7 +355,7 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
           </div>
         ))}
       </div>
-      <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+      <div className="text-center text-xs text-muted-foreground mt-2">
         {hovered.rows > 0 && hovered.cols > 0
           ? `${hovered.rows}行 × ${hovered.cols}列`
           : 'サイズを選択'}
@@ -394,10 +391,10 @@ function ColorPalette({ onApplyColor }: ColorPaletteProps) {
   ]
 
   return (
-    <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-3 grid grid-cols-4 gap-3 z-50">
+    <div className="absolute left-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-3 grid grid-cols-4 gap-3 z-50">
       {colors.map(({ color, title }) => (
         <button
-          className="w-8 h-8 rounded-md hover:scale-110 transition-transform border-2 border-white dark:border-gray-700 shadow-sm"
+          className="w-8 h-8 rounded-md hover:scale-110 transition-transform border-2 border-background shadow-sm"
           key={color}
           onClick={() => onApplyColor(color)}
           style={{ backgroundColor: color }}
@@ -431,7 +428,7 @@ function AlertPalette({ onApplyAlert }: AlertPaletteProps) {
   ]
 
   return (
-    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-2 flex flex-col gap-2 z-50 min-w-[140px]">
+    <div className="absolute right-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-2 flex flex-col gap-2 z-50 min-w-[140px]">
       {alerts.map(({ type, label, color }) => (
         <button
           className={`px-3 py-2 text-sm font-medium rounded-md hover:scale-105 transition-transform ${color} text-white`}
@@ -469,30 +466,24 @@ function ExportMenu({ onPdfExport, onHtmlExport, onClose }: ExportMenuProps) {
   }
 
   return (
-    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-1 flex flex-col gap-0.5 z-50 min-w-[250px]">
+    <div className="absolute right-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-1 flex flex-col gap-0.5 z-50 min-w-[250px]">
       {onPdfExport && (
         <button
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors text-left"
           onClick={handlePdf}
           type="button"
         >
-          <FileDown
-            className="shrink-0 text-gray-500 dark:text-gray-400"
-            size={14}
-          />
+          <FileDown className="shrink-0 text-muted-foreground" size={14} />
           <span>{t('editor.toolbar.exportPdf')}</span>
         </button>
       )}
       {onHtmlExport && (
         <button
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors text-left"
           onClick={handleHtml}
           type="button"
         >
-          <FileCode2
-            className="shrink-0 text-gray-500 dark:text-gray-400"
-            size={14}
-          />
+          <FileCode2 className="shrink-0 text-muted-foreground" size={14} />
           <span>{t('editor.toolbar.exportHtml')}</span>
         </button>
       )}
