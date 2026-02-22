@@ -79,6 +79,10 @@ export function MainScreen() {
         return
       }
 
+      // サイドバー・ノートリストの表示状態を復元
+      setShowSidebar(settings.showSidebar ?? true)
+      setShowNoteList(settings.showNoteList ?? true)
+
       // 前回選択していたフォルダを復元
       const lastFolder = settings.lastSelectedFolder ?? ''
       setSelectedFolder(lastFolder)
