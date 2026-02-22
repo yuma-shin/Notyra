@@ -36,10 +36,21 @@ export function SimpleTooltip({
   const hover = useHover(context, { delay: { open: delay, close: 0 } })
   const { getReferenceProps, getFloatingProps } = useInteractions([hover])
 
-  // 子要素に直接refを附着させる
+  const setMergedReference = (node: HTMLElement | null) => {
+    refs.setReference(node)
+
+    const childRef = (children.props as any).ref
+    if (typeof childRef === 'function') {
+      childRef(node)
+    } else if (childRef && typeof childRef === 'object') {
+      childRef.current = node
+    }
+  }
+
+  // 子要素の既存 props/ref を保持したまま tooltip の参照を付与する
   const clonedChild = React.cloneElement(children, {
-    ...getReferenceProps(),
-    ref: refs.setReference,
+    ...getReferenceProps(children.props as React.HTMLProps<Element>),
+    ref: setMergedReference,
   } as any)
 
   return (

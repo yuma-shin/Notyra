@@ -36,10 +36,11 @@ export function NoteItem({
   return (
     <div
       className={`relative p-2.5 transition-all duration-200 group border-b border-gray-200 dark:border-gray-700 ${
-        isSelected
-          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 shadow-sm'
-          : 'hover:bg-gray-100 dark:hover:bg-gray-800/50'
+        isSelected ? 'shadow-sm' : 'hover:bg-gray-100 dark:hover:bg-gray-800/50'
       }`}
+      style={
+        isSelected ? { background: 'var(--theme-accent-subtle)' } : undefined
+      }
     >
       <button
         className="w-full cursor-pointer text-left"
@@ -60,15 +61,16 @@ export function NoteItem({
         <div className="flex flex-wrap items-center gap-2">
           {note.tags && note.tags.length > 0 && (
             <div className="flex items-center gap-1">
-              <FiTag
-                className="text-purple-500 dark:text-purple-400"
-                size={12}
-              />
+              <FiTag size={12} style={{ color: 'var(--theme-accent)' }} />
               <div className="flex gap-1">
                 {note.tags.slice(0, 3).map(tag => (
                   <span
-                    className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-600 dark:bg-purple-900/30 dark:text-purple-300"
+                    className="rounded px-1.5 py-0.5 text-xs"
                     key={tag}
+                    style={{
+                      background: 'var(--theme-accent-subtle)',
+                      color: 'var(--theme-accent)',
+                    }}
                   >
                     {tag}
                   </span>

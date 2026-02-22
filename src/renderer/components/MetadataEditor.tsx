@@ -223,7 +223,7 @@ export function MetadataEditor({
   })
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
+    <div className="border-b border-gray-200 dark:border-gray-700 p-3 bg-background">
       <div className="space-y-2">
         <div>
           <input
@@ -267,12 +267,18 @@ export function MetadataEditor({
                           <div
                             className={`w-full text-left text-sm transition-colors flex items-center ${
                               folder.path === currentFolder
-                                ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                ? ''
                                 : 'text-gray-700 dark:text-gray-300'
                             }`}
                             key={folder.path}
                             style={{
                               paddingLeft: `${folder.depth * 12 + 8}px`,
+                              ...(folder.path === currentFolder
+                                ? {
+                                    background: 'var(--theme-accent-subtle)',
+                                    color: 'var(--theme-accent)',
+                                  }
+                                : {}),
                             }}
                           >
                             <div className="w-7 flex-shrink-0 flex items-center justify-center">
@@ -317,8 +323,14 @@ export function MetadataEditor({
           <div className="flex flex-wrap gap-1.5 items-center">
             {editTags.length === 0 && !showTagInput ? (
               <button
-                className="text-xs text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 transition-colors flex items-center gap-1"
+                className="text-xs text-gray-400 dark:text-gray-500 transition-colors flex items-center gap-1"
                 onClick={() => setShowTagInput(true)}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = 'var(--theme-accent)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = ''
+                }}
                 type="button"
               >
                 <FiPlus size={12} />
@@ -328,7 +340,7 @@ export function MetadataEditor({
               <>
                 {editTags.map((tag: string) => (
                   <span
-                    className={`px-1.5 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded font-medium flex items-center gap-1 ${
+                    className={`px-1.5 py-0.5 text-xs rounded font-medium flex items-center gap-1 ${
                       removingTags.has(tag)
                         ? 'animate-out zoom-out-50 fade-out duration-150'
                         : newlyAddedTag === tag
@@ -336,6 +348,10 @@ export function MetadataEditor({
                           : ''
                     }`}
                     key={tag}
+                    style={{
+                      background: 'var(--theme-accent-subtle)',
+                      color: 'var(--theme-accent)',
+                    }}
                   >
                     {tag}
                     <button
@@ -354,7 +370,7 @@ export function MetadataEditor({
                   <div ref={suggestionRefs.setReference}>
                     <form onSubmit={handleFormSubmit}>
                       <input
-                        className="w-32 px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-32 px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:outline-none focus:ring-1"
                         onBlur={e => {
                           // サジェストリスト内へのフォーカス移動はblurとして扱わない
                           if (
@@ -398,6 +414,11 @@ export function MetadataEditor({
                         }}
                         placeholder={t('metadata.tagPlaceholder')}
                         ref={tagInputRef}
+                        style={
+                          {
+                            '--tw-ring-color': 'var(--theme-accent)',
+                          } as React.CSSProperties
+                        }
                         type="text"
                         value={newTag}
                       />
@@ -413,7 +434,7 @@ export function MetadataEditor({
                             <button
                               className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors ${
                                 index === activeSuggestionIndex
-                                  ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                  ? ''
                                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                               }`}
                               key={tag}
@@ -421,6 +442,14 @@ export function MetadataEditor({
                                 e.preventDefault() // blur を防いで入力欄フォーカスを維持
                                 handleAddTag(tag)
                               }}
+                              style={
+                                index === activeSuggestionIndex
+                                  ? {
+                                      background: 'var(--theme-accent-subtle)',
+                                      color: 'var(--theme-accent)',
+                                    }
+                                  : undefined
+                              }
                               type="button"
                             >
                               <FiTag className="flex-shrink-0" size={10} />
@@ -435,8 +464,16 @@ export function MetadataEditor({
                 {editTags.length > 0 && !showTagInput && (
                   <SimpleTooltip content={t('metadata.addTagButton')}>
                     <button
-                      className="p-0.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                      className="p-0.5 rounded transition-colors"
                       onClick={() => setShowTagInput(true)}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background =
+                          'var(--theme-accent-subtle)'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = ''
+                      }}
+                      style={{ color: 'var(--theme-accent)' }}
                       type="button"
                     >
                       <FiPlus size={14} />

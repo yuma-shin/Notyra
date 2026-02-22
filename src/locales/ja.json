@@ -93,6 +93,15 @@
     "dark": "ダークモード",
     "system": "システム設定"
   },
+  "colorTheme": {
+    "tooltip": "カラーテーマ",
+    "title": "カラーテーマ",
+    "hint": "JSONファイルでテーマを追加できます",
+    "import": "テーマファイルをインポート (.json)",
+    "delete": "テーマを削除",
+    "importError": "無効なテーマファイルです。JSONの形式を確認してください。",
+    "importDuplicate": "同じIDの組み込みテーマが既に存在します。"
+  },
   "welcome": {
     "title": "Notyra へようこそ",
     "subtitle": "流れるような、心地よい執筆体験を",

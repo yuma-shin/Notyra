@@ -121,9 +121,20 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
               {t('welcome.selectFolderText')}
             </p>
             <button
-              className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-8 py-4 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isSelecting}
               onClick={handleSelectFolder}
+              onMouseEnter={e => {
+                if (!e.currentTarget.disabled)
+                  e.currentTarget.style.opacity = '0.85'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.opacity = '1'
+              }}
+              style={{
+                background:
+                  'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))',
+              }}
               type="button"
             >
               <FiFolder size={24} />

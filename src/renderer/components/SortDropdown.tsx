@@ -81,8 +81,8 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
         title={selectedLabel}
       >
         <FiFilter
-          className={isOpen ? 'text-purple-600 dark:text-purple-400' : ''}
           size={16}
+          style={isOpen ? { color: 'var(--theme-accent)' } : undefined}
         />
       </button>
       {isOpen && (
@@ -106,11 +106,19 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
                   })}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
                     value === option.value
-                      ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 font-medium'
+                      ? 'font-medium'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   } ${
                     activeIndex === index ? 'bg-gray-100 dark:bg-gray-700' : ''
                   }`}
+                  style={
+                    value === option.value
+                      ? {
+                          background: 'var(--theme-accent-subtle)',
+                          color: 'var(--theme-accent)',
+                        }
+                      : undefined
+                  }
                 >
                   {option.label}
                 </button>

@@ -57,75 +57,99 @@ pre,
   background: linear-gradient(to bottom, rgb(3, 7, 18), rgb(2, 6, 23));
 }
 
+/* ============================================================
+   Base color variables — Grayscale theme defaults
+   (overridden at runtime by themeManager via style.setProperty)
+   ============================================================ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --background: oklch(0.98 0 0);
+  --foreground: oklch(0.13 0 0);
+  --card: oklch(0.98 0 0);
+  --card-foreground: oklch(0.13 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.13 0 0);
+  --primary: oklch(0.18 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.94 0 0);
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.92 0 0);
+  --accent-foreground: oklch(0.18 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.6 0 0);
+  --chart-1: oklch(0.2 0 0);
+  --chart-2: oklch(0.35 0 0);
+  --chart-3: oklch(0.5 0 0);
+  --chart-4: oklch(0.65 0 0);
+  --chart-5: oklch(0.8 0 0);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.95 0 0);
+  --sidebar-foreground: oklch(0.13 0 0);
+  --sidebar-primary: oklch(0.18 0 0);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.9 0 0);
+  --sidebar-accent-foreground: oklch(0.18 0 0);
+  --sidebar-border: oklch(0.88 0 0);
+  --sidebar-ring: oklch(0.6 0 0);
+  /* Theme accent variables — Grayscale light defaults */
+  --theme-accent: #525252;
+  --theme-accent-hover: #404040;
+  --theme-accent-subtle: #f5f5f5;
+  --theme-accent-subtle-hover: #e5e5e5;
+  --theme-gradient-from: #737373;
+  --theme-gradient-to: #a3a3a3;
+  --theme-link: #404040;
+  --theme-link-hover: #737373;
+  --theme-heading-color: var(--foreground);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.94 0 0);
+  --card: oklch(0.14 0 0);
+  --card-foreground: oklch(0.94 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.94 0 0);
+  --primary: oklch(0.94 0 0);
+  --primary-foreground: oklch(0.18 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.94 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.62 0 0);
+  --accent: oklch(0.23 0 0);
+  --accent-foreground: oklch(0.94 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --border: oklch(0.22 0 0);
+  --input: oklch(0.22 0 0);
+  --ring: oklch(0.45 0 0);
+  --chart-1: oklch(0.9 0 0);
+  --chart-2: oklch(0.75 0 0);
+  --chart-3: oklch(0.6 0 0);
+  --chart-4: oklch(0.45 0 0);
+  --chart-5: oklch(0.3 0 0);
+  --sidebar: oklch(0.16 0 0);
+  --sidebar-foreground: oklch(0.94 0 0);
+  --sidebar-primary: oklch(0.62 0 0);
+  --sidebar-primary-foreground: oklch(0.94 0 0);
+  --sidebar-accent: oklch(0.2 0 0);
+  --sidebar-accent-foreground: oklch(0.94 0 0);
+  --sidebar-border: oklch(0.22 0 0);
+  --sidebar-ring: oklch(0.45 0 0);
+  /* Theme accent variables — Grayscale dark defaults */
+  --theme-accent: #a3a3a3;
+  --theme-accent-hover: #d4d4d4;
+  --theme-accent-subtle: rgba(163, 163, 163, 0.12);
+  --theme-accent-subtle-hover: rgba(163, 163, 163, 0.2);
+  --theme-gradient-from: #a3a3a3;
+  --theme-gradient-to: #d4d4d4;
+  --theme-link: #d4d4d4;
+  --theme-link-hover: #e5e5e5;
+  --theme-heading-color: var(--foreground);
 }
 
 @theme inline {
@@ -261,10 +285,19 @@ pre,
   background-color: rgba(75, 85, 99, 0.7);
 }
 
-/* CodeMirror gutter (line numbers) background */
-.dark .cm-gutters {
-  background-color: rgb(3, 7, 18);
-  border-right-color: rgb(31, 41, 55);
+/* CodeMirror background — follows the active color theme */
+/* Use doubled/nested selectors (specificity 0,2,0) to override CodeMirror's defaults without !important */
+.cm-editor.cm-editor {
+  background-color: var(--background);
+}
+
+.cm-editor .cm-scroller {
+  background-color: var(--background);
+}
+
+.cm-editor .cm-gutters {
+  background-color: var(--background);
+  border-right-color: var(--border);
 }
 
 /* CodeMirror Markdown styling */
@@ -276,11 +309,7 @@ pre,
   font-size: 2em;
   font-weight: 700;
   line-height: 1.25;
-  border-bottom: 1px solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-heading-1) {
-  border-bottom-color: #3d444d;
+  border-bottom: 1px solid var(--border);
 }
 
 .cm-line:has(.cm-heading-2) {
@@ -290,11 +319,7 @@ pre,
   font-size: 1.5em;
   font-weight: 700;
   line-height: 1.25;
-  border-bottom: 1px solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-heading-2) {
-  border-bottom-color: #3d444d;
+  border-bottom: 1px solid var(--border);
 }
 
 .cm-line:has(.cm-heading-3) {
@@ -327,11 +352,7 @@ pre,
   font-size: 0.85em;
   font-weight: 700;
   line-height: 1.25;
-  color: #656d76;
-}
-
-.dark .cm-line:has(.cm-heading-6) {
-  color: #848d97;
+  color: var(--muted-foreground);
 }
 
 /* Bold text */
@@ -375,12 +396,8 @@ pre,
 
 /* Links */
 .cm-link {
-  color: #0969da;
+  color: var(--theme-link);
   text-decoration: underline;
-}
-
-.dark .cm-link {
-  color: #58a6ff;
 }
 
 /* Lists */
@@ -391,24 +408,15 @@ pre,
 /* Blockquotes */
 .cm-line:has(.cm-quote) {
   padding-left: 1em;
-  color: #656d76;
-  border-left: 0.25em solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-quote) {
-  color: #848d97;
-  border-left-color: #3d444d;
+  color: var(--muted-foreground);
+  border-left: 0.25em solid var(--border);
 }
 
 /* Horizontal rule */
 .cm-line:has(.cm-hr) {
   padding-bottom: 0.5em;
   margin: 1.5em 0;
-  border-bottom: 2px solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-hr) {
-  border-bottom-color: #3d444d;
+  border-bottom: 2px solid var(--border);
 }
 
 /* Markdown preview list styles */
@@ -444,9 +452,15 @@ pre,
   margin-top: 1.5em;
   margin-bottom: 1em;
   font-weight: 700;
+  color: var(--theme-heading-color);
   letter-spacing: -0.02em;
   border-bottom: 2px solid;
-  border-image: linear-gradient(90deg, #a78bfa, #c084fc) 1;
+  border-image: linear-gradient(
+      90deg,
+      var(--theme-gradient-from),
+      var(--theme-gradient-to)
+    )
+    1;
 }
 
 .markdown-body h2 {
@@ -454,26 +468,31 @@ pre,
   margin-top: 1.5em;
   margin-bottom: 0.8em;
   font-weight: 600;
+  color: var(--theme-heading-color);
   letter-spacing: -0.01em;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dark .markdown-body h2 {
-  border-bottom-color: #3d444d;
+  border-bottom: 1px solid var(--border);
 }
 
 .markdown-body h3 {
   margin-top: 1.25em;
   margin-bottom: 0.6em;
   font-weight: 600;
+  color: var(--theme-heading-color);
 }
 
 .markdown-body h4,
-.markdown-body h5,
+.markdown-body h5 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  color: var(--theme-heading-color);
+}
+
 .markdown-body h6 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   font-weight: 600;
+  color: var(--muted-foreground);
 }
 
 .markdown-body p {
@@ -483,24 +502,15 @@ pre,
 
 /* Enhanced Links */
 .markdown-body a {
-  color: #8250df;
+  color: var(--theme-link);
   text-decoration: underline;
   text-decoration-color: transparent;
   transition: all 0.2s ease;
 }
 
 .markdown-body a:hover {
-  color: #a371f7;
-  text-decoration-color: #a371f7;
-}
-
-.dark .markdown-body a {
-  color: #a371f7;
-}
-
-.dark .markdown-body a:hover {
-  color: #c084fc;
-  text-decoration-color: #c084fc;
+  color: var(--theme-link-hover);
+  text-decoration-color: var(--theme-link-hover);
 }
 
 /* Horizontal Rule */
@@ -508,35 +518,21 @@ pre,
   height: 0.25em;
   padding: 0;
   margin: 2em 0;
-  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
   border: 0;
-}
-
-.dark .markdown-body hr {
-  background: linear-gradient(90deg, transparent, #3d444d, transparent);
 }
 
 /* Code block theme overrides */
 .markdown-body pre {
   padding: 1em;
   overflow-x: auto;
-  color: #24292f;
-  background-color: #f6f8fa;
+  color: var(--foreground);
+  background-color: var(--secondary);
 }
 
 .markdown-body code {
-  color: #24292f;
-  background-color: #f6f8fa;
-}
-
-.dark .markdown-body pre {
-  color: #e6edf3;
-  background-color: #0d1117;
-}
-
-.dark .markdown-body code {
-  color: #e6edf3;
-  background-color: #0d1117;
+  color: var(--foreground);
+  background-color: var(--secondary);
 }
 
 /* Inline code specific styling */
@@ -556,7 +552,7 @@ pre,
   opacity: 0.7;
 }
 
-/* Table theme overrides for dark mode */
+/* Table theme overrides */
 .markdown-body table {
   border-collapse: collapse;
   background-color: transparent;
@@ -565,40 +561,21 @@ pre,
 .markdown-body table th,
 .markdown-body table td {
   padding: 6px 13px;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
 }
 
 .markdown-body table th {
   font-weight: 600;
-  background-color: #f6f8fa;
+  background-color: var(--secondary);
 }
 
 .markdown-body table tr {
-  background-color: #ffffff;
-  border-top: 1px solid #d0d7de;
+  background-color: var(--background);
+  border-top: 1px solid var(--border);
 }
 
 .markdown-body table tr:nth-child(2n) {
-  background-color: #f6f8fa;
-}
-
-.dark .markdown-body table th,
-.dark .markdown-body table td {
-  border-color: #3d444d;
-}
-
-.dark .markdown-body table th {
-  color: #e6edf3;
-  background-color: #161b22;
-}
-
-.dark .markdown-body table tr {
-  background-color: #0d1117;
-  border-top-color: #3d444d;
-}
-
-.dark .markdown-body table tr:nth-child(2n) {
-  background-color: #161b22;
+  background-color: var(--muted);
 }
 
 /* Pre code blocks - no background override */
@@ -701,6 +678,7 @@ pre,
 /* Enhanced task lists */
 .markdown-body input[type="checkbox"] {
   margin-right: 0.5em;
+  accent-color: var(--theme-accent);
   cursor: pointer;
 }
 
@@ -713,7 +691,7 @@ pre,
   position: relative;
   padding: 0.5em 1em 0.5em 1.5em;
   margin: 0 0 16px 0;
-  color: #656d76;
+  color: var(--muted-foreground);
   border-left: none;
 }
 
@@ -724,16 +702,8 @@ pre,
   left: 0.5em;
   width: 4px;
   content: "";
-  background-color: #d0d7de;
+  background-color: var(--border);
   border-radius: 9999px;
-}
-
-.dark .markdown-body blockquote {
-  color: #848d97;
-}
-
-.dark .markdown-body blockquote::before {
-  background-color: #3d444d;
 }
 
 /* GitHub Alert Title */
@@ -780,21 +750,13 @@ pre,
   color: #3fb950;
 }
 
-/* GitHub Alerts - Important (Purple) */
+/* GitHub Alerts - Important (uses theme accent) */
 .markdown-body blockquote.alert-important::before {
-  background-color: #8250df;
+  background-color: var(--theme-accent);
 }
 
 .markdown-body blockquote.alert-important .alert-title {
-  color: #8250df;
-}
-
-.dark .markdown-body blockquote.alert-important::before {
-  background-color: #a371f7;
-}
-
-.dark .markdown-body blockquote.alert-important .alert-title {
-  color: #a371f7;
+  color: var(--theme-accent);
 }
 
 /* GitHub Alerts - Warning (Orange) */
@@ -868,29 +830,19 @@ pre,
   padding: 12px 16px;
   font-size: 0.75em;
   font-weight: 600;
-  color: #374151;
+  color: var(--muted-foreground);
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  background: var(--secondary);
   border: none;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.dark .markdown-body table th {
-  color: #d1d5db;
-  background: linear-gradient(to bottom, #1f2937, #111827);
-  border-bottom-color: #374151;
+  border-bottom: 2px solid var(--border);
 }
 
 .markdown-body table td {
   padding: 12px 16px;
   border: none;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.dark .markdown-body table td {
-  border-bottom-color: #1f2937;
+  border-bottom: 1px solid var(--border);
 }
 
 .markdown-body table tbody tr {
@@ -898,19 +850,11 @@ pre,
 }
 
 .markdown-body table tbody tr:hover {
-  background-color: #f9fafb;
-}
-
-.dark .markdown-body table tbody tr:hover {
-  background-color: #1f2937;
+  background-color: var(--accent);
 }
 
 .markdown-body table tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-.dark .markdown-body table tbody tr:nth-child(even) {
-  background-color: #0f1419;
+  background-color: var(--muted);
 }
 
 .markdown-body table tbody tr:last-child td {
@@ -943,12 +887,7 @@ pre,
 
 /* Drop zone visual feedback for image drag & drop */
 .editor-drop-target {
-  outline: 2px dashed #a78bfa;
+  outline: 2px dashed var(--theme-accent);
   outline-offset: -2px;
-  background-color: rgba(167, 139, 250, 0.05);
-}
-
-.dark .editor-drop-target {
-  outline-color: #c084fc;
-  background-color: rgba(192, 132, 252, 0.05);
+  background-color: var(--theme-accent-subtle);
 }
