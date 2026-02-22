@@ -2,14 +2,12 @@
   "common": {
     "appName": "Notyra",
     "search": "検索",
-    "back": "最小化",
     "cancel": "キャンセル",
     "save": "保存",
     "delete": "削除",
     "edit": "編集",
     "create": "作成",
     "confirm": "確認",
-    "close": "閉じる",
     "language": "言語"
   },
   "titleBar": {
@@ -48,6 +46,10 @@
       "color": "文字色",
       "alert": "アラート",
       "imageInsert": "画像を挿入",
+      "export": "エクスポート",
+      "exportPdf": "PDFとしてエクスポート",
+      "exportHtml": "HTMLとしてエクスポート",
+      "exporting": "エクスポート中...",
       "pdfExport": "PDFとしてエクスポート",
       "pdfExporting": "エクスポート中..."
     },

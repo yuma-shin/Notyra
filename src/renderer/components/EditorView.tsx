@@ -130,11 +130,21 @@ export function EditorView({
       editorViewRef,
     })
 
-  const { exportPdf, isExporting: isPdfExporting } = usePdfExport()
+  const {
+    exportPdf,
+    isExporting: isPdfExporting,
+    exportHtml,
+    isHtmlExporting,
+  } = usePdfExport()
 
   const handleExportPdf = async () => {
     const title = noteMeta?.title || noteBaseName || 'untitled'
     await exportPdf(localContent, rootDir, title)
+  }
+
+  const handleExportHtml = async () => {
+    const title = noteMeta?.title || noteBaseName || 'untitled'
+    await exportHtml(localContent, rootDir, title)
   }
 
   useEffect(() => {
@@ -263,6 +273,7 @@ export function EditorView({
       {/* 固定ツールバー (プレビューモード以外で表示) */}
       {layoutMode !== 'preview' && (
         <MarkdownToolbar
+          isHtmlExporting={isHtmlExporting}
           isImageInserting={isInserting}
           isPdfExporting={isPdfExporting}
           onApplyAlert={handleApplyAlert}
@@ -273,6 +284,7 @@ export function EditorView({
           onApplyList={handleApplyList}
           onApplyQuote={handleApplyQuote}
           onApplyTable={handleApplyTable}
+          onHtmlExport={handleExportHtml}
           onImageInsert={handleToolbarImageInsert}
           onPdfExport={handleExportPdf}
           onToggleAlertPalette={() => {

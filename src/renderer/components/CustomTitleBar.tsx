@@ -208,46 +208,40 @@ export function CustomTitleBar({
         className="flex items-center gap-0.5 mr-1.5"
         style={{ WebkitAppRegion: 'no-drag' } as any}
       >
-        <SimpleTooltip content={t('common.back')}>
-          <button
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            onClick={handleMinimize}
-            type="button"
-          >
-            <FiMinus className="text-gray-600 dark:text-gray-400" size={16} />
-          </button>
-        </SimpleTooltip>
-        <SimpleTooltip content={t('common.close')}>
-          <button
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            onClick={handleMaximize}
-            type="button"
-          >
-            {isMaximized ? (
-              <FiMinimize
-                className="text-gray-600 dark:text-gray-400"
-                size={16}
-              />
-            ) : (
-              <FiMaximize
-                className="text-gray-600 dark:text-gray-400"
-                size={16}
-              />
-            )}
-          </button>
-        </SimpleTooltip>
-        <SimpleTooltip content={t('common.close')}>
-          <button
-            className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
-            onClick={handleClose}
-            type="button"
-          >
-            <FiX
-              className="text-gray-600 dark:text-gray-400 group-hover:text-white"
+        <button
+          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          onClick={handleMinimize}
+          type="button"
+        >
+          <FiMinus className="text-gray-600 dark:text-gray-400" size={16} />
+        </button>
+        <button
+          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          onClick={handleMaximize}
+          type="button"
+        >
+          {isMaximized ? (
+            <FiMinimize
+              className="text-gray-600 dark:text-gray-400"
               size={16}
             />
-          </button>
-        </SimpleTooltip>
+          ) : (
+            <FiMaximize
+              className="text-gray-600 dark:text-gray-400"
+              size={16}
+            />
+          )}
+        </button>
+        <button
+          className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
+          onClick={handleClose}
+          type="button"
+        >
+          <FiX
+            className="text-gray-600 dark:text-gray-400 group-hover:text-white"
+            size={16}
+          />
+        </button>
       </div>
     </div>
   )

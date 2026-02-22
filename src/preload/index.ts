@@ -148,6 +148,16 @@ const API = {
       canceled?: boolean
       error?: string
     }> => ipcRenderer.invoke('export:pdf', { html, title }),
+
+    html: (
+      html: string,
+      title: string
+    ): Promise<{
+      success: boolean
+      filePath?: string
+      canceled?: boolean
+      error?: string
+    }> => ipcRenderer.invoke('export:html', { html, title }),
   },
 
   // Shell関連のAPI

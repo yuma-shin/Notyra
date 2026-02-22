@@ -204,34 +204,41 @@ ${bodyHtml}
 </html>`
 }
 
-export interface PdfExportResult {
+export interface ExportResult {
   success: boolean
   filePath?: string
   canceled?: boolean
   error?: string
 }
 
+/** @deprecated Use ExportResult */
+export type PdfExportResult = ExportResult
+
+async function buildExportHtml(
+  markdownContent: string,
+  noteDir: string | undefined,
+  title: string
+): Promise<string> {
+  const isDark = document.documentElement.classList.contains('dark')
+  const processedHtml = await processMarkdownForPdf(markdownContent, noteDir)
+  const htmlWithMermaid = await renderMermaidInHtml(processedHtml, isDark)
+  const htmlWithImages = await inlineLocalImages(htmlWithMermaid)
+  return buildHtmlDocument(htmlWithImages, isDark, title)
+}
+
 export function usePdfExport() {
   const [isExporting, setIsExporting] = useState(false)
+  const [isHtmlExporting, setIsHtmlExporting] = useState(false)
 
   const exportPdf = useCallback(
     async (
       markdownContent: string,
       noteDir: string | undefined,
       title: string
-    ): Promise<PdfExportResult | undefined> => {
+    ): Promise<ExportResult | undefined> => {
       setIsExporting(true)
       try {
-        const isDark = document.documentElement.classList.contains('dark')
-
-        const processedHtml = await processMarkdownForPdf(
-          markdownContent,
-          noteDir
-        )
-        const htmlWithMermaid = await renderMermaidInHtml(processedHtml, isDark)
-        const htmlWithImages = await inlineLocalImages(htmlWithMermaid)
-        const fullHtml = buildHtmlDocument(htmlWithImages, isDark, title)
-
+        const fullHtml = await buildExportHtml(markdownContent, noteDir, title)
         return await window.App.export.pdf(fullHtml, title)
       } finally {
         setIsExporting(false)
@@ -240,5 +247,22 @@ export function usePdfExport() {
     []
   )
 
-  return { exportPdf, isExporting }
+  const exportHtml = useCallback(
+    async (
+      markdownContent: string,
+      noteDir: string | undefined,
+      title: string
+    ): Promise<ExportResult | undefined> => {
+      setIsHtmlExporting(true)
+      try {
+        const fullHtml = await buildExportHtml(markdownContent, noteDir, title)
+        return await window.App.export.html(fullHtml, title)
+      } finally {
+        setIsHtmlExporting(false)
+      }
+    },
+    []
+  )
+
+  return { exportPdf, isExporting, exportHtml, isHtmlExporting }
 }

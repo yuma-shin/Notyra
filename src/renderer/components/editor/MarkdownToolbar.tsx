@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiDroplet } from 'react-icons/fi'
 import {
@@ -15,7 +15,7 @@ import {
   GoTasklist,
   GoTable,
 } from 'react-icons/go'
-import { ImagePlus, FileDown } from 'lucide-react'
+import { ImagePlus, FileDown, FileCode2, ChevronDown } from 'lucide-react'
 import { SimpleTooltip } from './Tooltip'
 
 type ListType = 'bullet' | 'ordered'
@@ -43,6 +43,8 @@ interface MarkdownToolbarProps {
   isImageInserting?: boolean
   onPdfExport?: () => void
   isPdfExporting?: boolean
+  onHtmlExport?: () => void
+  isHtmlExporting?: boolean
 }
 
 export function MarkdownToolbar({
@@ -66,8 +68,28 @@ export function MarkdownToolbar({
   isImageInserting = false,
   onPdfExport,
   isPdfExporting = false,
+  onHtmlExport,
+  isHtmlExporting = false,
 }: MarkdownToolbarProps) {
   const { t } = useTranslation()
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportButtonRef = useRef<HTMLDivElement>(null)
+  const hasExport = !!(onPdfExport || onHtmlExport)
+  const isExporting = isPdfExporting || isHtmlExporting
+
+  useEffect(() => {
+    if (!showExportMenu) return
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        exportButtonRef.current &&
+        !exportButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [showExportMenu])
   const btn =
     'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
   const sep = (
@@ -225,26 +247,32 @@ export function MarkdownToolbar({
         </SimpleTooltip>
       )}
 
-      {/* PDF エクスポート */}
-      {onPdfExport && (
+      {/* エクスポート */}
+      {hasExport && (
         <div className="ml-auto flex items-center gap-0.5">
           {sep}
-          <SimpleTooltip
-            content={
-              isPdfExporting
-                ? t('editor.toolbar.pdfExporting')
-                : t('editor.toolbar.pdfExport')
-            }
-          >
+          <div className="relative self-center" ref={exportButtonRef}>
             <button
-              className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-              disabled={isPdfExporting}
-              onClick={onPdfExport}
+              className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 px-2 text-xs font-medium`}
+              disabled={isExporting}
+              onClick={() => setShowExportMenu(prev => !prev)}
               type="button"
             >
-              <FileDown size={15} />
+              <span>
+                {isExporting
+                  ? t('editor.toolbar.exporting')
+                  : t('editor.toolbar.export')}
+              </span>
+              <ChevronDown size={12} />
             </button>
-          </SimpleTooltip>
+            {showExportMenu && (
+              <ExportMenu
+                onClose={() => setShowExportMenu(false)}
+                onHtmlExport={onHtmlExport}
+                onPdfExport={onPdfExport}
+              />
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -415,6 +443,59 @@ function AlertPalette({ onApplyAlert }: AlertPaletteProps) {
           {label}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ─── Export Menu ──────────────────────────────────────────────────────────────
+
+interface ExportMenuProps {
+  onPdfExport?: () => void
+  onHtmlExport?: () => void
+  onClose: () => void
+}
+
+function ExportMenu({ onPdfExport, onHtmlExport, onClose }: ExportMenuProps) {
+  const { t } = useTranslation()
+
+  const handlePdf = () => {
+    onClose()
+    onPdfExport?.()
+  }
+
+  const handleHtml = () => {
+    onClose()
+    onHtmlExport?.()
+  }
+
+  return (
+    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-1 flex flex-col gap-0.5 z-50 min-w-[250px]">
+      {onPdfExport && (
+        <button
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+          onClick={handlePdf}
+          type="button"
+        >
+          <FileDown
+            className="shrink-0 text-gray-500 dark:text-gray-400"
+            size={14}
+          />
+          <span>{t('editor.toolbar.exportPdf')}</span>
+        </button>
+      )}
+      {onHtmlExport && (
+        <button
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+          onClick={handleHtml}
+          type="button"
+        >
+          <FileCode2
+            className="shrink-0 text-gray-500 dark:text-gray-400"
+            size={14}
+          />
+          <span>{t('editor.toolbar.exportHtml')}</span>
+        </button>
+      )}
     </div>
   )
 }
