@@ -989,6 +989,7 @@ export function MainScreen() {
               }`}
             >
               <EditorView
+                allNotes={allNotes}
                 content={noteContent}
                 currentFolder={selectedFolder}
                 folderTree={folderTree ?? undefined}

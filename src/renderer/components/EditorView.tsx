@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
@@ -56,6 +56,7 @@ interface EditorViewProps {
   currentFolder?: string
   isSaving?: boolean
   rootDir?: string
+  allNotes?: MarkdownNoteMeta[]
 }
 
 export function EditorView({
@@ -75,7 +76,15 @@ export function EditorView({
   currentFolder,
   isSaving = false,
   rootDir,
+  allNotes,
 }: EditorViewProps) {
+  const allTags = useMemo(() => {
+    if (!allNotes) return []
+    const tagSet = new Set<string>()
+    allNotes.forEach(note => note.tags?.forEach(tag => tagSet.add(tag)))
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b, 'ja'))
+  }, [allNotes])
+
   const [localContent, setLocalContent] = useState(content)
   const [currentTheme, setCurrentTheme] = useState(() => {
     const isDark = document.documentElement.classList.contains('dark')
@@ -258,6 +267,7 @@ export function EditorView({
 
       {noteMeta && onMetadataChange && (
         <MetadataEditor
+          allTags={allTags}
           currentFolder={currentFolder}
           filePath={noteMeta.filePath}
           folderTree={folderTree}
