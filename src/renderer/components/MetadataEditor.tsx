@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   FiX,
@@ -8,6 +8,7 @@ import {
   FiFolder,
   FiChevronRight,
   FiChevronDown,
+  FiTag,
 } from 'react-icons/fi'
 import {
   useFloating,
@@ -31,6 +32,7 @@ interface MetadataEditorProps {
   currentFolder?: string
   onSave: (title: string, tags: string[]) => void
   onMove?: (targetFolder: string) => void
+  allTags?: string[]
 }
 
 export function MetadataEditor({
@@ -41,6 +43,7 @@ export function MetadataEditor({
   currentFolder = '',
   onSave,
   onMove,
+  allTags,
 }: MetadataEditorProps) {
   const { t } = useTranslation()
   const [editTitle, setEditTitle] = useState(title)
@@ -51,7 +54,11 @@ export function MetadataEditor({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set([''])
   ) // ルートは最初から展開
+  const [newlyAddedTag, setNewlyAddedTag] = useState<string | null>(null)
+  const [removingTags, setRemovingTags] = useState<Set<string>>(new Set())
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1)
   const tagInputRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
 
   const { refs, floatingStyles, context } = useFloating({
     open: isMenuOpen,
@@ -87,25 +94,58 @@ export function MetadataEditor({
     return () => clearTimeout(timer)
   }, [editTitle, editTags, title, tags, onSave])
 
-  const handleAddTag = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newTag.trim() && !editTags.includes(newTag.trim())) {
-      setEditTags([...editTags, newTag.trim()])
-      setNewTag('')
-      setShowTagInput(false)
-    }
-  }
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setEditTags(editTags.filter(tag => tag !== tagToRemove))
-  }
-
   // タグInput表示時にフォーカス
   useEffect(() => {
     if (showTagInput && tagInputRef.current) {
       tagInputRef.current.focus()
     }
   }, [showTagInput])
+
+  // showTagInput が false になったらサジェストインデックスをリセット
+  useEffect(() => {
+    if (!showTagInput) {
+      setActiveSuggestionIndex(-1)
+    }
+  }, [showTagInput])
+
+  // サジェスト候補（入力値でフィルタ、既に追加済みのタグは除外）
+  const filteredSuggestions = useMemo(() => {
+    if (!allTags || !showTagInput) return []
+    return allTags.filter(
+      tag =>
+        !editTags.includes(tag) &&
+        (newTag === '' || tag.toLowerCase().includes(newTag.toLowerCase()))
+    )
+  }, [allTags, editTags, newTag, showTagInput])
+
+  const handleAddTag = (tagValue: string = newTag) => {
+    const trimmed = tagValue.trim()
+    if (trimmed && !editTags.includes(trimmed)) {
+      setEditTags(prev => [...prev, trimmed])
+      setNewlyAddedTag(trimmed)
+      setTimeout(() => setNewlyAddedTag(null), 400)
+    }
+    setNewTag('')
+    setActiveSuggestionIndex(-1)
+    tagInputRef.current?.focus()
+  }
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    handleAddTag()
+  }
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setRemovingTags(prev => new Set(prev).add(tagToRemove))
+    setTimeout(() => {
+      setEditTags(prev => prev.filter(tag => tag !== tagToRemove))
+      setRemovingTags(prev => {
+        const next = new Set(prev)
+        next.delete(tagToRemove)
+        return next
+      })
+    }, 150)
+  }
 
   const getFolderList = (
     node: FolderNode,
@@ -264,7 +304,7 @@ export function MetadataEditor({
               </>
             )}
             <FiFile size={12} />
-            <span>{filePath.split(/[\\\\\\/]/).pop()}</span>
+            <span>{filePath.split(/[\\\\/]/).pop()}</span>
           </div>
           <div className="flex flex-wrap gap-1.5 items-center">
             {editTags.length === 0 && !showTagInput ? (
@@ -280,7 +320,13 @@ export function MetadataEditor({
               <>
                 {editTags.map((tag: string) => (
                   <span
-                    className="px-1.5 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded font-medium flex items-center gap-1"
+                    className={`px-1.5 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded font-medium flex items-center gap-1 ${
+                      removingTags.has(tag)
+                        ? 'animate-out zoom-out-50 fade-out duration-150'
+                        : newlyAddedTag === tag
+                          ? 'animate-in zoom-in-50 fade-in duration-200'
+                          : ''
+                    }`}
                     key={tag}
                   >
                     {tag}
@@ -297,30 +343,83 @@ export function MetadataEditor({
                   </span>
                 ))}
                 {showTagInput && (
-                  <form
-                    className="flex-1 min-w-[100px]"
-                    onSubmit={handleAddTag}
-                  >
-                    <input
-                      className="w-full px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
-                      onBlur={() => {
-                        if (!newTag.trim()) {
-                          setShowTagInput(false)
-                        }
-                      }}
-                      onChange={e => setNewTag(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Escape') {
-                          setNewTag('')
-                          setShowTagInput(false)
-                        }
-                      }}
-                      placeholder={t('metadata.tagPlaceholder')}
-                      ref={tagInputRef}
-                      type="text"
-                      value={newTag}
-                    />
-                  </form>
+                  <div className="relative">
+                    <form onSubmit={handleFormSubmit}>
+                      <input
+                        className="w-32 px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                        onBlur={e => {
+                          // サジェストリスト内へのフォーカス移動はblurとして扱わない
+                          if (
+                            suggestionsRef.current?.contains(
+                              e.relatedTarget as Node
+                            )
+                          ) {
+                            return
+                          }
+                          if (!newTag.trim()) {
+                            setShowTagInput(false)
+                          }
+                        }}
+                        onChange={e => {
+                          setNewTag(e.target.value)
+                          setActiveSuggestionIndex(-1)
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') {
+                            setNewTag('')
+                            setShowTagInput(false)
+                          } else if (e.key === 'ArrowDown') {
+                            e.preventDefault()
+                            setActiveSuggestionIndex(prev =>
+                              Math.min(prev + 1, filteredSuggestions.length - 1)
+                            )
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault()
+                            setActiveSuggestionIndex(prev =>
+                              Math.max(prev - 1, -1)
+                            )
+                          } else if (
+                            e.key === 'Enter' &&
+                            activeSuggestionIndex >= 0
+                          ) {
+                            e.preventDefault()
+                            handleAddTag(
+                              filteredSuggestions[activeSuggestionIndex]
+                            )
+                          }
+                        }}
+                        placeholder={t('metadata.tagPlaceholder')}
+                        ref={tagInputRef}
+                        type="text"
+                        value={newTag}
+                      />
+                    </form>
+                    {filteredSuggestions.length > 0 && (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute top-full left-0 z-50 mt-1 w-48 max-h-40 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1"
+                      >
+                        {filteredSuggestions.map((tag, index) => (
+                          <button
+                            className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors ${
+                              index === activeSuggestionIndex
+                                ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`}
+                            key={tag}
+                            onMouseDown={e => {
+                              e.preventDefault() // blur を防いで入力欄フォーカスを維持
+                              handleAddTag(tag)
+                            }}
+                            type="button"
+                          >
+                            <FiTag size={10} className="flex-shrink-0" />
+                            <span className="truncate">{tag}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
                 {editTags.length > 0 && !showTagInput && (
                   <SimpleTooltip content={t('metadata.addTagButton')}>
