@@ -58,7 +58,15 @@ export function MetadataEditor({
   const [removingTags, setRemovingTags] = useState<Set<string>>(new Set())
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1)
   const tagInputRef = useRef<HTMLInputElement>(null)
-  const suggestionsRef = useRef<HTMLDivElement>(null)
+
+  // タグサジェスト用 floating-ui（ビューポート対応）
+  const { refs: suggestionRefs, floatingStyles: suggestionFloatingStyles } =
+    useFloating({
+      open: showTagInput,
+      placement: 'bottom-start',
+      middleware: [offset(4), flip(), shift({ padding: 8 })],
+      whileElementsMounted: autoUpdate,
+    })
 
   const { refs, floatingStyles, context } = useFloating({
     open: isMenuOpen,
@@ -343,14 +351,14 @@ export function MetadataEditor({
                   </span>
                 ))}
                 {showTagInput && (
-                  <div className="relative">
+                  <div ref={suggestionRefs.setReference}>
                     <form onSubmit={handleFormSubmit}>
                       <input
                         className="w-32 px-1.5 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
                         onBlur={e => {
                           // サジェストリスト内へのフォーカス移動はblurとして扱わない
                           if (
-                            suggestionsRef.current?.contains(
+                            suggestionRefs.floating.current?.contains(
                               e.relatedTarget as Node
                             )
                           ) {
@@ -395,29 +403,32 @@ export function MetadataEditor({
                       />
                     </form>
                     {filteredSuggestions.length > 0 && (
-                      <div
-                        ref={suggestionsRef}
-                        className="absolute top-full left-0 z-50 mt-1 w-48 max-h-40 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1"
-                      >
-                        {filteredSuggestions.map((tag, index) => (
-                          <button
-                            className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors ${
-                              index === activeSuggestionIndex
-                                ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                            }`}
-                            key={tag}
-                            onMouseDown={e => {
-                              e.preventDefault() // blur を防いで入力欄フォーカスを維持
-                              handleAddTag(tag)
-                            }}
-                            type="button"
-                          >
-                            <FiTag size={10} className="flex-shrink-0" />
-                            <span className="truncate">{tag}</span>
-                          </button>
-                        ))}
-                      </div>
+                      <FloatingPortal>
+                        <div
+                          className="z-50 w-48 max-h-40 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1"
+                          ref={suggestionRefs.setFloating}
+                          style={suggestionFloatingStyles}
+                        >
+                          {filteredSuggestions.map((tag, index) => (
+                            <button
+                              className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-1.5 transition-colors ${
+                                index === activeSuggestionIndex
+                                  ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                              }`}
+                              key={tag}
+                              onMouseDown={e => {
+                                e.preventDefault() // blur を防いで入力欄フォーカスを維持
+                                handleAddTag(tag)
+                              }}
+                              type="button"
+                            >
+                              <FiTag className="flex-shrink-0" size={10} />
+                              <span className="truncate">{tag}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </FloatingPortal>
                     )}
                   </div>
                 )}
