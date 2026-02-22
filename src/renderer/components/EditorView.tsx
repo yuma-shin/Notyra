@@ -81,7 +81,13 @@ export function EditorView({
   const allTags = useMemo(() => {
     if (!allNotes) return []
     const tagSet = new Set<string>()
-    allNotes.forEach(note => note.tags?.forEach(tag => tagSet.add(tag)))
+    for (const note of allNotes) {
+      if (note.tags) {
+        for (const tag of note.tags) {
+          tagSet.add(tag)
+        }
+      }
+    }
     return Array.from(tagSet).sort((a, b) => a.localeCompare(b, 'ja'))
   }, [allNotes])
 
