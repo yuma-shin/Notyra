@@ -110,10 +110,7 @@ export function NoteList({
       >
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-            <FiFileText
-              className="text-purple-600 dark:text-purple-400"
-              size={16}
-            />
+            <FiFileText size={16} style={{ color: 'var(--theme-accent)' }} />
             {getFolderDisplayName()}
           </h2>
           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
@@ -123,8 +120,15 @@ export function NoteList({
         {onCreateNote && (
           <SimpleTooltip content={t('noteList.createNoteButton')}>
             <button
-              className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
+              className="p-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow"
               onClick={onCreateNote}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--theme-accent-subtle)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = ''
+              }}
+              style={{ color: 'var(--theme-accent)' }}
               type="button"
             >
               <FiPlus size={16} />
@@ -143,9 +147,14 @@ export function NoteList({
               size={14}
             />
             <input
-              className="w-full pl-9 pr-8 py-1.5 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full pl-9 pr-8 py-1.5 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('noteList.searchPlaceholder')}
+              style={
+                {
+                  '--tw-ring-color': 'var(--theme-accent)',
+                } as React.CSSProperties
+              }
               type="text"
               value={searchQuery}
             />
@@ -191,8 +200,20 @@ export function NoteList({
                   y1="0%"
                   y2="100%"
                 >
-                  <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#c084fc" stopOpacity="0.3" />
+                  <stop
+                    offset="0%"
+                    style={{
+                      stopColor: 'var(--theme-gradient-from)',
+                      stopOpacity: 0.2,
+                    }}
+                  />
+                  <stop
+                    offset="100%"
+                    style={{
+                      stopColor: 'var(--theme-gradient-to)',
+                      stopOpacity: 0.3,
+                    }}
+                  />
                 </linearGradient>
                 <linearGradient
                   id="folderStroke"
@@ -201,8 +222,20 @@ export function NoteList({
                   y1="0%"
                   y2="100%"
                 >
-                  <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#c084fc" stopOpacity="0.5" />
+                  <stop
+                    offset="0%"
+                    style={{
+                      stopColor: 'var(--theme-gradient-from)',
+                      stopOpacity: 0.4,
+                    }}
+                  />
+                  <stop
+                    offset="100%"
+                    style={{
+                      stopColor: 'var(--theme-gradient-to)',
+                      stopOpacity: 0.5,
+                    }}
+                  />
                 </linearGradient>
               </defs>
 
@@ -309,19 +342,19 @@ export function NoteList({
               <g opacity="0.2">
                 <path
                   d="M 50 100 Q 65 98 80 100"
-                  stroke="#a78bfa"
+                  stroke="var(--theme-gradient-from)"
                   strokeLinecap="round"
                   strokeWidth="2"
                 />
                 <path
                   d="M 120 110 Q 135 108 150 110"
-                  stroke="#c084fc"
+                  stroke="var(--theme-gradient-to)"
                   strokeLinecap="round"
                   strokeWidth="2"
                 />
                 <path
                   d="M 55 120 Q 70 118 85 120"
-                  stroke="#a78bfa"
+                  stroke="var(--theme-gradient-from)"
                   strokeLinecap="round"
                   strokeWidth="2"
                 />

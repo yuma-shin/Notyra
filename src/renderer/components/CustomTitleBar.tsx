@@ -13,6 +13,7 @@ import { useApp } from '../contexts/AppContext'
 import { SimpleTooltip } from './editor/Tooltip'
 import { ThemeToggle } from './ThemeToggle'
 import { LanguageToggle } from './LanguageToggle'
+import { ColorThemeSelector } from './ColorThemeSelector'
 
 const { App } = window
 
@@ -83,8 +84,14 @@ export function CustomTitleBar({
           y1="0%"
           y2="100%"
         >
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#c084fc" />
+          <stop
+            offset="0%"
+            style={{ stopColor: 'var(--theme-gradient-from)' }}
+          />
+          <stop
+            offset="100%"
+            style={{ stopColor: 'var(--theme-gradient-to)' }}
+          />
         </linearGradient>
       </defs>
       {/* 流れるようなドキュメントの形 */}
@@ -126,9 +133,6 @@ export function CustomTitleBar({
         <div className="flex items-center h-full px-4 gap-3">
           <div className="flex items-center gap-2">
             <NotyraLogo />
-            {/*<span className="text-base font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent tracking-wide">
-              Notyra
-            </span>*/}
           </div>
           {settings.rootDir && (
             <>
@@ -147,8 +151,20 @@ export function CustomTitleBar({
                 {onChangeRootFolder && (
                   <SimpleTooltip content={t('titleBar.selectFolder')}>
                     <button
-                      className="px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded transition-all duration-200"
+                      className="px-2 py-0.5 text-xs font-medium rounded transition-all duration-200"
                       onClick={onChangeRootFolder}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor =
+                          'var(--theme-accent-subtle-hover)'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor =
+                          'var(--theme-accent-subtle)'
+                      }}
+                      style={{
+                        color: 'var(--theme-accent)',
+                        backgroundColor: 'var(--theme-accent-subtle)',
+                      }}
                       type="button"
                     >
                       {t('titleBar.selectFolder')}
@@ -169,34 +185,41 @@ export function CustomTitleBar({
         {onToggleSidebar && (
           <SimpleTooltip content={t('titleBar.toggleSidebar')}>
             <button
-              className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${
-                showSidebar
-                  ? 'text-purple-600 dark:text-purple-400'
-                  : 'text-gray-400 dark:text-gray-600'
-              }`}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
               onClick={onToggleSidebar}
+              style={{ color: showSidebar ? 'var(--theme-accent)' : undefined }}
               type="button"
             >
-              <FiSidebar size={16} />
+              <FiSidebar
+                className={
+                  showSidebar ? '' : 'text-gray-400 dark:text-gray-600'
+                }
+                size={16}
+              />
             </button>
           </SimpleTooltip>
         )}
         {onToggleNoteList && (
           <SimpleTooltip content={t('titleBar.toggleNoteList')}>
             <button
-              className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${
-                showNoteList
-                  ? 'text-purple-600 dark:text-purple-400'
-                  : 'text-gray-400 dark:text-gray-600'
-              }`}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
               onClick={onToggleNoteList}
+              style={{
+                color: showNoteList ? 'var(--theme-accent)' : undefined,
+              }}
               type="button"
             >
-              <FiList size={16} />
+              <FiList
+                className={
+                  showNoteList ? '' : 'text-gray-400 dark:text-gray-600'
+                }
+                size={16}
+              />
             </button>
           </SimpleTooltip>
         )}
         <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+        <ColorThemeSelector />
         <div className="scale-90">
           <ThemeToggle />
         </div>

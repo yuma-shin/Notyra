@@ -262,10 +262,12 @@ export function EditorView({
       {isSaving && (
         <div className="absolute top-0 left-0 right-0 z-50 h-0.5 bg-gray-200 dark:bg-gray-700 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-500 via-purple-400 to-purple-500 animate-[progress_1s_ease-in-out_infinite]"
+            className="h-full animate-[progress_1s_ease-in-out_infinite]"
             style={{
               width: '40%',
               animation: 'progress 1s ease-in-out infinite',
+              background:
+                'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to), var(--theme-gradient-from))',
             }}
           ></div>
         </div>

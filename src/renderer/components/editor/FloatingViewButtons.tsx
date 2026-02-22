@@ -24,10 +24,15 @@ export function FloatingViewButtons({
           <button
             className={`p-2 rounded-md transition-all duration-200 ${
               layoutMode === 'editor'
-                ? 'bg-purple-500 text-white'
+                ? ''
                 : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50'
             }`}
             onClick={() => onLayoutModeChange('editor')}
+            style={
+              layoutMode === 'editor'
+                ? { background: 'var(--theme-accent)', color: 'white' }
+                : undefined
+            }
             type="button"
           >
             <FiEdit3 size={16} />
@@ -40,10 +45,15 @@ export function FloatingViewButtons({
           <button
             className={`p-2 rounded-md transition-all duration-200 ${
               layoutMode === 'split'
-                ? 'bg-purple-500 text-white'
+                ? ''
                 : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50'
             }`}
             onClick={() => onLayoutModeChange('split')}
+            style={
+              layoutMode === 'split'
+                ? { background: 'var(--theme-accent)', color: 'white' }
+                : undefined
+            }
             type="button"
           >
             <FiColumns size={16} />
@@ -56,10 +66,15 @@ export function FloatingViewButtons({
           <button
             className={`p-2 rounded-md transition-all duration-200 ${
               layoutMode === 'preview'
-                ? 'bg-purple-500 text-white'
+                ? ''
                 : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50'
             }`}
             onClick={() => onLayoutModeChange('preview')}
+            style={
+              layoutMode === 'preview'
+                ? { background: 'var(--theme-accent)', color: 'white' }
+                : undefined
+            }
             type="button"
           >
             <FiEye size={16} />

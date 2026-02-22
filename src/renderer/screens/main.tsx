@@ -869,11 +869,17 @@ export function MainScreen() {
 
   if (isLoading || settingsLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center gap-6">
           {/* Notyra Logo with pulse animation */}
           <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
+            <div
+              className="absolute inset-0 rounded-2xl blur-xl opacity-50 animate-pulse"
+              style={{
+                background:
+                  'linear-gradient(to bottom right, var(--theme-gradient-from), var(--theme-gradient-to))',
+              }}
+            ></div>
             <svg
               className="relative drop-shadow-2xl"
               height="80"
@@ -888,8 +894,14 @@ export function MainScreen() {
                   y1="0%"
                   y2="100%"
                 >
-                  <stop offset="0%" stopColor="#a78bfa" />
-                  <stop offset="100%" stopColor="#c084fc" />
+                  <stop
+                    offset="0%"
+                    style={{ stopColor: 'var(--theme-gradient-from)' }}
+                  />
+                  <stop
+                    offset="100%"
+                    style={{ stopColor: 'var(--theme-gradient-to)' }}
+                  />
                 </linearGradient>
               </defs>
               <path
@@ -922,13 +934,22 @@ export function MainScreen() {
 
           {/* Spinning loader */}
           <div className="relative w-16 h-16 flex items-center justify-center">
-            <div className="absolute inset-0 border-4 border-purple-200 dark:border-gray-700 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-transparent border-t-purple-500 dark:border-t-purple-400 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+            <div
+              className="absolute inset-0 border-4 border-transparent rounded-full animate-spin"
+              style={{ borderTopColor: 'var(--theme-accent)' }}
+            ></div>
           </div>
 
           {/* Loading text */}
           <div className="flex flex-col items-center justify-center gap-2">
-            <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+            <h2
+              className="text-xl font-semibold bg-clip-text text-transparent"
+              style={{
+                backgroundImage:
+                  'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))',
+              }}
+            >
               Notyra
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">

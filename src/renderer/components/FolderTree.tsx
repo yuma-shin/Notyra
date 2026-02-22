@@ -100,21 +100,39 @@ function FolderItem({
       <div
         className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-all duration-200 border-l-4 group ${
           isSelected
-            ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-700 dark:text-purple-300 font-semibold shadow-sm border-purple-600 dark:border-purple-400'
+            ? 'font-semibold shadow-sm'
             : isMenuOpen
               ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-500'
               : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
         }`}
-        style={{ paddingLeft: `${depth * 20 + 16}px` }}
+        style={{
+          paddingLeft: `${depth * 20 + 16}px`,
+          ...(isSelected
+            ? {
+                background: 'var(--theme-accent-subtle)',
+                color: 'var(--theme-accent)',
+                borderLeftColor: 'var(--theme-accent)',
+              }
+            : {}),
+        }}
       >
         <div className="w-5 flex-shrink-0 flex items-center justify-center">
           {hasChildren && (
             <button
-              className="text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
+              className="text-gray-500 dark:text-gray-400 transition-colors"
               onClick={e => {
                 e.stopPropagation()
                 onToggleExpand()
               }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = 'var(--theme-accent)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = isSelected
+                  ? 'var(--theme-accent)'
+                  : ''
+              }}
+              style={{ color: isSelected ? 'var(--theme-accent)' : undefined }}
               type="button"
             >
               {isExpanded ? (
@@ -138,9 +156,17 @@ function FolderItem({
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               isSelected
-                ? 'bg-purple-600/20 dark:bg-purple-400/20 text-purple-700 dark:text-purple-300'
+                ? ''
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
             }`}
+            style={
+              isSelected
+                ? {
+                    background: 'var(--theme-accent-subtle)',
+                    color: 'var(--theme-accent)',
+                  }
+                : undefined
+            }
           >
             {node.notes?.length || 0}
           </span>
@@ -226,14 +252,11 @@ export function FolderTree({
     }
   }, [showAllNotes])
 
-  // selectedFolderが変更された時に、そのフォルダまでのパスを展開
   useEffect(() => {
     if (selectedFolder !== null && selectedFolder !== '') {
-      // selectedFolderまでのすべての親フォルダを展開（既存の展開状態は維持）
       setExpanded(prev => {
         const next = new Set(prev)
-        next.add('') // ルートは常に展開
-
+        next.add('')
         const pathParts = selectedFolder.split(/[\\/]/).filter(Boolean)
         let accumulatedPath = ''
         for (const part of pathParts) {
@@ -242,7 +265,6 @@ export function FolderTree({
             : part
           next.add(accumulatedPath)
         }
-
         return next
       })
     }
@@ -262,16 +284,13 @@ export function FolderTree({
 
   const getNodeByPath = (path: string): FolderNode => {
     if (path === '') return node
-
     const pathParts = path.split(/[\\/]/).filter(Boolean)
     let current = node
-
     for (const part of pathParts) {
       const found = current.children.find(child => child.name === part)
       if (!found) return node
       current = found
     }
-
     return current
   }
 
@@ -283,18 +302,15 @@ export function FolderTree({
     if (currentPath === '') {
       return [{ name: node.name, path: '' }]
     }
-
     const pathParts = currentPath.split(/[\\/]/).filter(Boolean)
     const fullBreadcrumbs: Array<{ name: string; path: string }> = [
       { name: node.name, path: '' },
     ]
-
     let accumulatedPath = ''
     for (const part of pathParts) {
       accumulatedPath = accumulatedPath ? `${accumulatedPath}/${part}` : part
       fullBreadcrumbs.push({ name: part, path: accumulatedPath })
     }
-
     if (fullBreadcrumbs.length > 4) {
       const root = fullBreadcrumbs[0]
       const lastTwo = fullBreadcrumbs.slice(-2)
@@ -308,7 +324,6 @@ export function FolderTree({
         ...lastTwo,
       ]
     }
-
     return fullBreadcrumbs
   }
 
@@ -316,20 +331,17 @@ export function FolderTree({
     setPrevPath(displayPath)
     setCurrentPath(path)
     setAnimationDirection('forward')
-
-    // ナビゲート先のパスとその親パスを展開状態に追加（既存の展開状態を維持）
     setExpanded(prev => {
       const next = new Set(prev)
       const pathParts = path.split(/[\\/]/).filter(Boolean)
       let accumulatedPath = ''
-      next.add('') // ルートは常に展開
+      next.add('')
       for (const part of pathParts) {
         accumulatedPath = accumulatedPath ? `${accumulatedPath}/${part}` : part
         next.add(accumulatedPath)
       }
       return next
     })
-
     setTimeout(() => {
       setDisplayPath(path)
       setAnimationDirection(null)
@@ -339,28 +351,23 @@ export function FolderTree({
 
   const handleNavigateUp = () => {
     if (currentPath === '') return
-
     const pathParts = currentPath.split(/[\\/]/).filter(Boolean)
     pathParts.pop()
     const newPath = pathParts.join('/')
-
     setPrevPath(displayPath)
     setCurrentPath(newPath)
     setAnimationDirection('backward')
-
-    // 上へ戻る際も既存の展開状態を維持し、新しいパスまでの親パスを追加
     setExpanded(prev => {
       const next = new Set(prev)
       const pathParts = newPath.split(/[\\/]/).filter(Boolean)
       let accumulatedPath = ''
-      next.add('') // ルートは常に展開
+      next.add('')
       for (const part of pathParts) {
         accumulatedPath = accumulatedPath ? `${accumulatedPath}/${part}` : part
         next.add(accumulatedPath)
       }
       return next
     })
-
     setTimeout(() => {
       setDisplayPath(newPath)
       setAnimationDirection(null)
@@ -370,28 +377,23 @@ export function FolderTree({
 
   const handleBreadcrumbClick = (path: string) => {
     if (path === currentPath) return
-
     const currentDepth = currentPath.split(/[\\/]/).filter(Boolean).length
     const targetDepth =
       path === '' ? 0 : path.split(/[\\/]/).filter(Boolean).length
-
     setPrevPath(displayPath)
     setCurrentPath(path)
     setAnimationDirection(targetDepth > currentDepth ? 'forward' : 'backward')
-
-    // パンくずリストクリック時も既存の展開状態を維持し、新しいパスまでの親パスを追加
     setExpanded(prev => {
       const next = new Set(prev)
       const pathParts = path === '' ? [] : path.split(/[\\/]/).filter(Boolean)
       let accumulatedPath = ''
-      next.add('') // ルートは常に展開
+      next.add('')
       for (const part of pathParts) {
         accumulatedPath = accumulatedPath ? `${accumulatedPath}/${part}` : part
         next.add(accumulatedPath)
       }
       return next
     })
-
     setTimeout(() => {
       setDisplayPath(path)
       setAnimationDirection(null)
@@ -401,12 +403,10 @@ export function FolderTree({
 
   const renderNode = (n: FolderNode, depth: number = 0): React.ReactNode => {
     const isExpanded = expanded.has(n.relativePath)
-    // パスを正規化して比較（バックスラッシュをスラッシュに統一）
     const normalizedNodePath = n.relativePath.replace(/\\/g, '/')
     const normalizedSelectedFolder = selectedFolder?.replace(/\\/g, '/') ?? null
     const isSelected =
       !showAllNotes && normalizedSelectedFolder === normalizedNodePath
-
     return (
       <div key={n.relativePath}>
         <FolderItem
@@ -441,17 +441,22 @@ export function FolderTree({
       >
         <div className="h-14 flex items-center justify-between px-4">
           <h2 className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-            <FiFolder
-              className="text-purple-600 dark:text-purple-400"
-              size={16}
-            />
+            <FiFolder size={16} style={{ color: 'var(--theme-accent)' }} />
             {t('sidebar.folders')}
           </h2>
           {onCreateFolder && (
             <SimpleTooltip content={t('common.create')}>
               <button
-                className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200 text-purple-600 dark:text-purple-400 shadow-sm hover:shadow"
+                className="p-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow"
                 onClick={() => onCreateFolder(currentPath)}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background =
+                    'var(--theme-accent-subtle)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = ''
+                }}
+                style={{ color: 'var(--theme-accent)' }}
                 type="button"
               >
                 <FiFolderPlus size={16} />
@@ -482,13 +487,26 @@ export function FolderTree({
                 )}
                 <button
                   className={`transition-colors flex-shrink-0 ${
-                    crumb.isEllipsis
-                      ? 'hover:text-purple-600 dark:hover:text-purple-400'
-                      : index === breadcrumbs.length - 1
-                        ? 'font-semibold text-purple-600 dark:text-purple-400'
-                        : 'hover:text-purple-600 dark:hover:text-purple-400 hover:underline'
+                    index === breadcrumbs.length - 1
+                      ? 'font-semibold'
+                      : 'hover:underline'
                   }`}
                   onClick={() => handleBreadcrumbClick(crumb.path)}
+                  onMouseEnter={e => {
+                    if (index < breadcrumbs.length - 1) {
+                      e.currentTarget.style.color = 'var(--theme-accent)'
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (index < breadcrumbs.length - 1 && !crumb.isEllipsis) {
+                      e.currentTarget.style.color = ''
+                    }
+                  }}
+                  style={
+                    crumb.isEllipsis || index === breadcrumbs.length - 1
+                      ? { color: 'var(--theme-accent)' }
+                      : undefined
+                  }
                   title={crumb.isEllipsis ? '中間の階層' : undefined}
                   type="button"
                 >
@@ -514,10 +532,19 @@ export function FolderTree({
             <button
               className={`w-full flex justify-start items-center gap-2 px-3 py-2.5 mb-2 cursor-pointer transition-all duration-200 border-l-4 ${
                 showAllNotes
-                  ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-700 dark:text-purple-300 font-semibold shadow-sm border-purple-600 dark:border-purple-400'
+                  ? 'font-semibold shadow-sm'
                   : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
               }`}
               onClick={onShowAllNotes}
+              style={
+                showAllNotes
+                  ? {
+                      background: 'var(--theme-accent-subtle)',
+                      color: 'var(--theme-accent)',
+                      borderLeftColor: 'var(--theme-accent)',
+                    }
+                  : undefined
+              }
               type="button"
             >
               <span className="text-sm">{t('folderTree.allNotes')}</span>
@@ -525,9 +552,17 @@ export function FolderTree({
                 <span
                   className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
                     showAllNotes
-                      ? 'bg-purple-600/20 dark:bg-purple-400/20 text-purple-700 dark:text-purple-300'
+                      ? ''
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                   }`}
+                  style={
+                    showAllNotes
+                      ? {
+                          background: 'var(--theme-accent-subtle)',
+                          color: 'var(--theme-accent)',
+                        }
+                      : undefined
+                  }
                 >
                   {totalNotes}
                 </span>
@@ -535,30 +570,23 @@ export function FolderTree({
             </button>
           </SimpleTooltip>
         )}
-        {/* 古いコンテンツ（アニメーション中のみ表示） */}
+
         {animationDirection && prevPath !== '' && (
           <div
             className={`absolute inset-0 transition-all duration-300 ease-out ${
               animationDirection === 'forward'
-                ? '-translate-x-full' // 深掘り時: 左に退出
-                : 'translate-x-full' // 戻る時: 右に退出
+                ? '-translate-x-full'
+                : 'translate-x-full'
             }`}
           >
             {renderNode(prevNode)}
           </div>
         )}
 
-        {/* 新しいコンテンツ */}
         <div
           className="transition-all duration-300 ease-out"
           key={animationDirection ? currentPath : displayPath}
           style={{
-            transform:
-              animationDirection === 'forward'
-                ? 'translateX(0)'
-                : animationDirection === 'backward'
-                  ? 'translateX(0)'
-                  : 'translateX(0)',
             animation:
               animationDirection === 'forward'
                 ? 'slideInFromRight 300ms ease-out'
@@ -574,21 +602,12 @@ export function FolderTree({
 
         <style>{`
         @keyframes slideInFromRight {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
         }
-        
         @keyframes slideInFromLeft {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
         }
       `}</style>
 
