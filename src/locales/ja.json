@@ -93,6 +93,11 @@
     "dark": "ダークモード",
     "system": "システム設定"
   },
+  "colorTheme": {
+    "tooltip": "カラーテーマ",
+    "title": "カラーテーマ",
+    "hint": "JSONファイルでテーマを追加できます"
+  },
   "welcome": {
     "title": "Notyra へようこそ",
     "subtitle": "流れるような、心地よい執筆体験を",
