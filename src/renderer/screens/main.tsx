@@ -1050,8 +1050,16 @@ export function MainScreen() {
                     y1="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#c084fc" stopOpacity="0.4" />
+                    <stop
+                      offset="0%"
+                      stopOpacity="0.3"
+                      style={{ stopColor: 'var(--theme-gradient-from)' }}
+                    />
+                    <stop
+                      offset="100%"
+                      stopOpacity="0.4"
+                      style={{ stopColor: 'var(--theme-gradient-to)' }}
+                    />
                   </linearGradient>
                   <linearGradient
                     id="noteStroke"
@@ -1060,8 +1068,14 @@ export function MainScreen() {
                     y1="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#a78bfa" />
-                    <stop offset="100%" stopColor="#c084fc" />
+                    <stop
+                      offset="0%"
+                      style={{ stopColor: 'var(--theme-gradient-from)' }}
+                    />
+                    <stop
+                      offset="100%"
+                      style={{ stopColor: 'var(--theme-gradient-to)' }}
+                    />
                   </linearGradient>
                 </defs>
 
@@ -1078,21 +1092,19 @@ export function MainScreen() {
                 {/* Background documents stack */}
                 <g opacity="0.3">
                   <rect
-                    fill="#d1d5db"
                     height="140"
                     rx="8"
-                    stroke="#9ca3af"
                     strokeWidth="2"
+                    style={{ fill: 'var(--muted)', stroke: 'var(--border)' }}
                     width="100"
                     x="70"
                     y="55"
                   />
                   <rect
-                    fill="#e5e7eb"
                     height="140"
                     rx="8"
-                    stroke="#9ca3af"
                     strokeWidth="2"
+                    style={{ fill: 'var(--accent)', stroke: 'var(--border)' }}
                     width="100"
                     x="75"
                     y="50"
@@ -1127,9 +1139,9 @@ export function MainScreen() {
                 {/* Document lines */}
                 <line
                   opacity="0.5"
-                  stroke="#a78bfa"
                   strokeLinecap="round"
                   strokeWidth="2.5"
+                  style={{ stroke: 'var(--theme-gradient-from)' }}
                   x1="95"
                   x2="150"
                   y1="75"
@@ -1137,9 +1149,9 @@ export function MainScreen() {
                 />
                 <line
                   opacity="0.5"
-                  stroke="#a78bfa"
                   strokeLinecap="round"
                   strokeWidth="2.5"
+                  style={{ stroke: 'var(--theme-gradient-from)' }}
                   x1="95"
                   x2="165"
                   y1="90"
@@ -1147,9 +1159,9 @@ export function MainScreen() {
                 />
                 <line
                   opacity="0.5"
-                  stroke="#a78bfa"
                   strokeLinecap="round"
                   strokeWidth="2.5"
+                  style={{ stroke: 'var(--theme-gradient-from)' }}
                   x1="95"
                   x2="155"
                   y1="105"
@@ -1157,9 +1169,9 @@ export function MainScreen() {
                 />
                 <line
                   opacity="0.5"
-                  stroke="#a78bfa"
                   strokeLinecap="round"
                   strokeWidth="2.5"
+                  style={{ stroke: 'var(--theme-gradient-from)' }}
                   x1="95"
                   x2="160"
                   y1="120"
@@ -1167,13 +1179,25 @@ export function MainScreen() {
                 />
 
                 {/* Markdown symbols */}
-                <circle cx="95" cy="140" fill="#c084fc" opacity="0.6" r="3" />
-                <circle cx="105" cy="140" fill="#c084fc" opacity="0.6" r="3" />
+                <circle
+                  cx="95"
+                  cy="140"
+                  opacity="0.6"
+                  r="3"
+                  style={{ fill: 'var(--theme-gradient-to)' }}
+                />
+                <circle
+                  cx="105"
+                  cy="140"
+                  opacity="0.6"
+                  r="3"
+                  style={{ fill: 'var(--theme-gradient-to)' }}
+                />
                 <text
-                  fill="#a78bfa"
                   fontFamily="monospace"
                   fontSize="14"
                   opacity="0.6"
+                  style={{ fill: 'var(--theme-gradient-from)' }}
                   x="115"
                   y="145"
                 >
@@ -1185,40 +1209,40 @@ export function MainScreen() {
                   <circle
                     cx="120"
                     cy="30"
-                    fill="#a78bfa"
                     opacity="0.1"
                     r="28"
+                    style={{ fill: 'var(--theme-gradient-from)' }}
                   />
                   <circle
                     cx="120"
                     cy="30"
-                    fill="#a78bfa"
                     opacity="0.15"
                     r="20"
+                    style={{ fill: 'var(--theme-gradient-from)' }}
                   />
                   <path
                     d="M 120 15 L 115 25 L 120 22 L 125 25 Z"
-                    fill="#a78bfa"
                     opacity="0.7"
+                    style={{ fill: 'var(--theme-gradient-from)' }}
                   />
                   <path
                     d="M 108 28 L 118 35 L 116 30 L 120 25 Z"
-                    fill="#c084fc"
                     opacity="0.7"
+                    style={{ fill: 'var(--theme-gradient-to)' }}
                     transform="rotate(-30 120 30)"
                   />
                   <path
                     d="M 132 28 L 122 35 L 124 30 L 120 25 Z"
-                    fill="#c084fc"
                     opacity="0.7"
+                    style={{ fill: 'var(--theme-gradient-to)' }}
                     transform="rotate(30 120 30)"
                   />
                 </g>
               </svg>
-              <p className="text-lg text-gray-400 dark:text-gray-500 font-medium">
+              <p className="text-lg text-muted-foreground font-medium">
                 {t('editor.selectNote')}
               </p>
-              <p className="text-sm text-gray-400 dark:text-gray-600 mt-2">
+              <p className="text-sm text-muted-foreground/70 mt-2">
                 {t('editor.selectNoteHint')}
               </p>
             </div>

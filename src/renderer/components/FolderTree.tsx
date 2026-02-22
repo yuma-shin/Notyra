@@ -155,9 +155,7 @@ function FolderItem({
           <span className="text-sm flex-1">{node.name}</span>
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              isSelected
-                ? ''
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              isSelected ? '' : 'bg-muted text-muted-foreground'
             }`}
             style={
               isSelected
@@ -436,7 +434,7 @@ export function FolderTree({
         className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(102, 126, 234, 0.05), transparent)',
+            'linear-gradient(to bottom, var(--theme-accent-subtle), transparent)',
         }}
       >
         <div className="h-14 flex items-center justify-between px-4">
@@ -551,9 +549,7 @@ export function FolderTree({
               {totalNotes > 0 && (
                 <span
                   className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
-                    showAllNotes
-                      ? ''
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                    showAllNotes ? '' : 'bg-muted text-muted-foreground'
                   }`}
                   style={
                     showAllNotes

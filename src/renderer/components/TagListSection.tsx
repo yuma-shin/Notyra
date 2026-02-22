@@ -51,14 +51,14 @@ export function TagListSection({
   if (!onSelectTag) return null
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700">
-      <div className="h-10 flex items-center justify-between px-4 bg-gray-50 dark:bg-gray-800/30">
+    <div className="border-t border-border">
+      <div className="h-10 flex items-center justify-between px-4 bg-muted/30">
         <div className="flex items-center gap-2">
-          <h3 className="text-xs font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+          <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
             <FiTag size={14} style={{ color: 'var(--theme-accent)' }} />
             {t('metadata.tags')}
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">
+          <span className="text-xs text-muted-foreground font-medium px-1.5 py-0.5 bg-muted rounded-full">
             {tagCounts.length}
           </span>
         </div>
@@ -86,10 +86,10 @@ export function TagListSection({
         {tagCounts.length === 0 ? (
           <div className="p-4 text-center">
             <FiTag
-              className="mx-auto mb-2 text-gray-300 dark:text-gray-600"
+              className="mx-auto mb-2 text-muted-foreground/40"
               size={24}
             />
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {t('noteList.empty')}
             </p>
           </div>
@@ -98,9 +98,7 @@ export function TagListSection({
             {tagCounts.map(([tag, count]) => (
               <button
                 className={`w-full px-2 py-1.5 rounded-lg text-left transition-all duration-200 group flex items-center justify-between ${
-                  selectedTag === tag
-                    ? 'shadow-sm'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800/50'
+                  selectedTag === tag ? 'shadow-sm' : 'hover:bg-accent'
                 }`}
                 key={tag}
                 onClick={() => handleTagClick(tag)}
@@ -121,7 +119,7 @@ export function TagListSection({
                     }}
                   />
                   <span
-                    className={`text-xs truncate ${selectedTag === tag ? 'font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+                    className={`text-xs truncate ${selectedTag === tag ? 'font-semibold' : 'text-foreground'}`}
                     style={
                       selectedTag === tag
                         ? { color: 'var(--theme-accent)' }
@@ -132,7 +130,7 @@ export function TagListSection({
                   </span>
                 </div>
                 <span
-                  className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${selectedTag === tag ? 'font-medium' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
+                  className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${selectedTag === tag ? 'font-medium' : 'bg-muted text-muted-foreground'}`}
                   style={
                     selectedTag === tag
                       ? {

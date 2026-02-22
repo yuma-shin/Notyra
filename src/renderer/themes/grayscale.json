@@ -47,7 +47,8 @@
     "--theme-gradient-from": "#737373",
     "--theme-gradient-to": "#a3a3a3",
     "--theme-link": "#404040",
-    "--theme-link-hover": "#737373"
+    "--theme-link-hover": "#737373",
+    "--theme-heading-color": "var(--foreground)"
   },
   "dark": {
     "--background": "oklch(0.12 0 0)",
@@ -90,6 +91,7 @@
     "--theme-gradient-from": "#a3a3a3",
     "--theme-gradient-to": "#d4d4d4",
     "--theme-link": "#d4d4d4",
-    "--theme-link-hover": "#e5e5e5"
+    "--theme-link-hover": "#e5e5e5",
+    "--theme-heading-color": "var(--foreground)"
   }
 }

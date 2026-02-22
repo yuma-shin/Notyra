@@ -4,6 +4,7 @@ import { markdown } from '@codemirror/lang-markdown'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import { EditorView as CodemirrorEditorView } from '@codemirror/view'
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language'
+import { Prec } from '@codemirror/state'
 import { tags } from '@lezer/highlight'
 import { languages } from '@codemirror/language-data'
 import { MarkdownPreview } from './MarkdownPreview'
@@ -21,21 +22,46 @@ import type { AppSettings, MarkdownNoteMeta, FolderNode } from '@/shared/types'
 const lineWrapping = CodemirrorEditorView.lineWrapping
 
 const markdownStyle = HighlightStyle.define([
-  { tag: tags.heading1, fontSize: '2em', fontWeight: '700' },
-  { tag: tags.heading2, fontSize: '1.5em', fontWeight: '700' },
-  { tag: tags.heading3, fontSize: '1.25em', fontWeight: '700' },
-  { tag: tags.heading4, fontSize: '1em', fontWeight: '700' },
-  { tag: tags.heading5, fontSize: '0.875em', fontWeight: '700' },
+  {
+    tag: tags.heading1,
+    fontSize: '2em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading2,
+    fontSize: '1.5em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading3,
+    fontSize: '1.25em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading4,
+    fontSize: '1em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading5,
+    fontSize: '0.875em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
   {
     tag: tags.heading6,
     fontSize: '0.85em',
     fontWeight: '700',
-    color: '#656d76',
+    color: 'var(--muted-foreground)',
   },
   { tag: tags.strong, fontWeight: '700' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strikethrough, textDecoration: 'line-through', opacity: '0.7' },
-  { tag: tags.link, color: '#0969da', textDecoration: 'underline' },
+  { tag: tags.link, color: 'var(--theme-link)', textDecoration: 'underline' },
   { tag: tags.monospace, fontFamily: 'var(--font-mono)', fontSize: '0.85em' },
 ])
 
@@ -351,7 +377,7 @@ export function EditorView({
               extensions={[
                 markdown({ codeLanguages: languages }),
                 lineWrapping,
-                syntaxHighlighting(markdownStyle),
+                Prec.high(syntaxHighlighting(markdownStyle)),
                 imageHandlerExtension,
               ]}
               onChange={handleChange}
@@ -382,7 +408,7 @@ export function EditorView({
                 extensions={[
                   markdown({ codeLanguages: languages }),
                   lineWrapping,
-                  syntaxHighlighting(markdownStyle),
+                  Prec.high(syntaxHighlighting(markdownStyle)),
                   imageHandlerExtension,
                 ]}
                 onChange={handleChange}

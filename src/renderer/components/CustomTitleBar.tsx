@@ -124,7 +124,7 @@ export function CustomTitleBar({
   )
 
   return (
-    <div className="h-11 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 select-none relative z-50 bg-white dark:bg-gray-900">
+    <div className="h-11 flex items-center justify-between border-b border-border select-none relative z-50 bg-background">
       {/* ドラッグ可能な領域 */}
       <div
         className="flex-1 h-full drag-region flex items-center"
@@ -136,16 +136,13 @@ export function CustomTitleBar({
           </div>
           {settings.rootDir && (
             <>
-              <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+              <div className="w-px h-4 bg-border mx-0.5" />
               <div
                 className="flex items-center gap-1.5"
                 style={{ WebkitAppRegion: 'no-drag' } as any}
               >
-                <FiFolder
-                  className="text-gray-500 dark:text-gray-400"
-                  size={14}
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                <FiFolder className="text-muted-foreground" size={14} />
+                <span className="text-sm text-foreground font-medium">
                   {getRootFolderName()}
                 </span>
                 {onChangeRootFolder && (
@@ -185,15 +182,13 @@ export function CustomTitleBar({
         {onToggleSidebar && (
           <SimpleTooltip content={t('titleBar.toggleSidebar')}>
             <button
-              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+              className="p-1.5 rounded-md hover:bg-accent transition-all duration-200"
               onClick={onToggleSidebar}
               style={{ color: showSidebar ? 'var(--theme-accent)' : undefined }}
               type="button"
             >
               <FiSidebar
-                className={
-                  showSidebar ? '' : 'text-gray-400 dark:text-gray-600'
-                }
+                className={showSidebar ? '' : 'text-muted-foreground'}
                 size={16}
               />
             </button>
@@ -202,7 +197,7 @@ export function CustomTitleBar({
         {onToggleNoteList && (
           <SimpleTooltip content={t('titleBar.toggleNoteList')}>
             <button
-              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+              className="p-1.5 rounded-md hover:bg-accent transition-all duration-200"
               onClick={onToggleNoteList}
               style={{
                 color: showNoteList ? 'var(--theme-accent)' : undefined,
@@ -210,15 +205,13 @@ export function CustomTitleBar({
               type="button"
             >
               <FiList
-                className={
-                  showNoteList ? '' : 'text-gray-400 dark:text-gray-600'
-                }
+                className={showNoteList ? '' : 'text-muted-foreground'}
                 size={16}
               />
             </button>
           </SimpleTooltip>
         )}
-        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+        <div className="w-px h-4 bg-border mx-0.5" />
         <ColorThemeSelector />
         <div className="scale-90">
           <ThemeToggle />
@@ -232,27 +225,21 @@ export function CustomTitleBar({
         style={{ WebkitAppRegion: 'no-drag' } as any}
       >
         <button
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-1.5 rounded-md hover:bg-accent transition-colors"
           onClick={handleMinimize}
           type="button"
         >
-          <FiMinus className="text-gray-600 dark:text-gray-400" size={16} />
+          <FiMinus className="text-muted-foreground" size={16} />
         </button>
         <button
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-1.5 rounded-md hover:bg-accent transition-colors"
           onClick={handleMaximize}
           type="button"
         >
           {isMaximized ? (
-            <FiMinimize
-              className="text-gray-600 dark:text-gray-400"
-              size={16}
-            />
+            <FiMinimize className="text-muted-foreground" size={16} />
           ) : (
-            <FiMaximize
-              className="text-gray-600 dark:text-gray-400"
-              size={16}
-            />
+            <FiMaximize className="text-muted-foreground" size={16} />
           )}
         </button>
         <button
@@ -261,7 +248,7 @@ export function CustomTitleBar({
           type="button"
         >
           <FiX
-            className="text-gray-600 dark:text-gray-400 group-hover:text-white"
+            className="text-muted-foreground group-hover:text-white"
             size={16}
           />
         </button>

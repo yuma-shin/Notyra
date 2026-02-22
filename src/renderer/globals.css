@@ -104,6 +104,7 @@ pre,
   --theme-gradient-to: #a3a3a3;
   --theme-link: #404040;
   --theme-link-hover: #737373;
+  --theme-heading-color: var(--foreground);
 }
 
 .dark {
@@ -148,6 +149,7 @@ pre,
   --theme-gradient-to: #d4d4d4;
   --theme-link: #d4d4d4;
   --theme-link-hover: #e5e5e5;
+  --theme-heading-color: var(--foreground);
 }
 
 @theme inline {
@@ -307,11 +309,7 @@ pre,
   font-size: 2em;
   font-weight: 700;
   line-height: 1.25;
-  border-bottom: 1px solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-heading-1) {
-  border-bottom-color: #3d444d;
+  border-bottom: 1px solid var(--border);
 }
 
 .cm-line:has(.cm-heading-2) {
@@ -321,11 +319,7 @@ pre,
   font-size: 1.5em;
   font-weight: 700;
   line-height: 1.25;
-  border-bottom: 1px solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-heading-2) {
-  border-bottom-color: #3d444d;
+  border-bottom: 1px solid var(--border);
 }
 
 .cm-line:has(.cm-heading-3) {
@@ -358,11 +352,7 @@ pre,
   font-size: 0.85em;
   font-weight: 700;
   line-height: 1.25;
-  color: #656d76;
-}
-
-.dark .cm-line:has(.cm-heading-6) {
-  color: #848d97;
+  color: var(--muted-foreground);
 }
 
 /* Bold text */
@@ -406,12 +396,8 @@ pre,
 
 /* Links */
 .cm-link {
-  color: #0969da;
+  color: var(--theme-link);
   text-decoration: underline;
-}
-
-.dark .cm-link {
-  color: #58a6ff;
 }
 
 /* Lists */
@@ -422,24 +408,15 @@ pre,
 /* Blockquotes */
 .cm-line:has(.cm-quote) {
   padding-left: 1em;
-  color: #656d76;
-  border-left: 0.25em solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-quote) {
-  color: #848d97;
-  border-left-color: #3d444d;
+  color: var(--muted-foreground);
+  border-left: 0.25em solid var(--border);
 }
 
 /* Horizontal rule */
 .cm-line:has(.cm-hr) {
   padding-bottom: 0.5em;
   margin: 1.5em 0;
-  border-bottom: 2px solid #d0d7de;
-}
-
-.dark .cm-line:has(.cm-hr) {
-  border-bottom-color: #3d444d;
+  border-bottom: 2px solid var(--border);
 }
 
 /* Markdown preview list styles */
@@ -475,6 +452,7 @@ pre,
   margin-top: 1.5em;
   margin-bottom: 1em;
   font-weight: 700;
+  color: var(--theme-heading-color);
   letter-spacing: -0.02em;
   border-bottom: 2px solid;
   border-image: linear-gradient(
@@ -490,26 +468,31 @@ pre,
   margin-top: 1.5em;
   margin-bottom: 0.8em;
   font-weight: 600;
+  color: var(--theme-heading-color);
   letter-spacing: -0.01em;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.dark .markdown-body h2 {
-  border-bottom-color: #3d444d;
+  border-bottom: 1px solid var(--border);
 }
 
 .markdown-body h3 {
   margin-top: 1.25em;
   margin-bottom: 0.6em;
   font-weight: 600;
+  color: var(--theme-heading-color);
 }
 
 .markdown-body h4,
-.markdown-body h5,
+.markdown-body h5 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  color: var(--theme-heading-color);
+}
+
 .markdown-body h6 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   font-weight: 600;
+  color: var(--muted-foreground);
 }
 
 .markdown-body p {
@@ -535,35 +518,21 @@ pre,
   height: 0.25em;
   padding: 0;
   margin: 2em 0;
-  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
   border: 0;
-}
-
-.dark .markdown-body hr {
-  background: linear-gradient(90deg, transparent, #3d444d, transparent);
 }
 
 /* Code block theme overrides */
 .markdown-body pre {
   padding: 1em;
   overflow-x: auto;
-  color: #24292f;
-  background-color: #f6f8fa;
+  color: var(--foreground);
+  background-color: var(--secondary);
 }
 
 .markdown-body code {
-  color: #24292f;
-  background-color: #f6f8fa;
-}
-
-.dark .markdown-body pre {
-  color: #e6edf3;
-  background-color: #0d1117;
-}
-
-.dark .markdown-body code {
-  color: #e6edf3;
-  background-color: #0d1117;
+  color: var(--foreground);
+  background-color: var(--secondary);
 }
 
 /* Inline code specific styling */
@@ -583,7 +552,7 @@ pre,
   opacity: 0.7;
 }
 
-/* Table theme overrides for dark mode */
+/* Table theme overrides */
 .markdown-body table {
   border-collapse: collapse;
   background-color: transparent;
@@ -592,40 +561,21 @@ pre,
 .markdown-body table th,
 .markdown-body table td {
   padding: 6px 13px;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
 }
 
 .markdown-body table th {
   font-weight: 600;
-  background-color: #f6f8fa;
+  background-color: var(--secondary);
 }
 
 .markdown-body table tr {
-  background-color: #ffffff;
-  border-top: 1px solid #d0d7de;
+  background-color: var(--background);
+  border-top: 1px solid var(--border);
 }
 
 .markdown-body table tr:nth-child(2n) {
-  background-color: #f6f8fa;
-}
-
-.dark .markdown-body table th,
-.dark .markdown-body table td {
-  border-color: #3d444d;
-}
-
-.dark .markdown-body table th {
-  color: #e6edf3;
-  background-color: #161b22;
-}
-
-.dark .markdown-body table tr {
-  background-color: #0d1117;
-  border-top-color: #3d444d;
-}
-
-.dark .markdown-body table tr:nth-child(2n) {
-  background-color: #161b22;
+  background-color: var(--muted);
 }
 
 /* Pre code blocks - no background override */
@@ -728,6 +678,7 @@ pre,
 /* Enhanced task lists */
 .markdown-body input[type="checkbox"] {
   margin-right: 0.5em;
+  accent-color: var(--theme-accent);
   cursor: pointer;
 }
 
@@ -740,7 +691,7 @@ pre,
   position: relative;
   padding: 0.5em 1em 0.5em 1.5em;
   margin: 0 0 16px 0;
-  color: #656d76;
+  color: var(--muted-foreground);
   border-left: none;
 }
 
@@ -751,16 +702,8 @@ pre,
   left: 0.5em;
   width: 4px;
   content: "";
-  background-color: #d0d7de;
+  background-color: var(--border);
   border-radius: 9999px;
-}
-
-.dark .markdown-body blockquote {
-  color: #848d97;
-}
-
-.dark .markdown-body blockquote::before {
-  background-color: #3d444d;
 }
 
 /* GitHub Alert Title */
@@ -887,29 +830,19 @@ pre,
   padding: 12px 16px;
   font-size: 0.75em;
   font-weight: 600;
-  color: #374151;
+  color: var(--muted-foreground);
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  background: var(--secondary);
   border: none;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.dark .markdown-body table th {
-  color: #d1d5db;
-  background: linear-gradient(to bottom, #1f2937, #111827);
-  border-bottom-color: #374151;
+  border-bottom: 2px solid var(--border);
 }
 
 .markdown-body table td {
   padding: 12px 16px;
   border: none;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.dark .markdown-body table td {
-  border-bottom-color: #1f2937;
+  border-bottom: 1px solid var(--border);
 }
 
 .markdown-body table tbody tr {
@@ -917,19 +850,11 @@ pre,
 }
 
 .markdown-body table tbody tr:hover {
-  background-color: #f9fafb;
-}
-
-.dark .markdown-body table tbody tr:hover {
-  background-color: #1f2937;
+  background-color: var(--accent);
 }
 
 .markdown-body table tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-.dark .markdown-body table tbody tr:nth-child(even) {
-  background-color: #0f1419;
+  background-color: var(--muted);
 }
 
 .markdown-body table tbody tr:last-child td {
