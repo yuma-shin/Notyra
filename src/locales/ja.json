@@ -2,7 +2,7 @@
   "common": {
     "appName": "Notyra",
     "search": "検索",
-    "back": "戻る",
+    "back": "最小化",
     "cancel": "キャンセル",
     "save": "保存",
     "delete": "削除",
