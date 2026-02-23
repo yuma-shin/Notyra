@@ -35,6 +35,7 @@ export function CustomTitleBar({
   const [isMaximized, setIsMaximized] = useState(false)
   const { settings } = useApp()
   const { t } = useTranslation()
+  const isMac = window.App?.platform === 'darwin'
 
   useEffect(() => {
     // Electron環境でのみ実行
@@ -130,7 +131,9 @@ export function CustomTitleBar({
         className="flex-1 h-full drag-region flex items-center"
         style={{ WebkitAppRegion: 'drag' } as any}
       >
-        <div className="flex items-center h-full px-4 gap-3">
+        <div
+          className={`flex items-center h-full gap-3 ${isMac ? 'pl-[80px] pr-4' : 'px-4'}`}
+        >
           <div className="flex items-center gap-2">
             <NotyraLogo />
           </div>
@@ -219,40 +222,42 @@ export function CustomTitleBar({
         <LanguageToggle />
       </div>
 
-      {/* ウィンドウ操作ボタン */}
-      <div
-        className="flex items-center gap-0.5 mr-1.5"
-        style={{ WebkitAppRegion: 'no-drag' } as any}
-      >
-        <button
-          className="p-1.5 rounded-md hover:bg-accent transition-colors"
-          onClick={handleMinimize}
-          type="button"
+      {/* ウィンドウ操作ボタン (Windows のみ) */}
+      {!isMac && (
+        <div
+          className="flex items-center gap-0.5 mr-1.5"
+          style={{ WebkitAppRegion: 'no-drag' } as any}
         >
-          <FiMinus className="text-muted-foreground" size={16} />
-        </button>
-        <button
-          className="p-1.5 rounded-md hover:bg-accent transition-colors"
-          onClick={handleMaximize}
-          type="button"
-        >
-          {isMaximized ? (
-            <FiMinimize className="text-muted-foreground" size={16} />
-          ) : (
-            <FiMaximize className="text-muted-foreground" size={16} />
-          )}
-        </button>
-        <button
-          className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
-          onClick={handleClose}
-          type="button"
-        >
-          <FiX
-            className="text-muted-foreground group-hover:text-white"
-            size={16}
-          />
-        </button>
-      </div>
+          <button
+            className="p-1.5 rounded-md hover:bg-accent transition-colors"
+            onClick={handleMinimize}
+            type="button"
+          >
+            <FiMinus className="text-muted-foreground" size={16} />
+          </button>
+          <button
+            className="p-1.5 rounded-md hover:bg-accent transition-colors"
+            onClick={handleMaximize}
+            type="button"
+          >
+            {isMaximized ? (
+              <FiMinimize className="text-muted-foreground" size={16} />
+            ) : (
+              <FiMaximize className="text-muted-foreground" size={16} />
+            )}
+          </button>
+          <button
+            className="p-1.5 rounded-md hover:bg-red-500 transition-colors group"
+            onClick={handleClose}
+            type="button"
+          >
+            <FiX
+              className="text-muted-foreground group-hover:text-white"
+              size={16}
+            />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

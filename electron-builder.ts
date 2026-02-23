@@ -40,7 +40,7 @@ export default {
 
   mac: {
     artifactName,
-    icon: `${resources}/build/icons/icon.icns`,
+    icon: `${resources}/build/icons/dark/mac/icon.icns`,
     category: 'public.app-category.utilities',
     target: ['zip', 'dmg', 'dir'],
   },
