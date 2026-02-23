@@ -62,11 +62,15 @@ export default defineConfig({
     plugins: [
       tsconfigPaths,
       tailwindcss(),
-      codeInspectorPlugin({
-        bundler: 'vite',
-        hotKeys: ['altKey'],
-        hideConsole: true,
-      }),
+      ...(process.env.NODE_ENV !== 'production'
+        ? [
+            codeInspectorPlugin({
+              bundler: 'vite',
+              hotKeys: ['altKey'],
+              hideConsole: true,
+            }),
+          ]
+        : []),
       reactPlugin(),
     ],
 

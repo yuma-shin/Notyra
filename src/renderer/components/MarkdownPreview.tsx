@@ -1,6 +1,5 @@
 import type React from 'react'
 import { useEffect, useRef } from 'react'
-import mermaid from 'mermaid'
 import { useMarkdownProcessing } from '@/renderer/hooks/useMarkdownProcessing'
 import { useCodeCopyHandler } from '@/renderer/hooks/useCodeCopyHandler'
 import { useCheckboxHandler } from '@/renderer/hooks/useCheckboxHandler'
@@ -118,40 +117,43 @@ export function MarkdownPreview({
 
     if (needsRender.length === 0) return
 
-    // 新規・変更された図のみ Mermaid でレンダリング
+    // 新規・変更された図のみ Mermaid でレンダリング（遅延ロード）
     const isDark = document.documentElement.classList.contains('dark')
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      securityLevel: 'loose',
-    })
+    import('mermaid').then(({ default: mermaid }) => {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        securityLevel: 'loose',
+      })
 
-    for (const [i, el] of needsRender.entries()) {
-      const encoded = el.getAttribute('data-diagram')
-      if (!encoded) continue
-      const diagram = decodeURIComponent(encoded)
-      const id = `mermaid-${Date.now()}-${i}`
-      mermaid
-        .render(id, diagram)
-        .then(({ svg }) => {
-          el.innerHTML = svg
-          el.style.textAlign = 'center'
-        })
-        .catch((err: unknown) => {
-          const errorMessage = err instanceof Error ? err.message : String(err)
-          el.innerHTML = `<pre style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 14px;font-size:0.8rem;white-space:pre-wrap;overflow-x:auto;">${errorMessage}</pre>`
-        })
-        .finally(() => {
-          // mermaid.render() がエラー時に document.body へ残す要素を確実に削除
-          // ただしビュアー内の要素（描画済み SVG）は削除しない
-          for (const strayId of [id, `d${id}`]) {
-            const stray = document.getElementById(strayId)
-            if (stray && !contentRef.current?.contains(stray)) {
-              stray.remove()
+      for (const [i, el] of needsRender.entries()) {
+        const encoded = el.getAttribute('data-diagram')
+        if (!encoded) continue
+        const diagram = decodeURIComponent(encoded)
+        const id = `mermaid-${Date.now()}-${i}`
+        mermaid
+          .render(id, diagram)
+          .then(({ svg }: { svg: string }) => {
+            el.innerHTML = svg
+            el.style.textAlign = 'center'
+          })
+          .catch((err: unknown) => {
+            const errorMessage =
+              err instanceof Error ? err.message : String(err)
+            el.innerHTML = `<pre style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 14px;font-size:0.8rem;white-space:pre-wrap;overflow-x:auto;">${errorMessage}</pre>`
+          })
+          .finally(() => {
+            // mermaid.render() がエラー時に document.body へ残す要素を確実に削除
+            // ただしビュアー内の要素（描画済み SVG）は削除しない
+            for (const strayId of [id, `d${id}`]) {
+              const stray = document.getElementById(strayId)
+              if (stray && !contentRef.current?.contains(stray)) {
+                stray.remove()
+              }
             }
-          }
-        })
-    }
+          })
+      }
+    })
   }, [html])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {

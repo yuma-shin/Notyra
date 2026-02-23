@@ -5,7 +5,6 @@ import remarkGithubAlerts from 'remark-github-alerts'
 import remarkRehype from 'remark-rehype'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeStringify from 'rehype-stringify'
-import mermaid from 'mermaid'
 import { rehypeLocalImages } from '@/renderer/plugins/rehypeLocalImages'
 import { rehypeMermaid } from '@/renderer/plugins/rehypeMermaid'
 import githubMarkdownLightCss from 'github-markdown-css/github-markdown-light.css?inline'
@@ -72,6 +71,7 @@ async function renderMermaidInHtml(
       '.mermaid-placeholder'
     )
     if (placeholders.length > 0) {
+      const { default: mermaid } = await import('mermaid')
       mermaid.initialize({
         startOnLoad: false,
         theme: isDark ? 'dark' : 'default',

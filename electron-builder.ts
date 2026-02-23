@@ -27,7 +27,11 @@ export default {
   files: [
     '**/*',
     '!sample-notes/**/*',
+    '!**/*.map',
   ],
+
+  // 不要な Chromium ロケールを除外（en-US と ja のみ残す）
+  electronLanguages: ['en-US', 'ja'],
 
   directories: {
     app: getDevFolder(main),
