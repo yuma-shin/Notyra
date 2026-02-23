@@ -26,7 +26,7 @@ describe('AppContext', () => {
       expect(result.current.settings).toEqual({
         editorLayoutMode: 'split',
         theme: 'system',
-        colorTheme: 'grayscale',
+        colorTheme: 'gray',
         language: 'en',
         showSidebar: true,
         showNoteList: true,
