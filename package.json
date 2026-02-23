@@ -2,7 +2,7 @@
   "displayName": "Notyra",
   "name": "notyra",
   "description": "A lightweight markdown editor built with Electron and React.",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "main": "./node_modules/.dev/main/index.mjs",
   "resources": "src/resources",
   "author": {
