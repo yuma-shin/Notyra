@@ -7,11 +7,19 @@ import packageJSON from '../../../../../package.json'
 import { getDevFolder } from '../utils/path'
 
 async function createPackageJSONDistVersion() {
-  const { main, scripts, resources, devDependencies, ...rest } = packageJSON
+  const { main, scripts, resources, devDependencies, dependencies, ...rest } =
+    packageJSON
+
+  // レンダラー依存はすべて Vite でバンドル済みのため node_modules 不要。
+  // main プロセスが実行時に必要とする npm パッケージのみ列挙する。
+  const mainProcessDeps: Partial<typeof dependencies> = {
+    'gray-matter': dependencies['gray-matter'],
+  }
 
   const packageJSONDistVersion = {
     main: `./main/${basename(main || 'index.mjs')}`,
     ...rest,
+    dependencies: mainProcessDeps,
   }
 
   try {

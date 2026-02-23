@@ -178,6 +178,16 @@ export function EditorView({
     isHtmlExporting,
   } = usePdfExport()
 
+  const extensions = useMemo(
+    () => [
+      markdown({ codeLanguages: languages }),
+      lineWrapping,
+      Prec.high(syntaxHighlighting(markdownStyle)),
+      imageHandlerExtension,
+    ],
+    [imageHandlerExtension]
+  )
+
   const handleExportPdf = async () => {
     const title = noteMeta?.title || noteBaseName || 'untitled'
     await exportPdf(localContent, rootDir, title)
@@ -374,12 +384,7 @@ export function EditorView({
                 bracketMatching: true,
                 syntaxHighlighting: true,
               }}
-              extensions={[
-                markdown({ codeLanguages: languages }),
-                lineWrapping,
-                Prec.high(syntaxHighlighting(markdownStyle)),
-                imageHandlerExtension,
-              ]}
+              extensions={extensions}
               onChange={handleChange}
               onCreateEditor={handleEditorCreate}
               theme={currentTheme}
@@ -405,12 +410,7 @@ export function EditorView({
                   bracketMatching: true,
                   syntaxHighlighting: true,
                 }}
-                extensions={[
-                  markdown({ codeLanguages: languages }),
-                  lineWrapping,
-                  Prec.high(syntaxHighlighting(markdownStyle)),
-                  imageHandlerExtension,
-                ]}
+                extensions={extensions}
                 onChange={handleChange}
                 onCreateEditor={handleEditorCreate}
                 theme={currentTheme}

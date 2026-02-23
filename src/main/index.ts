@@ -44,6 +44,15 @@ protocol.registerSchemesAsPrivileged([
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
 
+  // macOS 開発時の Dock アイコンを設定（ビルド済みアプリはアプリバンドルから自動で設定される）
+  if (process.platform === 'darwin' && ENVIRONMENT.IS_DEV) {
+    const iconPath = nodePath.join(
+      process.cwd(),
+      'src/resources/build/icons/dark/mac/icon.icns'
+    )
+    app.dock?.setIcon(iconPath)
+  }
+
   // Register local-resource:// protocol handler for serving local images
   protocol.handle('local-resource', request => {
     const url = new URL(request.url)

@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FiDroplet } from 'react-icons/fi'
+import {
+  FiDroplet,
+  FiImage,
+  FiDownload,
+  FiCode,
+  FiChevronDown,
+} from 'react-icons/fi'
 import {
   GoBold,
   GoItalic,
@@ -15,7 +21,6 @@ import {
   GoTasklist,
   GoTable,
 } from 'react-icons/go'
-import { ImagePlus, FileDown, FileCode2, ChevronDown } from 'lucide-react'
 import { SimpleTooltip } from './Tooltip'
 
 type ListType = 'bullet' | 'ordered'
@@ -239,7 +244,7 @@ export function MarkdownToolbar({
             onClick={onImageInsert}
             type="button"
           >
-            <ImagePlus size={15} />
+            <FiImage size={15} />
           </button>
         </SimpleTooltip>
       )}
@@ -260,7 +265,7 @@ export function MarkdownToolbar({
                   ? t('editor.toolbar.exporting')
                   : t('editor.toolbar.export')}
               </span>
-              <ChevronDown size={12} />
+              <FiChevronDown size={12} />
             </button>
             {showExportMenu && (
               <ExportMenu
@@ -473,7 +478,7 @@ function ExportMenu({ onPdfExport, onHtmlExport, onClose }: ExportMenuProps) {
           onClick={handlePdf}
           type="button"
         >
-          <FileDown className="shrink-0 text-muted-foreground" size={14} />
+          <FiDownload className="shrink-0 text-muted-foreground" size={14} />
           <span>{t('editor.toolbar.exportPdf')}</span>
         </button>
       )}
@@ -483,7 +488,7 @@ function ExportMenu({ onPdfExport, onHtmlExport, onClose }: ExportMenuProps) {
           onClick={handleHtml}
           type="button"
         >
-          <FileCode2 className="shrink-0 text-muted-foreground" size={14} />
+          <FiCode className="shrink-0 text-muted-foreground" size={14} />
           <span>{t('editor.toolbar.exportHtml')}</span>
         </button>
       )}

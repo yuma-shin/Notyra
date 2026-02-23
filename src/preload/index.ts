@@ -16,6 +16,7 @@ declare global {
 const API = {
   sayHelloFromBridge: () => console.log('\nHello from bridgeAPI! 👋\n\n'),
   username: process.env.USER,
+  platform: process.platform,
 
   // Markdown関連のAPI
   markdown: {
