@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiDroplet } from 'react-icons/fi'
 import {
   GoBold,
@@ -14,7 +15,8 @@ import {
   GoTasklist,
   GoTable,
 } from 'react-icons/go'
-import { ImagePlus, FileDown } from 'lucide-react'
+import { ImagePlus, FileDown, FileCode2, ChevronDown } from 'lucide-react'
+import { SimpleTooltip } from './Tooltip'
 
 type ListType = 'bullet' | 'ordered'
 
@@ -41,6 +43,8 @@ interface MarkdownToolbarProps {
   isImageInserting?: boolean
   onPdfExport?: () => void
   isPdfExporting?: boolean
+  onHtmlExport?: () => void
+  isHtmlExporting?: boolean
 }
 
 export function MarkdownToolbar({
@@ -64,29 +68,48 @@ export function MarkdownToolbar({
   isImageInserting = false,
   onPdfExport,
   isPdfExporting = false,
+  onHtmlExport,
+  isHtmlExporting = false,
 }: MarkdownToolbarProps) {
-  const btn =
-    'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors'
-  const sep = (
-    <div className="w-px h-5 bg-gray-200 dark:bg-gray-600 self-center mx-0.5" />
-  )
+  const { t } = useTranslation()
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportButtonRef = useRef<HTMLDivElement>(null)
+  const hasExport = !!(onPdfExport || onHtmlExport)
+  const isExporting = isPdfExporting || isHtmlExporting
+
+  useEffect(() => {
+    if (!showExportMenu) return
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        exportButtonRef.current &&
+        !exportButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [showExportMenu])
+  const btn = 'p-1.5 hover:bg-accent rounded transition-colors'
+  const sep = <div className="w-px h-5 bg-border self-center mx-0.5" />
 
   return (
     <div
       aria-label="Markdown formatting toolbar"
-      className="flex items-center gap-0.5 px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0d1117] flex-shrink-0 flex-wrap"
+      className="flex items-center gap-0.5 px-2 py-1 border-b border-border bg-background flex-shrink-0 flex-wrap"
       role="toolbar"
     >
       {/* Heading */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleHeadingPalette}
-          title="見出し"
-          type="button"
-        >
-          <GoHeading size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.heading')}>
+          <button
+            className={btn}
+            onClick={onToggleHeadingPalette}
+            type="button"
+          >
+            <GoHeading size={15} />
+          </button>
+        </SimpleTooltip>
         {showHeadingPalette && (
           <HeadingPalette onApplyHeading={onApplyHeading} />
         )}
@@ -95,88 +118,91 @@ export function MarkdownToolbar({
       {sep}
 
       {/* Inline formats */}
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('**')}
-        title="太字"
-        type="button"
-      >
-        <GoBold size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('*')}
-        title="斜体"
-        type="button"
-      >
-        <GoItalic size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('`')}
-        title="コード"
-        type="button"
-      >
-        <GoCodeSquare size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('~~')}
-        title="取り消し線"
-        type="button"
-      >
-        <GoStrikethrough size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('[', '](url)')}
-        title="リンク"
-        type="button"
-      >
-        <GoLink size={15} />
-      </button>
+      <SimpleTooltip content={t('editor.toolbar.bold')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('**')}
+          type="button"
+        >
+          <GoBold size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.italic')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('*')}
+          type="button"
+        >
+          <GoItalic size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.code')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('`')}
+          type="button"
+        >
+          <GoCodeSquare size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.strikethrough')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('~~')}
+          type="button"
+        >
+          <GoStrikethrough size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.link')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('[', '](url)')}
+          type="button"
+        >
+          <GoLink size={15} />
+        </button>
+      </SimpleTooltip>
 
       {sep}
 
       {/* Block formats */}
-      <button className={btn} onClick={onApplyQuote} title="引用" type="button">
-        <GoQuote size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={onApplyCheckbox}
-        title="チェックボックス"
-        type="button"
-      >
-        <GoTasklist size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyList('bullet')}
-        title="箇条書きリスト"
-        type="button"
-      >
-        <GoListUnordered size={15} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyList('ordered')}
-        title="番号付きリスト"
-        type="button"
-      >
-        <GoListOrdered size={15} />
-      </button>
+      <SimpleTooltip content={t('editor.toolbar.quote')}>
+        <button className={btn} onClick={onApplyQuote} type="button">
+          <GoQuote size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.checkbox')}>
+        <button className={btn} onClick={onApplyCheckbox} type="button">
+          <GoTasklist size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.bulletList')}>
+        <button
+          className={btn}
+          onClick={() => onApplyList('bullet')}
+          type="button"
+        >
+          <GoListUnordered size={15} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.orderedList')}>
+        <button
+          className={btn}
+          onClick={() => onApplyList('ordered')}
+          type="button"
+        >
+          <GoListOrdered size={15} />
+        </button>
+      </SimpleTooltip>
 
       {/* Table */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleTablePicker}
-          title="テーブル"
-          type="button"
-        >
-          <GoTable size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.table')}>
+          <button className={btn} onClick={onToggleTablePicker} type="button">
+            <GoTable size={15} />
+          </button>
+        </SimpleTooltip>
         {showTablePicker && <TablePicker onApplyTable={onApplyTable} />}
       </div>
 
@@ -184,56 +210,67 @@ export function MarkdownToolbar({
 
       {/* Color */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleColorPalette}
-          title="文字色"
-          type="button"
-        >
-          <FiDroplet size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.color')}>
+          <button className={btn} onClick={onToggleColorPalette} type="button">
+            <FiDroplet size={15} />
+          </button>
+        </SimpleTooltip>
         {showColorPalette && <ColorPalette onApplyColor={onApplyColor} />}
       </div>
 
       {/* Alert */}
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={onToggleAlertPalette}
-          title="アラート"
-          type="button"
-        >
-          <GoInfo size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.alert')}>
+          <button className={btn} onClick={onToggleAlertPalette} type="button">
+            <GoInfo size={15} />
+          </button>
+        </SimpleTooltip>
         {showAlertPalette && <AlertPalette onApplyAlert={onApplyAlert} />}
       </div>
 
-      {(onImageInsert || onPdfExport) && sep}
+      {onImageInsert && sep}
 
       {/* 画像挿入 */}
       {onImageInsert && (
-        <button
-          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          disabled={isImageInserting}
-          onClick={onImageInsert}
-          title="画像を挿入"
-          type="button"
-        >
-          <ImagePlus size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.imageInsert')}>
+          <button
+            className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
+            disabled={isImageInserting}
+            onClick={onImageInsert}
+            type="button"
+          >
+            <ImagePlus size={15} />
+          </button>
+        </SimpleTooltip>
       )}
 
-      {/* PDF エクスポート */}
-      {onPdfExport && (
-        <button
-          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          disabled={isPdfExporting}
-          onClick={onPdfExport}
-          title={isPdfExporting ? 'エクスポート中...' : 'PDFとしてエクスポート'}
-          type="button"
-        >
-          <FileDown size={15} />
-        </button>
+      {/* エクスポート */}
+      {hasExport && (
+        <div className="ml-auto flex items-center gap-0.5">
+          {sep}
+          <div className="relative self-center" ref={exportButtonRef}>
+            <button
+              className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 px-2 text-xs font-medium`}
+              disabled={isExporting}
+              onClick={() => setShowExportMenu(prev => !prev)}
+              type="button"
+            >
+              <span>
+                {isExporting
+                  ? t('editor.toolbar.exporting')
+                  : t('editor.toolbar.export')}
+              </span>
+              <ChevronDown size={12} />
+            </button>
+            {showExportMenu && (
+              <ExportMenu
+                onClose={() => setShowExportMenu(false)}
+                onHtmlExport={onHtmlExport}
+                onPdfExport={onPdfExport}
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
@@ -256,16 +293,16 @@ function HeadingPalette({ onApplyHeading }: HeadingPaletteProps) {
   ]
 
   return (
-    <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-1 flex flex-col gap-0.5 z-50 min-w-[130px]">
+    <div className="absolute left-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-1 flex flex-col gap-0.5 z-50 min-w-[130px]">
       {headings.map(({ level, label, size }) => (
         <button
-          className="px-3 py-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left flex items-center gap-2 font-bold"
+          className="px-3 py-1.5 rounded hover:bg-accent transition-colors text-left flex items-center gap-2 font-bold"
           key={level}
           onClick={() => onApplyHeading(level)}
           title={`見出し${level}`}
           type="button"
         >
-          <span className="text-gray-400 dark:text-gray-500 text-[10px] font-normal w-4">
+          <span className="text-muted-foreground text-[10px] font-normal w-4">
             {label}
           </span>
           <span style={{ fontSize: size }}>{`見出し${level}`}</span>
@@ -289,7 +326,7 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
 
   return (
     <fieldset
-      className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-3 z-50"
+      className="absolute left-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-3 z-50"
       onMouseLeave={() => setHovered({ rows: 0, cols: 0 })}
     >
       <legend className="sr-only">テーブルサイズを選択</legend>
@@ -300,8 +337,8 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
               <button
                 className={`w-5 h-5 border rounded-sm transition-colors ${
                   rowIdx < hovered.rows && colIdx < hovered.cols
-                    ? 'bg-blue-400 border-blue-500'
-                    : 'bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-500 hover:bg-blue-200 hover:border-blue-400'
+                    ? 'bg-[var(--theme-accent)] border-[var(--theme-accent)]'
+                    : 'bg-muted border-border hover:bg-[var(--theme-accent-subtle-hover)] hover:border-[var(--theme-accent)]'
                 }`}
                 key={`${rowIdx}-${colIdx}`}
                 onClick={() => {
@@ -318,7 +355,7 @@ function TablePicker({ onApplyTable }: TablePickerProps) {
           </div>
         ))}
       </div>
-      <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+      <div className="text-center text-xs text-muted-foreground mt-2">
         {hovered.rows > 0 && hovered.cols > 0
           ? `${hovered.rows}行 × ${hovered.cols}列`
           : 'サイズを選択'}
@@ -354,10 +391,10 @@ function ColorPalette({ onApplyColor }: ColorPaletteProps) {
   ]
 
   return (
-    <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-3 grid grid-cols-4 gap-3 z-50">
+    <div className="absolute left-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-3 grid grid-cols-4 gap-3 z-50">
       {colors.map(({ color, title }) => (
         <button
-          className="w-8 h-8 rounded-md hover:scale-110 transition-transform border-2 border-white dark:border-gray-700 shadow-sm"
+          className="w-8 h-8 rounded-md hover:scale-110 transition-transform border-2 border-background shadow-sm"
           key={color}
           onClick={() => onApplyColor(color)}
           style={{ backgroundColor: color }}
@@ -391,7 +428,7 @@ function AlertPalette({ onApplyAlert }: AlertPaletteProps) {
   ]
 
   return (
-    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-600 p-2 flex flex-col gap-2 z-50 min-w-[140px]">
+    <div className="absolute right-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-2 flex flex-col gap-2 z-50 min-w-[140px]">
       {alerts.map(({ type, label, color }) => (
         <button
           className={`px-3 py-2 text-sm font-medium rounded-md hover:scale-105 transition-transform ${color} text-white`}
@@ -403,6 +440,53 @@ function AlertPalette({ onApplyAlert }: AlertPaletteProps) {
           {label}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ─── Export Menu ──────────────────────────────────────────────────────────────
+
+interface ExportMenuProps {
+  onPdfExport?: () => void
+  onHtmlExport?: () => void
+  onClose: () => void
+}
+
+function ExportMenu({ onPdfExport, onHtmlExport, onClose }: ExportMenuProps) {
+  const { t } = useTranslation()
+
+  const handlePdf = () => {
+    onClose()
+    onPdfExport?.()
+  }
+
+  const handleHtml = () => {
+    onClose()
+    onHtmlExport?.()
+  }
+
+  return (
+    <div className="absolute right-0 top-full mt-1 bg-popover shadow-xl rounded-lg border border-border p-1 flex flex-col gap-0.5 z-50 min-w-[250px]">
+      {onPdfExport && (
+        <button
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors text-left"
+          onClick={handlePdf}
+          type="button"
+        >
+          <FileDown className="shrink-0 text-muted-foreground" size={14} />
+          <span>{t('editor.toolbar.exportPdf')}</span>
+        </button>
+      )}
+      {onHtmlExport && (
+        <button
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-accent transition-colors text-left"
+          onClick={handleHtml}
+          type="button"
+        >
+          <FileCode2 className="shrink-0 text-muted-foreground" size={14} />
+          <span>{t('editor.toolbar.exportHtml')}</span>
+        </button>
+      )}
     </div>
   )
 }

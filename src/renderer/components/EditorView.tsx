@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import { EditorView as CodemirrorEditorView } from '@codemirror/view'
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language'
+import { Prec } from '@codemirror/state'
 import { tags } from '@lezer/highlight'
 import { languages } from '@codemirror/language-data'
 import { MarkdownPreview } from './MarkdownPreview'
@@ -21,21 +22,46 @@ import type { AppSettings, MarkdownNoteMeta, FolderNode } from '@/shared/types'
 const lineWrapping = CodemirrorEditorView.lineWrapping
 
 const markdownStyle = HighlightStyle.define([
-  { tag: tags.heading1, fontSize: '2em', fontWeight: '700' },
-  { tag: tags.heading2, fontSize: '1.5em', fontWeight: '700' },
-  { tag: tags.heading3, fontSize: '1.25em', fontWeight: '700' },
-  { tag: tags.heading4, fontSize: '1em', fontWeight: '700' },
-  { tag: tags.heading5, fontSize: '0.875em', fontWeight: '700' },
+  {
+    tag: tags.heading1,
+    fontSize: '2em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading2,
+    fontSize: '1.5em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading3,
+    fontSize: '1.25em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading4,
+    fontSize: '1em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
+  {
+    tag: tags.heading5,
+    fontSize: '0.875em',
+    fontWeight: '700',
+    color: 'var(--theme-heading-color)',
+  },
   {
     tag: tags.heading6,
     fontSize: '0.85em',
     fontWeight: '700',
-    color: '#656d76',
+    color: 'var(--muted-foreground)',
   },
   { tag: tags.strong, fontWeight: '700' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strikethrough, textDecoration: 'line-through', opacity: '0.7' },
-  { tag: tags.link, color: '#0969da', textDecoration: 'underline' },
+  { tag: tags.link, color: 'var(--theme-link)', textDecoration: 'underline' },
   { tag: tags.monospace, fontFamily: 'var(--font-mono)', fontSize: '0.85em' },
 ])
 
@@ -56,6 +82,7 @@ interface EditorViewProps {
   currentFolder?: string
   isSaving?: boolean
   rootDir?: string
+  allNotes?: MarkdownNoteMeta[]
 }
 
 export function EditorView({
@@ -75,7 +102,21 @@ export function EditorView({
   currentFolder,
   isSaving = false,
   rootDir,
+  allNotes,
 }: EditorViewProps) {
+  const allTags = useMemo(() => {
+    if (!allNotes) return []
+    const tagSet = new Set<string>()
+    for (const note of allNotes) {
+      if (note.tags) {
+        for (const tag of note.tags) {
+          tagSet.add(tag)
+        }
+      }
+    }
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b, 'ja'))
+  }, [allNotes])
+
   const [localContent, setLocalContent] = useState(content)
   const [currentTheme, setCurrentTheme] = useState(() => {
     const isDark = document.documentElement.classList.contains('dark')
@@ -130,11 +171,21 @@ export function EditorView({
       editorViewRef,
     })
 
-  const { exportPdf, isExporting: isPdfExporting } = usePdfExport()
+  const {
+    exportPdf,
+    isExporting: isPdfExporting,
+    exportHtml,
+    isHtmlExporting,
+  } = usePdfExport()
 
   const handleExportPdf = async () => {
     const title = noteMeta?.title || noteBaseName || 'untitled'
     await exportPdf(localContent, rootDir, title)
+  }
+
+  const handleExportHtml = async () => {
+    const title = noteMeta?.title || noteBaseName || 'untitled'
+    await exportHtml(localContent, rootDir, title)
   }
 
   useEffect(() => {
@@ -237,10 +288,12 @@ export function EditorView({
       {isSaving && (
         <div className="absolute top-0 left-0 right-0 z-50 h-0.5 bg-gray-200 dark:bg-gray-700 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-500 via-purple-400 to-purple-500 animate-[progress_1s_ease-in-out_infinite]"
+            className="h-full animate-[progress_1s_ease-in-out_infinite]"
             style={{
               width: '40%',
               animation: 'progress 1s ease-in-out infinite',
+              background:
+                'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to), var(--theme-gradient-from))',
             }}
           ></div>
         </div>
@@ -248,6 +301,7 @@ export function EditorView({
 
       {noteMeta && onMetadataChange && (
         <MetadataEditor
+          allTags={allTags}
           currentFolder={currentFolder}
           filePath={noteMeta.filePath}
           folderTree={folderTree}
@@ -263,6 +317,7 @@ export function EditorView({
       {/* 固定ツールバー (プレビューモード以外で表示) */}
       {layoutMode !== 'preview' && (
         <MarkdownToolbar
+          isHtmlExporting={isHtmlExporting}
           isImageInserting={isInserting}
           isPdfExporting={isPdfExporting}
           onApplyAlert={handleApplyAlert}
@@ -273,6 +328,7 @@ export function EditorView({
           onApplyList={handleApplyList}
           onApplyQuote={handleApplyQuote}
           onApplyTable={handleApplyTable}
+          onHtmlExport={handleExportHtml}
           onImageInsert={handleToolbarImageInsert}
           onPdfExport={handleExportPdf}
           onToggleAlertPalette={() => {
@@ -306,7 +362,7 @@ export function EditorView({
         />
       )}
 
-      <div className="flex-1 flex min-h-0 bg-white dark:bg-[#0d1117]">
+      <div className="flex-1 flex min-h-0 bg-background">
         {layoutMode === 'editor' && (
           <div className="flex-1 overflow-auto">
             <CodeMirror
@@ -321,7 +377,7 @@ export function EditorView({
               extensions={[
                 markdown({ codeLanguages: languages }),
                 lineWrapping,
-                syntaxHighlighting(markdownStyle),
+                Prec.high(syntaxHighlighting(markdownStyle)),
                 imageHandlerExtension,
               ]}
               onChange={handleChange}
@@ -352,7 +408,7 @@ export function EditorView({
                 extensions={[
                   markdown({ codeLanguages: languages }),
                   lineWrapping,
-                  syntaxHighlighting(markdownStyle),
+                  Prec.high(syntaxHighlighting(markdownStyle)),
                   imageHandlerExtension,
                 ]}
                 onChange={handleChange}

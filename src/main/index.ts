@@ -451,4 +451,24 @@ function setupIpcHandlers() {
       }
     }
   )
+
+  // HTMLエクスポート
+  ipcMain.handle(
+    'export:html',
+    async (_event, { html, title }: { html: string; title: string }) => {
+      const { filePath, canceled } = await dialog.showSaveDialog({
+        defaultPath: `${title}.html`,
+        filters: [{ name: 'HTMLファイル', extensions: ['html'] }],
+      })
+
+      if (canceled || !filePath) return { success: false, canceled: true }
+
+      try {
+        await fs.promises.writeFile(filePath, html, 'utf-8')
+        return { success: true, filePath }
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+  )
 }

@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AppSettings } from '@/shared/types'
+import { applyColorTheme } from '../lib/themeManager'
 
 interface AppContextType {
   settings: AppSettings
@@ -18,6 +19,7 @@ interface AppContextType {
 const defaultSettings: AppSettings = {
   editorLayoutMode: 'split',
   theme: 'system',
+  colorTheme: 'grayscale',
   language: 'en',
   showSidebar: true,
   showNoteList: true,
@@ -75,6 +77,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('storage', handleStorageChange)
     }
   }, [i18n])
+
+  // テーマ（ライト/ダーク/カラー）を適用
+  useEffect(() => {
+    if (isLoading) return
+
+    const supportsMatchMedia = typeof window.matchMedia === 'function'
+
+    const applyFullTheme = () => {
+      const isDark =
+        settings.theme === 'dark'
+          ? true
+          : settings.theme === 'light'
+            ? false
+            : supportsMatchMedia
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+              : false
+
+      const root = document.documentElement
+      if (isDark) {
+        root.classList.add('dark')
+      } else {
+        root.classList.remove('dark')
+      }
+
+      applyColorTheme(settings.colorTheme ?? 'grayscale', isDark)
+    }
+
+    applyFullTheme()
+
+    if (!supportsMatchMedia) return
+
+    // システム設定の変更を監視
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => {
+      if (settings.theme === 'system') {
+        applyFullTheme()
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [settings.theme, settings.colorTheme, isLoading])
 
   // 設定を更新
   const updateSettings = (updates: Partial<AppSettings>) => {

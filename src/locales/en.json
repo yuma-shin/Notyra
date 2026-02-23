@@ -2,14 +2,12 @@
   "common": {
     "appName": "Notyra",
     "search": "Search",
-    "back": "Back",
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
     "confirm": "Confirm",
-    "close": "Close",
     "language": "Language"
   },
   "titleBar": {
@@ -32,7 +30,34 @@
     "saving": "Saving...",
     "saved": "Saved",
     "selectNote": "Please select a note",
-    "selectNoteHint": "Select a note from the list on the left"
+    "selectNoteHint": "Select a note from the list on the left",
+    "toolbar": {
+      "heading": "Heading",
+      "bold": "Bold",
+      "italic": "Italic",
+      "code": "Code",
+      "strikethrough": "Strikethrough",
+      "link": "Link",
+      "quote": "Quote",
+      "checkbox": "Checkbox",
+      "bulletList": "Bullet List",
+      "orderedList": "Ordered List",
+      "table": "Table",
+      "color": "Text Color",
+      "alert": "Alert",
+      "imageInsert": "Insert Image",
+      "export": "Export",
+      "exportPdf": "Export as PDF",
+      "exportHtml": "Export as HTML",
+      "exporting": "Exporting...",
+      "pdfExport": "Export as PDF",
+      "pdfExporting": "Exporting..."
+    },
+    "layoutMode": {
+      "editorOnly": "Editor Only",
+      "splitView": "Split View",
+      "previewOnly": "Preview Only"
+    }
   },
   "dialog": {
     "createFolder": "Create Folder",
@@ -67,6 +92,15 @@
     "light": "Light Mode",
     "dark": "Dark Mode",
     "system": "System Setting"
+  },
+  "colorTheme": {
+    "tooltip": "Color Theme",
+    "title": "Color Theme",
+    "hint": "More themes can be added via JSON",
+    "import": "Import theme file (.json)",
+    "delete": "Delete theme",
+    "importError": "Invalid theme file. Please check the JSON format.",
+    "importDuplicate": "A built-in theme with this ID already exists."
   },
   "welcome": {
     "title": "Welcome to Notyra",

@@ -77,8 +77,16 @@ export function CreateFolderDialog({
               {t('common.cancel')}
             </button>
             <button
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-medium"
+              className="px-4 py-2 text-white rounded-lg font-medium disabled:opacity-50"
               disabled={!folderName.trim()}
+              onMouseEnter={e => {
+                if (!e.currentTarget.disabled)
+                  e.currentTarget.style.background = 'var(--theme-accent-hover)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'var(--theme-accent)'
+              }}
+              style={{ background: 'var(--theme-accent)' }}
               type="submit"
             >
               {t('common.create')}

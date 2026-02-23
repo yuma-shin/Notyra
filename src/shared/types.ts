@@ -41,6 +41,7 @@ export interface AppSettings {
   rootDir?: string
   editorLayoutMode: 'editor' | 'preview' | 'split'
   theme: 'light' | 'dark' | 'system'
+  colorTheme: string
   language: 'en' | 'ja'
   lastOpenedNotePath?: string
   lastSelectedFolder?: string

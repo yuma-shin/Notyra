@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiDroplet } from 'react-icons/fi'
 import {
   GoBold,
@@ -12,6 +13,7 @@ import {
   GoTasklist,
   GoInfo,
 } from 'react-icons/go'
+import { SimpleTooltip } from './Tooltip'
 
 interface SelectionToolbarProps {
   position: { top: number; left: number }
@@ -38,6 +40,7 @@ export function SelectionToolbar({
   onApplyColor,
   onApplyAlert,
 }: SelectionToolbarProps) {
+  const { t } = useTranslation()
   const [showColorPalette, setShowColorPalette] = useState(false)
   const [showAlertPalette, setShowAlertPalette] = useState(false)
 
@@ -77,95 +80,95 @@ export function SelectionToolbar({
       role="toolbar"
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
     >
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('**')}
-        title="太字"
-        type="button"
-      >
-        <GoBold size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('*')}
-        title="斜体"
-        type="button"
-      >
-        <GoItalic size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('`')}
-        title="コード"
-        type="button"
-      >
-        <GoCodeSquare size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('~~')}
-        title="取り消し線"
-        type="button"
-      >
-        <GoStrikethrough size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyFormat('[', '](url)')}
-        title="リンク"
-        type="button"
-      >
-        <GoLink size={16} />
-      </button>
-      {sep}
-      <button className={btn} onClick={onApplyQuote} title="引用" type="button">
-        <GoQuote size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={onApplyCheckbox}
-        title="チェックボックス"
-        type="button"
-      >
-        <GoTasklist size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyList('bullet')}
-        title="箇条書きリスト"
-        type="button"
-      >
-        <GoListUnordered size={16} />
-      </button>
-      <button
-        className={btn}
-        onClick={() => onApplyList('ordered')}
-        title="番号付きリスト"
-        type="button"
-      >
-        <GoListOrdered size={16} />
-      </button>
-      {sep}
-      <div className="relative self-center">
+      <SimpleTooltip content={t('editor.toolbar.bold')}>
         <button
           className={btn}
-          onClick={toggleColor}
-          title="文字色"
+          onClick={() => onApplyFormat('**')}
           type="button"
         >
-          <FiDroplet size={15} />
+          <GoBold size={16} />
         </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.italic')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('*')}
+          type="button"
+        >
+          <GoItalic size={16} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.code')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('`')}
+          type="button"
+        >
+          <GoCodeSquare size={16} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.strikethrough')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('~~')}
+          type="button"
+        >
+          <GoStrikethrough size={16} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.link')}>
+        <button
+          className={btn}
+          onClick={() => onApplyFormat('[', '](url)')}
+          type="button"
+        >
+          <GoLink size={16} />
+        </button>
+      </SimpleTooltip>
+      {sep}
+      <SimpleTooltip content={t('editor.toolbar.quote')}>
+        <button className={btn} onClick={onApplyQuote} type="button">
+          <GoQuote size={16} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.checkbox')}>
+        <button className={btn} onClick={onApplyCheckbox} type="button">
+          <GoTasklist size={16} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.bulletList')}>
+        <button
+          className={btn}
+          onClick={() => onApplyList('bullet')}
+          type="button"
+        >
+          <GoListUnordered size={16} />
+        </button>
+      </SimpleTooltip>
+      <SimpleTooltip content={t('editor.toolbar.orderedList')}>
+        <button
+          className={btn}
+          onClick={() => onApplyList('ordered')}
+          type="button"
+        >
+          <GoListOrdered size={16} />
+        </button>
+      </SimpleTooltip>
+      {sep}
+      <div className="relative self-center">
+        <SimpleTooltip content={t('editor.toolbar.color')}>
+          <button className={btn} onClick={toggleColor} type="button">
+            <FiDroplet size={15} />
+          </button>
+        </SimpleTooltip>
         {showColorPalette && <ColorPalette onApplyColor={handleColorApply} />}
       </div>
       <div className="relative self-center">
-        <button
-          className={btn}
-          onClick={toggleAlert}
-          title="アラート"
-          type="button"
-        >
-          <GoInfo size={15} />
-        </button>
+        <SimpleTooltip content={t('editor.toolbar.alert')}>
+          <button className={btn} onClick={toggleAlert} type="button">
+            <GoInfo size={15} />
+          </button>
+        </SimpleTooltip>
         {showAlertPalette && <AlertPalette onApplyAlert={handleAlertApply} />}
       </div>
     </div>

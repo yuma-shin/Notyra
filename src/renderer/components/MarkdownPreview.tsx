@@ -87,14 +87,38 @@ export function MarkdownPreview({
   useEffect(() => {
     if (!contentRef.current) return
 
+    // innerHTML 置き換え前に既存の Mermaid SVG をキャッシュ
+    // (diagram ソースをキーにして、変更のない図は再レンダリングせず即座に復元する)
+    const mermaidCache = new Map<string, string>()
+    for (const el of contentRef.current.querySelectorAll<HTMLElement>(
+      '.mermaid-placeholder'
+    )) {
+      const encoded = el.getAttribute('data-diagram')
+      if (encoded && el.querySelector('svg')) {
+        mermaidCache.set(encoded, el.innerHTML)
+      }
+    }
+
     contentRef.current.innerHTML = html
 
-    // Mermaid 図を描画
+    // キャッシュ済み SVG を即座に復元し、コンテンツ高さの崩壊を防ぐ
     const placeholders = contentRef.current.querySelectorAll<HTMLElement>(
       '.mermaid-placeholder'
     )
-    if (placeholders.length === 0) return
+    const needsRender: HTMLElement[] = []
+    for (const el of placeholders) {
+      const encoded = el.getAttribute('data-diagram')
+      if (encoded && mermaidCache.has(encoded)) {
+        el.innerHTML = mermaidCache.get(encoded) ?? ''
+        el.style.textAlign = 'center'
+      } else {
+        needsRender.push(el)
+      }
+    }
 
+    if (needsRender.length === 0) return
+
+    // 新規・変更された図のみ Mermaid でレンダリング
     const isDark = document.documentElement.classList.contains('dark')
     mermaid.initialize({
       startOnLoad: false,
@@ -102,29 +126,32 @@ export function MarkdownPreview({
       securityLevel: 'loose',
     })
 
-    placeholders.forEach(async (el, i) => {
+    for (const [i, el] of needsRender.entries()) {
       const encoded = el.getAttribute('data-diagram')
-      if (!encoded) return
+      if (!encoded) continue
       const diagram = decodeURIComponent(encoded)
       const id = `mermaid-${Date.now()}-${i}`
-      try {
-        const { svg } = await mermaid.render(id, diagram)
-        el.innerHTML = svg
-        el.style.textAlign = 'center'
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : String(err)
-        el.innerHTML = `<pre style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 14px;font-size:0.8rem;white-space:pre-wrap;overflow-x:auto;">${errorMessage}</pre>`
-      } finally {
-        // mermaid.render() がエラー時に document.body へ残す要素を確実に削除
-        // ただしビュアー内の要素（描画済み SVG）は削除しない
-        for (const strayId of [id, `d${id}`]) {
-          const stray = document.getElementById(strayId)
-          if (stray && !contentRef.current?.contains(stray)) {
-            stray.remove()
+      mermaid
+        .render(id, diagram)
+        .then(({ svg }) => {
+          el.innerHTML = svg
+          el.style.textAlign = 'center'
+        })
+        .catch((err: unknown) => {
+          const errorMessage = err instanceof Error ? err.message : String(err)
+          el.innerHTML = `<pre style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 14px;font-size:0.8rem;white-space:pre-wrap;overflow-x:auto;">${errorMessage}</pre>`
+        })
+        .finally(() => {
+          // mermaid.render() がエラー時に document.body へ残す要素を確実に削除
+          // ただしビュアー内の要素（描画済み SVG）は削除しない
+          for (const strayId of [id, `d${id}`]) {
+            const stray = document.getElementById(strayId)
+            if (stray && !contentRef.current?.contains(stray)) {
+              stray.remove()
+            }
           }
-        }
-      }
-    })
+        })
+    }
   }, [html])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -136,7 +163,7 @@ export function MarkdownPreview({
 
   return (
     <div
-      className="bg-white dark:bg-gray-950 flex justify-center min-h-full"
+      className="bg-background flex justify-center min-h-full"
       onScroll={handleScroll}
       ref={scrollRef || containerRef}
     >

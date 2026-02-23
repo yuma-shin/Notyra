@@ -54,12 +54,21 @@ export function ConfirmDialog({
               {defaultCancelText}
             </button>
             <button
-              className={`px-4 py-2 text-sm rounded-lg ${
-                isDanger
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              className={`px-4 py-2 text-sm rounded-lg text-white ${
+                isDanger ? 'bg-red-600 hover:bg-red-700' : ''
               }`}
               onClick={onConfirm}
+              onMouseEnter={e => {
+                if (!isDanger)
+                  e.currentTarget.style.background = 'var(--theme-accent-hover)'
+              }}
+              onMouseLeave={e => {
+                if (!isDanger)
+                  e.currentTarget.style.background = 'var(--theme-accent)'
+              }}
+              style={
+                !isDanger ? { background: 'var(--theme-accent)' } : undefined
+              }
               type="button"
             >
               {defaultConfirmText}

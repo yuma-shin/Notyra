@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiGlobe } from 'react-icons/fi'
 import { useApp } from '../contexts/AppContext'
+import { SimpleTooltip } from './editor/Tooltip'
 
 export function LanguageToggle() {
   const { settings, changeLanguage } = useApp()
@@ -27,14 +28,15 @@ export function LanguageToggle() {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
-        className="px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/15 transition-all duration-200 text-gray-600 dark:text-white flex items-center justify-center"
-        onClick={() => setIsOpen(!isOpen)}
-        title={t('common.language')}
-        type="button"
-      >
-        <FiGlobe size={16} />
-      </button>
+      <SimpleTooltip content={t('common.language')}>
+        <button
+          className="px-2 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/15 transition-all duration-200 text-gray-600 dark:text-white flex items-center justify-center"
+          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+        >
+          <FiGlobe size={16} />
+        </button>
+      </SimpleTooltip>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-white/10 rounded-md shadow-lg overflow-hidden z-50">
