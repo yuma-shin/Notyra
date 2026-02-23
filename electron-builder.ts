@@ -63,6 +63,26 @@ export default {
     ]
   },
 
+  linux: {
+    artifactName,
+    icon: `${resources}/build/icons/dark/png`,
+    category: 'TextEditor',
+    target: [
+      {
+        target: 'AppImage',
+        arch: ['x64'],
+      },
+      {
+        target: 'deb',
+        arch: ['x64'],
+      },
+      {
+        target: 'rpm',
+        arch: ['x64'],
+      },
+    ],
+  },
+
   nsis: {
     oneClick: true,
     perMachine: false,
