@@ -19,7 +19,7 @@ interface AppContextType {
 const defaultSettings: AppSettings = {
   editorLayoutMode: 'split',
   theme: 'system',
-  colorTheme: 'grayscale',
+  colorTheme: 'gray',
   language: 'en',
   showSidebar: true,
   showNoteList: true,
@@ -101,7 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         root.classList.remove('dark')
       }
 
-      applyColorTheme(settings.colorTheme ?? 'grayscale', isDark)
+      applyColorTheme(settings.colorTheme ?? 'gray', isDark)
     }
 
     applyFullTheme()

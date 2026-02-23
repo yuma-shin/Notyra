@@ -29,7 +29,7 @@ export function ColorThemeSelector() {
 
   const allThemes = [...builtinThemes, ...customThemes]
   const currentTheme = allThemes.find(
-    th => th.id === (settings.colorTheme ?? 'grayscale')
+    th => th.id === (settings.colorTheme ?? 'gray')
   )
 
   // クリック外で閉じる
@@ -100,7 +100,7 @@ export function ColorThemeSelector() {
     removeCustomTheme(themeId)
     setCustomThemes(loadCustomThemes())
     if (settings.colorTheme === themeId) {
-      updateSettings({ colorTheme: 'grayscale' })
+      updateSettings({ colorTheme: 'gray' })
     }
   }
 
@@ -149,8 +149,7 @@ export function ColorThemeSelector() {
           </div>
           <div className="p-1.5 flex flex-col gap-0.5 max-h-64 overflow-y-auto">
             {allThemes.map(theme => {
-              const isSelected =
-                (settings.colorTheme ?? 'grayscale') === theme.id
+              const isSelected = (settings.colorTheme ?? 'gray') === theme.id
               const isBuiltin = builtinThemes.some(b => b.id === theme.id)
               const swatches = isDark ? theme.swatchesDark : theme.swatches
               return (
