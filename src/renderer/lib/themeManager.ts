@@ -1,4 +1,4 @@
-import grayscaleTheme from '../themes/grayscale.json'
+import grayscaleTheme from '../themes/gray.json'
 import purpleTheme from '../themes/purple.json'
 
 export interface ColorTheme {
