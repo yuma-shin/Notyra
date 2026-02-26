@@ -99,10 +99,10 @@ export function MainScreen() {
     if (!settings.rootDir || !App) return
 
     try {
-      const notes = await App.markdown.scanNotes(settings.rootDir)
+      const { notes, tree } = await App.markdown.scanNotesAndBuildFolderTree(
+        settings.rootDir
+      )
       setAllNotes(notes)
-
-      const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
       setFolderTree(tree)
       const targetFolder =
         folderPath !== undefined ? folderPath : selectedFolder
@@ -535,10 +535,10 @@ export function MainScreen() {
       )
       if (filePath) {
         // ノートリストを再読み込み
-        const notes = await App.markdown.scanNotes(settings.rootDir)
+        const { notes, tree } = await App.markdown.scanNotesAndBuildFolderTree(
+          settings.rootDir
+        )
         setAllNotes(notes)
-
-        const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
         setFolderTree(tree)
 
         // フィルタリングされたノートリストを更新
@@ -719,10 +719,10 @@ export function MainScreen() {
 
       if (newFilePath) {
         // ノートリストを再読み込み
-        const notes = await App.markdown.scanNotes(settings.rootDir)
+        const { notes, tree } = await App.markdown.scanNotesAndBuildFolderTree(
+          settings.rootDir
+        )
         setAllNotes(notes)
-
-        const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
         setFolderTree(tree)
 
         // 移動先のフォルダを選択
