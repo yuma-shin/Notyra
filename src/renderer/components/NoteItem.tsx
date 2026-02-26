@@ -35,7 +35,7 @@ export function NoteItem({
 
   return (
     <div
-      className={`relative p-2.5 transition-all duration-200 group border-b border-gray-200 dark:border-gray-700 ${
+      className={`relative transition-all duration-200 group border-b border-gray-200 dark:border-gray-700 ${
         isSelected ? 'shadow-sm' : 'hover:bg-gray-100 dark:hover:bg-gray-800/50'
       }`}
       style={
@@ -43,7 +43,7 @@ export function NoteItem({
       }
     >
       <button
-        className="w-full cursor-pointer text-left"
+        className="w-full cursor-pointer text-left p-2.5"
         onClick={onSelect}
         onDoubleClick={onDoubleClick}
         type="button"

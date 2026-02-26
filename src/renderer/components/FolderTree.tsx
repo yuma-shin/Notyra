@@ -105,6 +105,11 @@ function FolderItem({
               ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-500'
               : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
         }`}
+        onClick={() => onSelectFolder(node.relativePath)}
+        onContextMenu={handleContextMenu}
+        onDoubleClick={() =>
+          hasChildren && onNavigateToFolder?.(node.relativePath)
+        }
         style={{
           paddingLeft: `${depth * 20 + 16}px`,
           ...(isSelected
@@ -143,18 +148,10 @@ function FolderItem({
             </button>
           )}
         </div>
-        <button
-          className="flex items-center gap-2 flex-1 text-left"
-          onClick={() => onSelectFolder(node.relativePath)}
-          onContextMenu={handleContextMenu}
-          onDoubleClick={() =>
-            hasChildren && onNavigateToFolder?.(node.relativePath)
-          }
-          type="button"
-        >
-          <span className="text-sm flex-1">{node.name}</span>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-sm flex-1 truncate">{node.name}</span>
           <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+            className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
               isSelected ? '' : 'bg-muted text-muted-foreground'
             }`}
             style={
@@ -168,7 +165,7 @@ function FolderItem({
           >
             {node.notes?.length || 0}
           </span>
-        </button>
+        </div>
       </div>
 
       {isMenuOpen && (
