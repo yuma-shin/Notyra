@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiFileText, FiPlus, FiSearch, FiX } from 'react-icons/fi'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import type { MarkdownNoteMeta } from '@/shared/types'
 import { SimpleTooltip } from './editor/Tooltip'
 import { NoteItem } from './NoteItem'
@@ -28,6 +29,7 @@ export function NoteList({
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOption, setSortOption] = useState<SortOption>('date-desc')
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // フィルター&ソート処理
   const filteredAndSortedNotes = useMemo(() => {
@@ -69,27 +71,29 @@ export function NoteList({
     return result
   }, [notes, searchQuery, sortOption])
 
-  const handleDoubleClick = async (note: MarkdownNoteMeta) => {
-    try {
-      await App.window.openNoteWindow(note.filePath)
-    } catch (error) {
-      console.error('Failed to open note in new window:', error)
-    }
-  }
+  // 仮想スクロール
+  const virtualizer = useVirtualizer({
+    count: filteredAndSortedNotes.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 80,
+    overscan: 10,
+    measureElement:
+      typeof window !== 'undefined' &&
+      navigator.userAgent.indexOf('Firefox') === -1
+        ? element => element?.getBoundingClientRect().height
+        : undefined,
+  })
 
-  const _formatDate = (dateStr?: string) => {
-    if (!dateStr) return ''
-    try {
-      const date = new Date(dateStr)
-      return date.toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      })
-    } catch {
-      return ''
-    }
-  }
+  const handleDoubleClick = useCallback(
+    async (note: MarkdownNoteMeta) => {
+      try {
+        await App.window.openNoteWindow(note.filePath)
+      } catch (error) {
+        console.error('Failed to open note in new window:', error)
+      }
+    },
+    []
+  )
 
   const getFolderDisplayName = () => {
     if (!selectedFolder || selectedFolder === '') {
@@ -171,18 +175,54 @@ export function NoteList({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {filteredAndSortedNotes.map(note => (
-          <NoteItem
-            isSelected={selectedNote === note.filePath}
-            key={note.id}
-            note={note}
-            onDelete={onDeleteNote ? () => onDeleteNote(note) : undefined}
-            onDoubleClick={() => handleDoubleClick(note)}
-            onSelect={() => onSelectNote(note)}
-          />
-        ))}
-        {filteredAndSortedNotes.length === 0 && notes.length === 0 && (
+      {/* 仮想スクロールリスト */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+        {filteredAndSortedNotes.length > 0 ? (
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map(virtualItem => (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <NoteItem
+                  isSelected={
+                    selectedNote ===
+                    filteredAndSortedNotes[virtualItem.index].filePath
+                  }
+                  note={filteredAndSortedNotes[virtualItem.index]}
+                  onDelete={
+                    onDeleteNote
+                      ? () =>
+                          onDeleteNote(
+                            filteredAndSortedNotes[virtualItem.index]
+                          )
+                      : undefined
+                  }
+                  onDoubleClick={() =>
+                    handleDoubleClick(filteredAndSortedNotes[virtualItem.index])
+                  }
+                  onSelect={() =>
+                    onSelectNote(filteredAndSortedNotes[virtualItem.index])
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        ) : notes.length === 0 ? (
           <div className="p-8 text-center">
             <svg
               className="mx-auto mb-4"
@@ -367,8 +407,7 @@ export function NoteList({
               {t('noteList.noNotesHint')}
             </p>
           </div>
-        )}
-        {filteredAndSortedNotes.length === 0 && notes.length > 0 && (
+        ) : (
           <div className="p-8 text-center">
             <FiSearch
               className="mx-auto mb-4 text-gray-300 dark:text-gray-600"
