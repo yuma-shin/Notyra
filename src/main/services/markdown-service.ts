@@ -35,49 +35,102 @@ export class MarkdownService {
 
   /**
    * ルートフォルダ配下の全.mdファイルをスキャンしてメタデータを取得
+   * Phase 1: .mdファイルパスを並列収集
+   * Phase 2: メタデータを並列読み取り（並列数制限付き）
    */
   async scanNotes(rootDir: string): Promise<MarkdownNoteMeta[]> {
-    const notes: MarkdownNoteMeta[] = []
-    await this.scanDirectory(rootDir, rootDir, notes)
-    return notes
+    const filePaths: string[] = []
+    await this.collectMdFilePaths(rootDir, rootDir, filePaths)
+
+    const results = await this.mapConcurrent(
+      filePaths,
+      filePath => this.getNoteMeta(rootDir, filePath),
+      64
+    )
+
+    return results.filter((meta): meta is MarkdownNoteMeta => meta !== null)
   }
 
-  private async scanDirectory(
+  /**
+   * .mdファイルパスを並列収集（ディレクトリ走査を並列化）
+   */
+  private async collectMdFilePaths(
     rootDir: string,
     currentDir: string,
-    notes: MarkdownNoteMeta[]
+    filePaths: string[]
   ): Promise<void> {
     try {
       const entries = await fs.readdir(currentDir, { withFileTypes: true })
+      const subdirPromises: Promise<void>[] = []
 
       for (const entry of entries) {
         const fullPath = path.join(currentDir, entry.name)
-
         if (entry.isDirectory()) {
-          // サブディレクトリを再帰的にスキャン
-          await this.scanDirectory(rootDir, fullPath, notes)
+          subdirPromises.push(
+            this.collectMdFilePaths(rootDir, fullPath, filePaths)
+          )
         } else if (entry.isFile() && entry.name.endsWith('.md')) {
-          // .mdファイルのメタデータを取得
-          const meta = await this.getNoteMeta(rootDir, fullPath)
-          if (meta) {
-            notes.push(meta)
-          }
+          filePaths.push(fullPath)
         }
       }
+
+      // サブディレクトリを並列走査
+      await Promise.all(subdirPromises)
     } catch (error) {
-      console.error(`Error scanning directory ${currentDir}:`, error)
+      console.error(`Error collecting files from ${currentDir}:`, error)
     }
   }
 
   /**
+   * 非同期タスクを並列数制限付きで実行
+   */
+  private async mapConcurrent<T, R>(
+    items: T[],
+    fn: (item: T) => Promise<R | null>,
+    concurrency: number
+  ): Promise<(R | null)[]> {
+    const results: (R | null)[] = new Array(items.length).fill(null)
+    let index = 0
+
+    const worker = async () => {
+      while (index < items.length) {
+        const i = index++
+        try {
+          results[i] = await fn(items[i])
+        } catch {
+          results[i] = null
+        }
+      }
+    }
+
+    const workerCount = Math.min(concurrency, items.length)
+    if (workerCount === 0) return results
+
+    await Promise.all(Array.from({ length: workerCount }, worker))
+    return results
+  }
+
+  /**
    * 個別のノートファイルからメタデータを取得
+   * ファイル先頭16KBのみ読み込み（フロントマターと抜粋に十分）
    */
   private async getNoteMeta(
     rootDir: string,
     filePath: string
   ): Promise<MarkdownNoteMeta | null> {
+    // フロントマターと抜粋取得に十分な先頭16KBのみ読み込む
+    const HEADER_SIZE = 16384
     try {
-      const content = await fs.readFile(filePath, 'utf-8')
+      let content: string
+      const fileHandle = await fs.open(filePath, 'r')
+      try {
+        const buffer = Buffer.alloc(HEADER_SIZE)
+        const { bytesRead } = await fileHandle.read(buffer, 0, HEADER_SIZE, 0)
+        content = buffer.subarray(0, bytesRead).toString('utf-8')
+      } finally {
+        await fileHandle.close()
+      }
+
       const parsed = matter(content)
       const relativePath = path.relative(rootDir, filePath)
 
@@ -145,6 +198,7 @@ export class MarkdownService {
 
   /**
    * ディレクトリ構造を走査してフォルダノードを作成
+   * 現レベルのエントリを先に処理してから子ディレクトリを並列走査
    */
   private async scanDirectoryStructure(
     rootDir: string,
@@ -153,6 +207,7 @@ export class MarkdownService {
   ): Promise<void> {
     try {
       const entries = await fs.readdir(currentDir, { withFileTypes: true })
+      const subdirPaths: string[] = []
 
       for (const entry of entries) {
         if (entry.isDirectory()) {
@@ -186,10 +241,16 @@ export class MarkdownService {
             }
           }
 
-          // サブディレクトリを再帰的に走査
-          await this.scanDirectoryStructure(rootDir, fullPath, folderMap)
+          subdirPaths.push(fullPath)
         }
       }
+
+      // 現レベルの folderMap 登録が完了してから子ディレクトリを並列走査
+      await Promise.all(
+        subdirPaths.map(fullPath =>
+          this.scanDirectoryStructure(rootDir, fullPath, folderMap)
+        )
+      )
     } catch (error) {
       console.error(`Error scanning directory structure ${currentDir}:`, error)
     }

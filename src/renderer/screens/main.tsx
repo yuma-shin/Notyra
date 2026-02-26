@@ -99,10 +99,10 @@ export function MainScreen() {
     if (!settings.rootDir || !App) return
 
     try {
-      const notes = await App.markdown.scanNotes(settings.rootDir)
+      const { notes, tree } = await App.markdown.scanNotesAndBuildFolderTree(
+        settings.rootDir
+      )
       setAllNotes(notes)
-
-      const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
       setFolderTree(tree)
       const targetFolder =
         folderPath !== undefined ? folderPath : selectedFolder
@@ -182,16 +182,28 @@ export function MainScreen() {
   }
 
   // ルートフォルダ選択
-  const handleRootFolderSelect = async (path: string) => {
-    updateSettings({ rootDir: path })
+  const handleRootFolderSelect = (path: string) => {
+    // 即座にエディタと各リストをリセット（クリーンな切り替え）
+    setSelectedNote(null)
+    setNoteContent('')
+    setAllNotes([])
+    setFilteredNotes([])
+    setFolderFilteredNotes([])
+    setFolderTree(null)
+    setSelectedFolder('')
+    setShowAllNotes(false)
     setShowRootDialog(false)
     setIsLoading(true)
 
-    // 設定が保存されるのを待つ
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    await loadNotes()
-    setIsLoading(false)
+    // settings.rootDir の変更が useEffect [settings.rootDir, settingsLoading] を
+    // トリガーし、新しい rootDir で loadNotes() が正しく呼ばれる。
+    // ここで loadNotes() を直接呼ぶと、React state が未反映のスタールな
+    // クロージャーの settings.rootDir（古いパス）を参照してしまうため呼ばない。
+    updateSettings({
+      rootDir: path,
+      lastSelectedFolder: '',
+      lastOpenedNotePath: undefined,
+    })
   }
 
   // ルートフォルダ再選択
@@ -535,10 +547,10 @@ export function MainScreen() {
       )
       if (filePath) {
         // ノートリストを再読み込み
-        const notes = await App.markdown.scanNotes(settings.rootDir)
+        const { notes, tree } = await App.markdown.scanNotesAndBuildFolderTree(
+          settings.rootDir
+        )
         setAllNotes(notes)
-
-        const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
         setFolderTree(tree)
 
         // フィルタリングされたノートリストを更新
@@ -719,10 +731,10 @@ export function MainScreen() {
 
       if (newFilePath) {
         // ノートリストを再読み込み
-        const notes = await App.markdown.scanNotes(settings.rootDir)
+        const { notes, tree } = await App.markdown.scanNotesAndBuildFolderTree(
+          settings.rootDir
+        )
         setAllNotes(notes)
-
-        const tree = await App.markdown.buildFolderTree(settings.rootDir, notes)
         setFolderTree(tree)
 
         // 移動先のフォルダを選択

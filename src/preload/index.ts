@@ -35,6 +35,11 @@ const API = {
     ): Promise<FolderNode> =>
       ipcRenderer.invoke('markdown:buildFolderTree', rootDir, notes),
 
+    scanNotesAndBuildFolderTree: (
+      rootDir: string
+    ): Promise<{ notes: MarkdownNoteMeta[]; tree: FolderNode }> =>
+      ipcRenderer.invoke('markdown:scanNotesAndBuildFolderTree', rootDir),
+
     getNoteContent: (filePath: string): Promise<NoteContent | null> =>
       ipcRenderer.invoke('markdown:getNoteContent', filePath),
 

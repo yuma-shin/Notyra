@@ -110,17 +110,19 @@ export async function MainWindow() {
     }
   })
 
-  window.webContents.on('did-finish-load', () => {
-    if (ENVIRONMENT.IS_DEV) {
-      window.webContents.openDevTools({ mode: 'detach' })
-    }
-
+  window.once('ready-to-show', () => {
     // 最大化状態を復元してから表示
     if (savedState.isMaximized) {
       window.maximize()
     }
     window.show()
   })
+
+  if (ENVIRONMENT.IS_DEV) {
+    window.webContents.on('did-finish-load', () => {
+      window.webContents.openDevTools({ mode: 'detach' })
+    })
+  }
 
   window.on('close', () => {
     saveWindowState(window)

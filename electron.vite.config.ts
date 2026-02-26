@@ -93,6 +93,27 @@ export default defineConfig({
 
         output: {
           dir: resolve(devPath, 'renderer'),
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined
+            if (id.includes('mermaid')) return 'chunk-mermaid'
+            if (
+              id.includes('@codemirror') ||
+              id.includes('@uiw/react-codemirror') ||
+              id.includes('@lezer')
+            )
+              return 'chunk-editor'
+            if (
+              id.includes('remark') ||
+              id.includes('rehype') ||
+              id.includes('unified') ||
+              id.includes('mdast') ||
+              id.includes('hast') ||
+              id.includes('micromark') ||
+              id.includes('highlight.js')
+            )
+              return 'chunk-markdown'
+            return undefined
+          },
         },
       },
     },

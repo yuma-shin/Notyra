@@ -132,6 +132,16 @@ function setupIpcHandlers() {
     }
   )
 
+  // ノート一覧取得とフォルダツリー構築を1回のIPCで処理（起動高速化）
+  ipcMain.handle(
+    'markdown:scanNotesAndBuildFolderTree',
+    async (_event, rootDir: string) => {
+      const notes = await markdownService.scanNotes(rootDir)
+      const tree = await markdownService.buildFolderTree(rootDir, notes)
+      return { notes, tree }
+    }
+  )
+
   // ノート内容を取得
   ipcMain.handle(
     'markdown:getNoteContent',
