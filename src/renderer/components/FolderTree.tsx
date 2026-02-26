@@ -110,6 +110,12 @@ function FolderItem({
         onDoubleClick={() =>
           hasChildren && onNavigateToFolder?.(node.relativePath)
         }
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onSelectFolder(node.relativePath)
+          }
+        }}
+        role="treeitem"
         style={{
           paddingLeft: `${depth * 20 + 16}px`,
           ...(isSelected
@@ -120,6 +126,7 @@ function FolderItem({
               }
             : {}),
         }}
+        tabIndex={0}
       >
         <div className="w-5 flex-shrink-0 flex items-center justify-center">
           {hasChildren && (

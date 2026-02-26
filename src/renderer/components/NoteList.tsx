@@ -84,16 +84,13 @@ export function NoteList({
         : undefined,
   })
 
-  const handleDoubleClick = useCallback(
-    async (note: MarkdownNoteMeta) => {
-      try {
-        await App.window.openNoteWindow(note.filePath)
-      } catch (error) {
-        console.error('Failed to open note in new window:', error)
-      }
-    },
-    []
-  )
+  const handleDoubleClick = useCallback(async (note: MarkdownNoteMeta) => {
+    try {
+      await App.window.openNoteWindow(note.filePath)
+    } catch (error) {
+      console.error('Failed to open note in new window:', error)
+    }
+  }, [])
 
   const getFolderDisplayName = () => {
     if (!selectedFolder || selectedFolder === '') {
@@ -176,7 +173,7 @@ export function NoteList({
       </div>
 
       {/* 仮想スクロールリスト */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
         {filteredAndSortedNotes.length > 0 ? (
           <div
             style={{
@@ -187,8 +184,8 @@ export function NoteList({
           >
             {virtualizer.getVirtualItems().map(virtualItem => (
               <div
-                key={virtualItem.key}
                 data-index={virtualItem.index}
+                key={virtualItem.key}
                 ref={virtualizer.measureElement}
                 style={{
                   position: 'absolute',

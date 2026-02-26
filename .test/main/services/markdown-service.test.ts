@@ -19,6 +19,7 @@ vi.mock('node:fs/promises', () => ({
     rm: vi.fn(),
     access: vi.fn(),
     copyFile: vi.fn(),
+    open: vi.fn(),
   },
 }))
 
@@ -69,6 +70,19 @@ import { dialog } from 'electron'
 
 const mockedFs = vi.mocked(fs)
 const mockedDialog = vi.mocked(dialog)
+
+function createMockFileHandle(content: string) {
+  return {
+    read: vi.fn().mockImplementation(
+      async (buffer: Buffer, offset: number, length: number) => {
+        const bytes = Buffer.from(content, 'utf-8').subarray(0, length)
+        bytes.copy(buffer, offset)
+        return { bytesRead: bytes.length }
+      },
+    ),
+    close: vi.fn().mockResolvedValue(undefined),
+  }
+}
 
 describe('MarkdownService', () => {
   let service: MarkdownService
@@ -150,8 +164,10 @@ describe('MarkdownService', () => {
         { name: 'note.md', isFile: () => true, isDirectory: () => false },
       ] as any)
 
-      mockedFs.readFile.mockResolvedValueOnce(
-        '---\ntitle: Test Note\ntags:\n  - js\ncreatedAt: 2024-01-01T00:00:00Z\n---\nHello world',
+      mockedFs.open.mockResolvedValueOnce(
+        createMockFileHandle(
+          '---\ntitle: Test Note\ntags:\n  - js\ncreatedAt: 2024-01-01T00:00:00Z\n---\nHello world',
+        ) as any,
       )
 
       const notes = await service.scanNotes('/root')
@@ -171,7 +187,9 @@ describe('MarkdownService', () => {
         { name: 'deep.md', isFile: () => true, isDirectory: () => false },
       ] as any)
 
-      mockedFs.readFile.mockResolvedValueOnce('---\ntitle: Deep Note\n---\nContent')
+      mockedFs.open.mockResolvedValueOnce(
+        createMockFileHandle('---\ntitle: Deep Note\n---\nContent') as any,
+      )
 
       const notes = await service.scanNotes('/root')
       expect(notes).toHaveLength(1)
@@ -182,7 +200,9 @@ describe('MarkdownService', () => {
       mockedFs.readdir.mockResolvedValueOnce([
         { name: 'plain.md', isFile: () => true, isDirectory: () => false },
       ] as any)
-      mockedFs.readFile.mockResolvedValueOnce('Just plain text without front matter')
+      mockedFs.open.mockResolvedValueOnce(
+        createMockFileHandle('Just plain text without front matter') as any,
+      )
 
       const notes = await service.scanNotes('/root')
       expect(notes).toHaveLength(1)
