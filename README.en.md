@@ -133,6 +133,12 @@ src/
 
 See `RUN_UNSIGNED_APPS.en.md` for platform-specific instructions.
 
+### Branches and Releases
+
+Create change branches and `release/vX.Y.Z` branches from `main`, and target `main` in pull requests.
+CI runs on pull request creation and updates. Merging a release PR creates a tag, builds packages, and uploads them to a release draft.
+See [Branch and release workflow (Japanese)](docs/release.md) for the procedure and migration from `develop`.
+
 ## Contribution
 
 If you find a bug in the source code, it would help a lot if you could create an issue in the GitHub repository.

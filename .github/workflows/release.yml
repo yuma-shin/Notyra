@@ -1,24 +1,106 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  pull_request:
+    branches: [main]
+    types: [closed]
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: false
+
 jobs:
+  prepare-release:
+    name: Create tag and release draft
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/v') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      release-id: ${{ steps.release.outputs.release-id }}
+
+    steps:
+      - name: Checkout merged commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+
+      - name: Validate version, create tag and release draft
+        id: release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const pr = context.payload.pull_request;
+            const match = /^release\/v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/.exec(pr.head.ref);
+            if (!match) {
+              throw new Error('Release branch must be named release/vX.Y.Z');
+            }
+            const version = match[1];
+            const tag = `v${version}`;
+            for (const file of ['package.json', 'src-tauri/tauri.conf.json']) {
+              const actual = JSON.parse(fs.readFileSync(file, 'utf8')).version;
+              if (actual !== version) {
+                throw new Error(`${file}: expected ${version}, got ${actual}`);
+              }
+            }
+
+            const repo = context.repo;
+            const sha = pr.merge_commit_sha;
+            let existingTag;
+            try {
+              existingTag = await github.rest.git.getRef({ ...repo, ref: `tags/${tag}` });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            if (existingTag) {
+              if (existingTag.data.object.type !== 'commit' || existingTag.data.object.sha !== sha) {
+                throw new Error(`${tag} already points to a different commit`);
+              }
+            } else {
+              await github.rest.git.createRef({ ...repo, ref: `refs/tags/${tag}`, sha });
+            }
+
+            // List releases to include drafts when retrying a failed build.
+            const releases = await github.paginate(github.rest.repos.listReleases, { ...repo, per_page: 100 });
+            let release = releases.find(item => item.tag_name === tag);
+            if (release && !release.draft) {
+              throw new Error(`${tag} is already published; refusing to replace release assets`);
+            }
+            if (!release) {
+              const response = await github.rest.repos.createRelease({
+                ...repo,
+                tag_name: tag,
+                target_commitish: sha,
+                name: `Notyra ${tag}`,
+                body: 'See the assets below to download Notyra for your platform.',
+                draft: true,
+                prerelease: false,
+              });
+              release = response.data;
+            }
+            core.setOutput('tag', tag);
+            core.setOutput('release-id', String(release.id));
+
   # ------------------------------------------------------------------
   # macOS ビルド
   # ------------------------------------------------------------------
   release-macos:
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: prepare-release
     runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -50,9 +132,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Notyra ${{ github.ref_name }}"
-          releaseBody: "See the assets below to download Notyra for your platform."
+          releaseId: ${{ needs.prepare-release.outputs.release-id }}
+          tagName: ${{ needs.prepare-release.outputs.tag }}
           releaseDraft: true
           prerelease: false
           args: --target universal-apple-darwin
@@ -60,6 +141,7 @@ jobs:
       - name: Create and upload macOS ZIP
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare-release.outputs.tag }}
         run: |
           VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
           DMG_FILE="${GITHUB_WORKSPACE}/src-tauri/target/universal-apple-darwin/release/bundle/dmg/Notyra_${VERSION}_universal.dmg"
@@ -80,18 +162,21 @@ jobs:
           ditto -c -k --keepParent "${APP_FILE}" "${GITHUB_WORKSPACE}/${ZIP_NAME}"
           hdiutil detach "${MOUNT_POINT}" -quiet
 
-          gh release upload "${{ github.ref_name }}" "${ZIP_NAME}" --clobber
+          gh release upload "${RELEASE_TAG}" "${ZIP_NAME}" --clobber
 
   # ------------------------------------------------------------------
   # Windows ビルド
   # ------------------------------------------------------------------
   release-windows:
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: prepare-release
     runs-on: windows-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -121,19 +206,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Notyra ${{ github.ref_name }}"
-          releaseBody: "See the assets below to download Notyra for your platform."
+          releaseId: ${{ needs.prepare-release.outputs.release-id }}
+          tagName: ${{ needs.prepare-release.outputs.tag }}
           releaseDraft: true
           prerelease: false
 
       - name: Create and upload Windows portable and ZIP
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare-release.outputs.tag }}
         shell: pwsh
         run: |
           $version = (Get-Content src-tauri\tauri.conf.json -Raw | ConvertFrom-Json).version
-          $tagName = "${{ github.ref_name }}"
+          $tagName = $env:RELEASE_TAG
 
           # ポータブル版: ビルド済みバイナリをそのまま配布
           $portableName = "Notyra_${version}_x64-portable.exe"
@@ -146,16 +231,18 @@ jobs:
           gh release upload $tagName $portableName $zipName --clobber
 
   # ------------------------------------------------------------------
-  # Linux ビルド（macOS/Windows のドラフト作成完了後に実行）
+  # Linux ビルド
   # ------------------------------------------------------------------
   release-linux:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [release-macos, release-windows]
+    needs: prepare-release
     runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
       - name: Install Linux system dependencies
         run: |
@@ -195,8 +282,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Notyra ${{ github.ref_name }}"
-          releaseBody: "See the assets below to download Notyra for your platform."
+          releaseId: ${{ needs.prepare-release.outputs.release-id }}
+          tagName: ${{ needs.prepare-release.outputs.tag }}
           releaseDraft: true
           prerelease: false

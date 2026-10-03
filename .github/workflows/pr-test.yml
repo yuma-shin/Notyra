@@ -2,8 +2,11 @@ name: Pull Request CI
 
 on:
   pull_request:
+    branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
-  workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 concurrency:
   group: pr-test-${{ github.event.pull_request.number }}
@@ -15,9 +18,7 @@ jobs:
   # ------------------------------------------------------------------
   frontend:
     name: Frontend (${{ matrix.test-type }})
-    if: >
-      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
-      github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -59,9 +60,7 @@ jobs:
   # ------------------------------------------------------------------
   rust-check:
     name: Rust check
-    if: >
-      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
-      github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
 
     steps:
