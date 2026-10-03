@@ -52,6 +52,27 @@ describe('NoteList', () => {
     mockOpenNoteWindow.mockReset()
   })
 
+  it('すべてのノート・ルート・サブフォルダの表示を見出しで区別できる', () => {
+    const props = {
+      notes: NOTES,
+      onSelectNote: vi.fn(),
+      selectedFolder: '',
+      selectedNote: null,
+    }
+    const { rerender } = render(<NoteList {...props} />)
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Root')
+
+    rerender(<NoteList {...props} showAllNotes />)
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'All Notes'
+    )
+
+    rerender(<NoteList {...props} selectedFolder="docs/tutorials" />)
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'tutorials'
+    )
+  })
+
   it('ダブルクリックすると、渡されたrootDirとともにopenNoteWindowが呼ばれる', () => {
     render(
       <NoteList

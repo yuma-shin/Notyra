@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useApp } from '../contexts/AppContext'
 import { tauriApi as App } from '@/renderer/lib/tauriApi'
 import { stripFrontMatter } from '@/renderer/utils/frontMatter'
+import { filterNotesByFolder } from '@/renderer/utils/noteFilters'
 import {
   invalidateEditorStateCache,
   clearEditorStateCache,
@@ -662,36 +663,10 @@ export function useNoteWorkspace({
         setAllNotes(notes)
         setFolderTree(tree)
 
-        // フォルダフィルタリングを再適用
-        const filtered = notes.filter(note => {
-          if (selectedFolder === '') {
-            const dir =
-              note.relativePath.includes('/') ||
-              note.relativePath.includes('\\')
-                ? note.relativePath.substring(
-                    0,
-                    Math.max(
-                      note.relativePath.lastIndexOf('/'),
-                      note.relativePath.lastIndexOf('\\')
-                    )
-                  )
-                : ''
-            return dir === ''
-          }
-          const dir =
-            note.relativePath.includes('/') || note.relativePath.includes('\\')
-              ? note.relativePath.substring(
-                  0,
-                  Math.max(
-                    note.relativePath.lastIndexOf('/'),
-                    note.relativePath.lastIndexOf('\\')
-                  )
-                )
-              : ''
-          const normalizedDir = dir.replace(/\\/g, '/')
-          const normalizedSelectedFolder = selectedFolder.replace(/\\/g, '/')
-          return normalizedDir === normalizedSelectedFolder
-        })
+        // 現在の表示範囲を維持して、正確なノートデータに差し替える
+        const filtered = showAllNotes
+          ? notes
+          : filterNotesByFolder(notes, selectedFolder)
         setFilteredNotes(filtered)
         setFolderFilteredNotes(filtered)
 

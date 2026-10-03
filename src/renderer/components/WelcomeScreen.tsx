@@ -1,3 +1,4 @@
+import { NotyraLogo } from './NotyraLogo'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LuFolder, LuZap, LuFileText, LuHeart } from 'react-icons/lu'
@@ -32,62 +33,12 @@ export function WelcomeScreen({ onSelect }: WelcomeScreenProps) {
     { icon: LuHeart, label: t('welcome.features.ui') },
   ]
 
-  // NotyraロゴSVG（大きめ）
-  const NotyraLogo = () => (
-    <svg
-      fill="none"
-      height="64"
-      viewBox="0 0 80 80"
-      width="64"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <linearGradient
-          id="welcome-gradient"
-          x1="0%"
-          x2="100%"
-          y1="0%"
-          y2="100%"
-        >
-          <stop
-            offset="0%"
-            style={{ stopColor: 'var(--theme-gradient-from)' }}
-          />
-          <stop
-            offset="100%"
-            style={{ stopColor: 'var(--theme-gradient-to)' }}
-          />
-        </linearGradient>
-      </defs>
-      {/* 流れるようなドキュメントの形 */}
-      <path
-        d="M20 6C16.6863 6 14 8.68629 14 12V68C14 71.3137 16.6863 74 20 74H60C63.3137 74 66 71.3137 66 68V26L46 6H20Z"
-        fill="url(#welcome-gradient)"
-        opacity="0.9"
-      />
-      <path
-        d="M46 6V20C46 23.3137 48.6863 26 52 26H66"
-        fill="url(#welcome-gradient)"
-        opacity="0.6"
-      />
-      {/* マークダウン記号 */}
-      <path
-        d="M24 36H38M24 46H44M24 56H34"
-        stroke="white"
-        strokeLinecap="round"
-        strokeWidth="4"
-      />
-      <circle cx="50" cy="46" fill="white" opacity="0.9" r="4" />
-      <circle cx="56" cy="56" fill="white" opacity="0.7" r="3" />
-    </svg>
-  )
-
   return (
     <div className="flex-1 flex items-center justify-center overflow-auto bg-background">
       <div className="max-w-md w-full mx-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <NotyraLogo />
+            <NotyraLogo size={96} />
           </div>
 
           <h1 className="text-heading-lg text-foreground mb-2">

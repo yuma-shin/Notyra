@@ -182,10 +182,10 @@ describe('AppShell', () => {
     expect(screen.queryByTestId('editor-view')).not.toBeInTheDocument()
   })
 
-  it('selectedNoteがない場合はイラスト(svg)付きの空状態を表示する', () => {
+  it('selectedNoteがない場合はNotyraロゴ付きの空状態を表示する', () => {
     renderAppShell({ selectedNote: null })
     expect(screen.getByText('Please select a note')).toBeInTheDocument()
-    expect(document.querySelector('svg')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Notyra' })).toBeInTheDocument()
   })
 
   it('selectedNoteがある場合はEditorViewを表示する', () => {

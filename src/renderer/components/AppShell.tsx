@@ -1,3 +1,4 @@
+import { NotyraLogo } from './NotyraLogo'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CustomTitleBar } from './CustomTitleBar'
@@ -143,6 +144,7 @@ export function AppShell({
               rootDir={activeRootPath}
               selectedFolder={workspace.selectedFolder}
               selectedNote={workspace.selectedNote?.filePath || null}
+              showAllNotes={workspace.showAllNotes}
               width={noteListPane.width}
             />
             <button
@@ -159,7 +161,7 @@ export function AppShell({
         )}
         {workspace.selectedNote ? (
           <div
-            className={`flex-1 h-full transition-opacity duration-300 ${
+            className={`flex-1 min-w-0 h-full transition-opacity duration-300 ${
               workspace.isNoteTransitioning ? 'opacity-0' : 'opacity-100'
             }`}
           >
@@ -189,211 +191,7 @@ export function AppShell({
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center bg-background">
-            <svg
-              className="mb-6"
-              fill="none"
-              height="160"
-              viewBox="0 0 240 240"
-              width="160"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient
-                  id="noteGradient"
-                  x1="0%"
-                  x2="100%"
-                  y1="0%"
-                  y2="100%"
-                >
-                  <stop
-                    offset="0%"
-                    stopOpacity="0.3"
-                    style={{ stopColor: 'var(--theme-gradient-from)' }}
-                  />
-                  <stop
-                    offset="100%"
-                    stopOpacity="0.4"
-                    style={{ stopColor: 'var(--theme-gradient-to)' }}
-                  />
-                </linearGradient>
-                <linearGradient
-                  id="noteStroke"
-                  x1="0%"
-                  x2="100%"
-                  y1="0%"
-                  y2="100%"
-                >
-                  <stop
-                    offset="0%"
-                    style={{ stopColor: 'var(--theme-gradient-from)' }}
-                  />
-                  <stop
-                    offset="100%"
-                    style={{ stopColor: 'var(--theme-gradient-to)' }}
-                  />
-                </linearGradient>
-              </defs>
-
-              {/* Shadow */}
-              <ellipse
-                cx="120"
-                cy="210"
-                fill="#000"
-                opacity="0.08"
-                rx="80"
-                ry="12"
-              />
-
-              {/* Background documents stack */}
-              <g opacity="0.3">
-                <rect
-                  height="140"
-                  rx="8"
-                  strokeWidth="2"
-                  style={{ fill: 'var(--muted)', stroke: 'var(--border)' }}
-                  width="100"
-                  x="70"
-                  y="55"
-                />
-                <rect
-                  height="140"
-                  rx="8"
-                  strokeWidth="2"
-                  style={{ fill: 'var(--accent)', stroke: 'var(--border)' }}
-                  width="100"
-                  x="75"
-                  y="50"
-                />
-              </g>
-
-              {/* Main document */}
-              <rect
-                fill="url(#noteGradient)"
-                height="140"
-                rx="8"
-                stroke="url(#noteStroke)"
-                strokeWidth="3"
-                width="100"
-                x="80"
-                y="45"
-              />
-
-              {/* Document corner fold */}
-              <path
-                d="M 155 45 L 155 70 L 180 70 Z"
-                fill="url(#noteGradient)"
-                opacity="0.6"
-              />
-              <path
-                d="M 155 45 L 155 70 L 180 70"
-                fill="none"
-                stroke="url(#noteStroke)"
-                strokeWidth="2"
-              />
-
-              {/* Document lines */}
-              <line
-                opacity="0.5"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                style={{ stroke: 'var(--theme-gradient-from)' }}
-                x1="95"
-                x2="150"
-                y1="75"
-                y2="75"
-              />
-              <line
-                opacity="0.5"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                style={{ stroke: 'var(--theme-gradient-from)' }}
-                x1="95"
-                x2="165"
-                y1="90"
-                y2="90"
-              />
-              <line
-                opacity="0.5"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                style={{ stroke: 'var(--theme-gradient-from)' }}
-                x1="95"
-                x2="155"
-                y1="105"
-                y2="105"
-              />
-              <line
-                opacity="0.5"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                style={{ stroke: 'var(--theme-gradient-from)' }}
-                x1="95"
-                x2="160"
-                y1="120"
-                y2="120"
-              />
-
-              {/* Markdown symbols */}
-              <circle
-                cx="95"
-                cy="140"
-                opacity="0.6"
-                r="3"
-                style={{ fill: 'var(--theme-gradient-to)' }}
-              />
-              <circle
-                cx="105"
-                cy="140"
-                opacity="0.6"
-                r="3"
-                style={{ fill: 'var(--theme-gradient-to)' }}
-              />
-              <text
-                fontFamily="monospace"
-                fontSize="14"
-                opacity="0.6"
-                style={{ fill: 'var(--theme-gradient-from)' }}
-                x="115"
-                y="145"
-              >
-                #
-              </text>
-
-              {/* Cursor/Selection indicator */}
-              <g className="animate-pulse">
-                <circle
-                  cx="120"
-                  cy="30"
-                  opacity="0.1"
-                  r="28"
-                  style={{ fill: 'var(--theme-gradient-from)' }}
-                />
-                <circle
-                  cx="120"
-                  cy="30"
-                  opacity="0.15"
-                  r="20"
-                  style={{ fill: 'var(--theme-gradient-from)' }}
-                />
-                <path
-                  d="M 120 15 L 115 25 L 120 22 L 125 25 Z"
-                  opacity="0.7"
-                  style={{ fill: 'var(--theme-gradient-from)' }}
-                />
-                <path
-                  d="M 108 28 L 118 35 L 116 30 L 120 25 Z"
-                  opacity="0.7"
-                  style={{ fill: 'var(--theme-gradient-to)' }}
-                  transform="rotate(-30 120 30)"
-                />
-                <path
-                  d="M 132 28 L 122 35 L 124 30 L 120 25 Z"
-                  opacity="0.7"
-                  style={{ fill: 'var(--theme-gradient-to)' }}
-                  transform="rotate(30 120 30)"
-                />
-              </g>
-            </svg>
+            <NotyraLogo className="mb-6" size={128} />
             <p className="text-lg text-muted-foreground font-medium">
               {t('editor.selectNote')}
             </p>
