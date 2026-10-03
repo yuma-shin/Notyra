@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use gray_matter::engine::YAML;
-use gray_matter::Matter;
+use gray_matter::{Matter, Pod};
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use tauri::{command, AppHandle, Emitter, State};
@@ -176,7 +176,7 @@ async fn read_header(path: &Path) -> std::io::Result<String> {
 async fn get_note_meta(root: &Path, file_path: &Path) -> Option<MarkdownNoteMeta> {
     let header = read_header(file_path).await.ok()?;
     let matter = Matter::<YAML>::new();
-    let parsed = matter.parse(&header);
+    let parsed = matter.parse::<Pod>(&header).ok()?;
 
     let relative = file_path.strip_prefix(root).ok()?.to_string_lossy().replace('\\', "/");
     let excerpt = parsed.content.trim().chars().take(150).collect::<String>();
@@ -377,7 +377,8 @@ pub async fn get_note_content(file_path: String) -> Result<Option<NoteContent>, 
         .map_err(|e| e.to_string())?;
 
     let matter = Matter::<YAML>::new();
-    let parsed = matter.parse(&raw);
+    let parsed = matter.parse::<Pod>(&raw)
+        .map_err(|e| format!("フロントマターの解析に失敗しました: {}", e))?;
 
     let relative = path.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string();
     let title = if let Some(pod) = parsed.data.as_ref() {
@@ -504,7 +505,8 @@ pub async fn rename_note(old_path: String, new_title: String) -> Result<Option<S
 
     let raw = tokio::fs::read_to_string(old).await.map_err(|e| e.to_string())?;
     let matter = Matter::<YAML>::new();
-    let parsed = matter.parse(&raw);
+    let parsed = matter.parse::<Pod>(&raw)
+        .map_err(|e| format!("フロントマターの解析に失敗しました: {}", e))?;
 
     let now = chrono_now();
     // フロントマターの title と updatedAt を更新
@@ -839,5 +841,61 @@ mod tests {
         let result = update_front_matter(raw, "body", "new title", "2026");
         assert!(result.contains("title: \"new title\""));
         assert!(result.contains("updatedAt: \"2026\""));
+    }
+
+    async fn create_front_matter_test_note(name: &str, raw: &str) -> (PathBuf, PathBuf) {
+        let dir = std::env::temp_dir().join(format!(
+            "notyra_front_matter_{}_{}", std::process::id(), name
+        ));
+        tokio::fs::create_dir_all(&dir).await.unwrap();
+        let path = dir.join("note.md");
+        tokio::fs::write(&path, raw).await.unwrap();
+        (dir, path)
+    }
+
+    #[tokio::test]
+    async fn test_read_note_with_front_matter() {
+        let raw = "---\nid: note-id\ntitle: Note title\ntags: [work, ideas]\ncreatedAt: '2026-01-01'\nupdatedAt: '2026-01-02'\n---\n# Body";
+        let (dir, path) = create_front_matter_test_note("valid", raw).await;
+
+        let meta = get_note_meta(&dir, &path).await.unwrap();
+        assert_eq!(meta.id, "note-id");
+        assert_eq!(meta.title, "Note title");
+        assert_eq!(meta.tags, vec!["work", "ideas"]);
+        assert_eq!(meta.created_at.as_deref(), Some("2026-01-01"));
+        assert_eq!(meta.updated_at.as_deref(), Some("2026-01-02"));
+        assert_eq!(meta.excerpt.as_deref(), Some("# Body"));
+
+        let note = get_note_content(path.to_string_lossy().into_owned()).await.unwrap().unwrap();
+        assert_eq!(note.meta.title, "Note title");
+        assert_eq!(note.content, "# Body");
+        assert_eq!(note.raw_content, raw);
+        tokio::fs::remove_dir_all(&dir).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_read_note_without_front_matter() {
+        let (dir, path) = create_front_matter_test_note("plain", "# Plain note").await;
+
+        let meta = get_note_meta(&dir, &path).await.unwrap();
+        assert_eq!(meta.title, "note");
+        assert!(meta.tags.is_empty());
+        let note = get_note_content(path.to_string_lossy().into_owned()).await.unwrap().unwrap();
+        assert_eq!(note.content, "# Plain note");
+        tokio::fs::remove_dir_all(&dir).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_invalid_front_matter_returns_error_without_modifying_note() {
+        let raw = "---\ntitle: [unterminated\n---\n# Body";
+        let (dir, path) = create_front_matter_test_note("invalid", raw).await;
+
+        assert!(get_note_meta(&dir, &path).await.is_none());
+        let file_path = path.to_string_lossy().into_owned();
+        assert!(get_note_content(file_path.clone()).await.is_err());
+        assert!(rename_note(file_path, "New title".to_string()).await.is_err());
+        assert_eq!(tokio::fs::read_to_string(&path).await.unwrap(), raw);
+        assert!(!dir.join("new-title.md").exists());
+        tokio::fs::remove_dir_all(&dir).await.unwrap();
     }
 }
