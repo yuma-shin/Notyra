@@ -1014,7 +1014,8 @@ pre {
  */
 
 /* ライトモード: github-markdown-light.css の値 */
-.markdown-body[data-color-mode="light"] .markdown-alert
+.markdown-body[data-color-mode="light"]
+  .markdown-alert
   .markdown-alert.markdown-alert-note
   .markdown-alert-title {
   color: #0969da;
@@ -1045,7 +1046,8 @@ pre {
 }
 
 /* ダークモード: github-markdown-dark.css の値 */
-.markdown-body[data-color-mode="dark"] .markdown-alert
+.markdown-body[data-color-mode="dark"]
+  .markdown-alert
   .markdown-alert.markdown-alert-note
   .markdown-alert-title {
   color: #4493f8;

@@ -70,8 +70,8 @@ updatedAt: 2026-02-12T00:00:00.000Z
 
 #### Development environment
 
-- Node.js: `22.x` (from `.nvmrc`)
-- pnpm: `10.x` (from `packageManager`)
+- Node.js: `24.21.0` (from `.nvmrc`)
+- pnpm: `12.7.0` (from `packageManager`)
 - **Rust toolchain**: Install via [rustup](https://rustup.rs/)
   ```bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -84,8 +84,11 @@ updatedAt: 2026-02-12T00:00:00.000Z
 ### Setup
 
 ```bash
-pnpm install
+npm install --global pnpm@12.7.0
+pnpm install --frozen-lockfile
 ```
+
+When upgrading from pnpm 10, run the global installation above first. Use pnpm to install this project's dependencies.
 
 ### Development
 

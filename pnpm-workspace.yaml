@@ -1,0 +1,7 @@
+allowBuilds:
+  core-js: false
+  esbuild: true
+
+# Nested language parsers must share Lezer's TreeBuffer and NodeProp classes.
+overrides:
+  '@lezer/common': ^1.5.3
