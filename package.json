@@ -2,7 +2,7 @@
   "displayName": "Notyra",
   "name": "notyra",
   "description": "A lightweight markdown editor built with Tauri and React.",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "author": {
     "name": "Yuma Shintani",
     "email": "yuma@y-shin.net"

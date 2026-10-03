@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
-<defs><linearGradient id="surface" x1="512" y1="80" x2="512" y2="944" gradientUnits="userSpaceOnUse">
+<svg fill="none" height="1024" viewBox="0 0 1024 1024" width="1024" xmlns="http://www.w3.org/2000/svg" >
+<defs><linearGradient gradientUnits="userSpaceOnUse" id="surface" x1="512" x2="512" y1="80" y2="944" >
       <stop stop-color="#deedff"/>
       <stop offset="1" stop-color="#cdd8f7"/>
     </linearGradient></defs>
-<circle cx="512" cy="512" r="432" fill="url(#surface)"/>
+<circle cx="512" cy="512" fill="url(#surface)" r="432" />
 </svg>

@@ -55,7 +55,7 @@ try {
   // desktop icons omit it, and the plain foreground omits lighting and shadows.
   const source = await readFile(join(icons, 'dark/icon.svg'), 'utf8')
   const surface = source.match(
-    /<linearGradient id="surface"[\s\S]*?<\/linearGradient>/
+    /<linearGradient\b[^>]*\bid="surface"[^>]*>[\s\S]*?<\/linearGradient>/
   )[0]
   const layers = join(icons, 'layers')
   await mkdir(layers, { recursive: true })
@@ -67,7 +67,7 @@ try {
       `<defs>${surface}</defs>\n<circle cx="512" cy="512" r="432" fill="url(#surface)"/>`
     )
   )
-  const page = source.match(/<path id="page"[^>]*\/>/)[0]
+  const page = source.match(/<path\b[^>]*\bid="page"[^>]*\/>/)[0]
   await writeFile(
     join(layers, 'foreground.svg'),
     svg(
@@ -82,7 +82,7 @@ try {
     await writeFile(
       join(icons, theme, 'mark.svg'),
       svg(
-        `${source.match(/<defs>[\s\S]*?<\/defs>/)[0]}\n${source.match(/<g id="foreground"[\s\S]*<\/g>/)[0]}`,
+        `${source.match(/<defs>[\s\S]*?<\/defs>/)[0]}\n${source.match(/<g\b[^>]*\bid="foreground"[^>]*>[\s\S]*<\/g>/)[0]}`,
         '128 128 768 768'
       )
     )
@@ -103,6 +103,21 @@ try {
     `-----BEGIN CERTIFICATE-----\n${base64.match(/.{1,64}/g).join('\n')}\n-----END CERTIFICATE-----\n`
   )
   console.log('Updated public and README icons')
+  // Keep generated SVG attributes consistent with the repository lint rules.
+  const lintResult = spawnSync(
+    process.execPath,
+    [
+      join(root, 'node_modules/@biomejs/biome/bin/biome'),
+      'check',
+      '--write',
+      icons,
+    ],
+    { cwd: root, encoding: 'utf8' }
+  )
+  if (lintResult.error) throw lintResult.error
+  if (lintResult.status !== 0) {
+    throw new Error(lintResult.stderr || lintResult.stdout || 'SVG lint failed')
+  }
 } finally {
   const temporaryPath = relative(root, temporary)
   if (

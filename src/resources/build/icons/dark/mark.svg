@@ -1,26 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="128 128 768 768" fill="none">
+<svg fill="none" height="1024" viewBox="128 128 768 768" width="1024" xmlns="http://www.w3.org/2000/svg" >
 <defs>
-    <linearGradient id="surface" x1="512" y1="80" x2="512" y2="944" gradientUnits="userSpaceOnUse">
+    <linearGradient gradientUnits="userSpaceOnUse" id="surface" x1="512" x2="512" y1="80" y2="944" >
       <stop stop-color="#deedff"/>
       <stop offset="1" stop-color="#cdd8f7"/>
     </linearGradient>
-    <linearGradient id="glass" x1="512" y1="192" x2="512" y2="832" gradientUnits="userSpaceOnUse">
+    <linearGradient gradientUnits="userSpaceOnUse" id="glass" x1="512" x2="512" y1="192" y2="832" >
       <stop stop-color="#4cafea" stop-opacity=".94"/>
       <stop offset=".44" stop-color="#788ded" stop-opacity=".94"/>
       <stop offset="1" stop-color="#8567da" stop-opacity=".94"/>
     </linearGradient>
-    <linearGradient id="rim" x1="512" y1="192" x2="512" y2="832" gradientUnits="userSpaceOnUse">
+    <linearGradient gradientUnits="userSpaceOnUse" id="rim" x1="512" x2="512" y1="192" y2="832" >
       <stop stop-color="white" stop-opacity=".82"/>
       <stop offset=".42" stop-color="white" stop-opacity=".58"/>
       <stop offset=".72" stop-color="#667bba" stop-opacity=".5"/>
       <stop offset="1" stop-color="white" stop-opacity=".88"/>
     </linearGradient>
-    <radialGradient id="reflection" cx="324" cy="248" r="320" gradientUnits="userSpaceOnUse" gradientTransform="translate(324 248) scale(1 1.25) translate(-324 -248)">
+    <radialGradient cx="324" cy="248" gradientTransform="translate(324 248) scale(1 1.25) translate(-324 -248)" gradientUnits="userSpaceOnUse" id="reflection" r="320" >
       <stop stop-color="white" stop-opacity=".38"/>
       <stop offset=".48" stop-color="white" stop-opacity=".12"/>
       <stop offset="1" stop-color="white" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="page-volume" x1="224" y1="512" x2="488" y2="512" gradientUnits="userSpaceOnUse">
+    <linearGradient gradientUnits="userSpaceOnUse" id="page-volume" x1="224" x2="488" y1="512" y2="512" >
       <stop stop-color="#3850a2" stop-opacity=".24"/>
       <stop offset=".13" stop-color="white" stop-opacity=".12"/>
       <stop offset=".32" stop-color="white" stop-opacity=".18"/>
@@ -28,37 +28,37 @@
       <stop offset=".88" stop-color="#4353a7" stop-opacity=".09"/>
       <stop offset="1" stop-color="#4353a7" stop-opacity=".24"/>
     </linearGradient>
-    <filter id="soft-highlight" x="208" y="176" width="312" height="176" filterUnits="userSpaceOnUse">
+    <filter filterUnits="userSpaceOnUse" height="176" id="soft-highlight" width="312" x="208" y="176" >
       <feGaussianBlur stdDeviation="7"/>
     </filter>
-    <filter id="rounded-volume" x="208" y="176" width="608" height="672" filterUnits="userSpaceOnUse">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="soft"/>
+    <filter filterUnits="userSpaceOnUse" height="672" id="rounded-volume" width="608" x="208" y="176" >
+      <feGaussianBlur in="SourceAlpha" result="soft" stdDeviation="10" />
       <feComposite in="SourceAlpha" in2="soft" operator="out" result="edge"/>
       <feFlood flood-color="#3c4c98" flood-opacity=".48"/>
       <feComposite in2="edge" operator="in"/>
       <feComposite in2="SourceGraphic" operator="over"/>
     </filter>
-    <linearGradient id="back-rim-glass" x1="356" y1="192" x2="356" y2="344" gradientUnits="userSpaceOnUse">
+    <linearGradient gradientUnits="userSpaceOnUse" id="back-rim-glass" x1="356" x2="356" y1="192" y2="344" >
       <stop stop-color="white" stop-opacity=".48"/>
       <stop offset=".42" stop-color="#a6d8ff" stop-opacity=".3"/>
       <stop offset="1" stop-color="#5067b8" stop-opacity=".34"/>
     </linearGradient>
-    <path id="back-rim" d="M488 316C488 300 484 286 474 276C412 214 344 192 276 192C246 192 224 216 224 248V264C224 234 248 216 280 222C352 228 416 258 456 298C474 316 482 330 488 344V316Z"/>
-    <path id="page" d="M488 316C488 300 484 286 474 276C412 214 344 192 276 192C246 192 224 216 224 248V584C224 620 244 648 280 660C364 688 436 744 498 822Q512 842 526 822C588 744 660 688 744 660C780 648 800 620 800 584V248C800 216 778 192 748 192C680 192 612 214 550 276C540 286 536 300 536 316V548C536 578 520 590 520 620V640C529 644 534 653 534 663C534 673 529 682 520 686V792Q520 800 512 800Q504 800 504 792V686C495 682 490 673 490 663C490 653 495 644 504 640V620C504 590 488 578 488 548V316Z"/>
+    <path d="M488 316C488 300 484 286 474 276C412 214 344 192 276 192C246 192 224 216 224 248V264C224 234 248 216 280 222C352 228 416 258 456 298C474 316 482 330 488 344V316Z" id="back-rim" />
+    <path d="M488 316C488 300 484 286 474 276C412 214 344 192 276 192C246 192 224 216 224 248V584C224 620 244 648 280 660C364 688 436 744 498 822Q512 842 526 822C588 744 660 688 744 660C780 648 800 620 800 584V248C800 216 778 192 748 192C680 192 612 214 550 276C540 286 536 300 536 316V548C536 578 520 590 520 620V640C529 644 534 653 534 663C534 673 529 682 520 686V792Q520 800 512 800Q504 800 504 792V686C495 682 490 673 490 663C490 653 495 644 504 640V620C504 590 488 578 488 548V316Z" id="page" />
     <clipPath id="page-clip"><use href="#page"/></clipPath>
-    <filter id="depth" x="160" y="128" width="704" height="768" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#6685b8" flood-opacity=".12"/>
+    <filter filterUnits="userSpaceOnUse" height="768" id="depth" width="704" x="160" y="128" >
+      <feDropShadow dx="0" dy="0" flood-color="#6685b8" flood-opacity=".12" stdDeviation="10" />
     </filter>
     <g id="page-reflection">
-      <rect x="224" y="192" width="264" height="640" fill="url(#page-volume)"/>
-      <rect x="224" y="192" width="264" height="640" fill="url(#reflection)"/>
-      <use href="#back-rim" fill="url(#back-rim-glass)"/>
-      <path d="M240 252V580C240 610 256 632 288 644C364 670 424 710 472 776" stroke="white" stroke-opacity=".16" stroke-width="5" fill="none"/>
-      <path d="M248 248C248 228 260 216 280 218C348 220 418 248 466 296" stroke="white" stroke-opacity=".5" stroke-width="24" stroke-linecap="round" fill="none" filter="url(#soft-highlight)"/>
-      <path d="M248 248C248 228 260 216 280 218C348 220 418 248 466 296" stroke="white" stroke-opacity=".6" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <rect fill="url(#page-volume)" height="640" width="264" x="224" y="192" />
+      <rect fill="url(#reflection)" height="640" width="264" x="224" y="192" />
+      <use fill="url(#back-rim-glass)" href="#back-rim" />
+      <path d="M240 252V580C240 610 256 632 288 644C364 670 424 710 472 776" fill="none" stroke="white" stroke-opacity=".16" stroke-width="5" />
+      <path d="M248 248C248 228 260 216 280 218C348 220 418 248 466 296" fill="none" filter="url(#soft-highlight)" stroke="white" stroke-linecap="round" stroke-opacity=".5" stroke-width="24" />
+      <path d="M248 248C248 228 260 216 280 218C348 220 418 248 466 296" fill="none" stroke="white" stroke-linecap="round" stroke-opacity=".6" stroke-width="5" />
     </g>
     <g id="pane">
-      <use href="#page" fill="url(#glass)" filter="url(#rounded-volume)"/>
+      <use fill="url(#glass)" filter="url(#rounded-volume)" href="#page" />
       <g clip-path="url(#page-clip)">
         <use href="#page-reflection"/>
         <use href="#page-reflection" transform="translate(1024 0) scale(-1 1)"/>
@@ -67,7 +67,7 @@
       <use href="#page" stroke="url(#rim)" stroke-width="3"/>
     </g>
   </defs>
-<g id="foreground" filter="url(#depth)">
+<g filter="url(#depth)" id="foreground" >
     <use href="#pane"/>
   </g>
 </svg>
