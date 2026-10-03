@@ -4,7 +4,7 @@
  * タイトルバー・タブ一覧が読み込み中も維持されることを確認する。
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { act, screen, cleanup, waitFor, fireEvent } from '@testing-library/react'
+import { act, screen, cleanup, fireEvent } from '@testing-library/react'
 import { renderWithProviders } from '../../helpers/test-app-provider'
 import { MainScreen } from '@/renderer/screens/main'
 
@@ -41,8 +41,10 @@ function createDeferred<T>() {
   return { promise, resolve }
 }
 
-function wait(ms: number) {
-  return new Promise<void>(resolve => setTimeout(resolve, ms))
+async function advanceTime(ms: number) {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms)
+  })
 }
 
 function scanResultFor(rootDir: string) {
@@ -104,6 +106,10 @@ vi.mock('@tauri-apps/api/window', () => ({
   })),
 }))
 
+vi.mock('@tauri-apps/api/app', () => ({
+  getVersion: vi.fn().mockResolvedValue('3.1.1'),
+}))
+
 vi.mock('@/renderer/components/FolderTree', () => ({
   FolderTree: () => null,
 }))
@@ -130,12 +136,14 @@ vi.mock('@/renderer/components/EditorView', () => ({
 
 describe('MainScreen: Skeleton Screen 表示', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     mockCheckRootExists.mockReset()
     mockScanNotes.mockReset()
   })
 
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
   })
 
   it('読み込みがしきい値時間(150ms)未満で終わる場合、Skeleton Screenは一度も表示されない', async () => {
@@ -151,13 +159,12 @@ describe('MainScreen: Skeleton Screen 表示', () => {
       },
     })
 
-    // 読み込みは即座に完了する（実時間ではしきい値未満）
-    await screen.findByText('note:Note A1')
+    // Promise による読み込みを完了させ、しきい値未満であることを確認する
+    await advanceTime(0)
+    expect(screen.getByText('note:Note A1')).toBeInTheDocument()
 
     // しきい値時間分待っても事後的にSkeletonが現れることはない
-    await act(async () => {
-      await wait(200)
-    })
+    await advanceTime(200)
     expect(screen.queryByTestId('skeleton-editor')).not.toBeInTheDocument()
   })
 
@@ -176,12 +183,10 @@ describe('MainScreen: Skeleton Screen 表示', () => {
     })
 
     // しきい値時間を超えてもまだ読み込み中 -> Skeleton Screenが表示される
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('skeleton-editor')).toBeInTheDocument()
-      },
-      { timeout: 1000 }
-    )
+    await advanceTime(149)
+    expect(screen.queryByTestId('skeleton-editor')).not.toBeInTheDocument()
+    await advanceTime(1)
+    expect(screen.getByTestId('skeleton-editor')).toBeInTheDocument()
     // タイトルバー(タブ一覧)は読み込み中も表示され続ける
     expect(screen.getByRole('tab', { name: /root-a/ })).toBeInTheDocument()
 
@@ -191,12 +196,10 @@ describe('MainScreen: Skeleton Screen 表示', () => {
     })
     expect(screen.getByTestId('skeleton-editor')).toBeInTheDocument()
 
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId('skeleton-editor')).not.toBeInTheDocument()
-      },
-      { timeout: 1000 }
-    )
+    await advanceTime(399)
+    expect(screen.getByTestId('skeleton-editor')).toBeInTheDocument()
+    await advanceTime(1)
+    expect(screen.queryByTestId('skeleton-editor')).not.toBeInTheDocument()
     expect(screen.getByText('note:Note A1')).toBeInTheDocument()
   })
 
@@ -213,7 +216,8 @@ describe('MainScreen: Skeleton Screen 表示', () => {
       },
     })
 
-    await screen.findByText('note:Note A1')
+    await advanceTime(0)
+    expect(screen.getByText('note:Note A1')).toBeInTheDocument()
 
     // root-b への切替では読み込みを保留させ、Skeleton Screenが表示される様子を確認する
     const deferred = createDeferred<boolean>()
@@ -221,12 +225,10 @@ describe('MainScreen: Skeleton Screen 表示', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: /root-b/ }))
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('skeleton-editor')).toBeInTheDocument()
-      },
-      { timeout: 1000 }
-    )
+    // 非同期のタブ切替を反映してから、読み込み表示のタイマーを進める
+    await advanceTime(0)
+    await advanceTime(150)
+    expect(screen.getByTestId('skeleton-editor')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /root-a/ })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /root-b/ })).toBeInTheDocument()
 
@@ -235,12 +237,8 @@ describe('MainScreen: Skeleton Screen 表示', () => {
       deferred.resolve(true)
     })
 
-    await waitFor(
-      () => {
-        expect(screen.queryByTestId('skeleton-editor')).not.toBeInTheDocument()
-      },
-      { timeout: 1000 }
-    )
+    await advanceTime(400)
+    expect(screen.queryByTestId('skeleton-editor')).not.toBeInTheDocument()
     expect(screen.getByText('note:Note B1')).toBeInTheDocument()
   })
 })
