@@ -16,6 +16,7 @@ interface NoteListProps {
   notes: MarkdownNoteMeta[]
   selectedNote: string | null
   selectedFolder: string | null
+  showAllNotes?: boolean
   onSelectNote: (note: MarkdownNoteMeta) => void
   onCreateNote?: () => void
   onDeleteNote?: (note: MarkdownNoteMeta) => void
@@ -33,6 +34,7 @@ export function NoteList({
   notes,
   selectedNote,
   selectedFolder,
+  showAllNotes = false,
   onSelectNote,
   onCreateNote,
   onDeleteNote,
@@ -120,6 +122,9 @@ export function NoteList({
   )
 
   const getFolderDisplayName = () => {
+    if (showAllNotes) {
+      return t('folderTree.allNotes')
+    }
     if (!selectedFolder || selectedFolder === '') {
       return t('noteList.root')
     }
@@ -129,7 +134,7 @@ export function NoteList({
 
   return (
     <div
-      className={`${width === undefined ? 'w-80' : ''} border-r border-border overflow-y-auto bg-background flex flex-col`}
+      className={`${width === undefined ? 'w-80' : ''} border-r border-border overflow-y-auto bg-background flex flex-col flex-shrink-0`}
       style={width === undefined ? undefined : { width }}
     >
       <div
@@ -431,7 +436,7 @@ export function NoteList({
               </g>
             </svg>
             <p className="text-sm text-muted-foreground font-medium">
-              {t('noteList.noNotesInFolder')}
+              {t(showAllNotes ? 'noteList.empty' : 'noteList.noNotesInFolder')}
             </p>
             <p className="text-xs text-muted-foreground/70 mt-2">
               {t('noteList.noNotesHint')}

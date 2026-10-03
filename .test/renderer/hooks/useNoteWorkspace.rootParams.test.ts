@@ -13,6 +13,7 @@ const mockCheckRootExists = vi.fn().mockResolvedValue(true)
 const mockScanNotes = vi.fn()
 const mockGetNoteContent = vi.fn()
 const mockSaveNote = vi.fn().mockResolvedValue(true)
+const mockCreateNote = vi.fn()
 
 const NOTE_A: MarkdownNoteMeta = {
   id: 'a',
@@ -38,7 +39,7 @@ vi.mock('@/renderer/lib/tauriApi', () => ({
       watchFile: vi.fn().mockResolvedValue(true),
       unwatchFile: vi.fn().mockResolvedValue(true),
       onFileChanged: vi.fn(() => () => {}),
-      createNote: vi.fn(),
+      createNote: (...args: unknown[]) => mockCreateNote(...args),
       createFolder: vi.fn(),
       deleteNote: vi.fn(),
       deleteFolder: vi.fn(),
@@ -79,7 +80,62 @@ describe('useNoteWorkspace のパラメータ化', () => {
       rawContent: 'body',
     })
     mockSaveNote.mockClear()
+    mockCreateNote.mockReset()
   })
+
+  it.each(['all', 'root', 'sub'] as const)(
+    'ノート作成後も表示範囲（%s）を維持する',
+    async scope => {
+      const folder = scope === 'sub' ? 'sub' : ''
+      const newNote: MarkdownNoteMeta = {
+        id: 'new',
+        title: 'New',
+        filePath: `/root-a/${folder ? `${folder}/` : ''}new.md`,
+        relativePath: `${folder ? `${folder}/` : ''}new.md`,
+      }
+      const { result } = renderHookWithProviders(() =>
+        useNoteWorkspace({
+          rootDir: '/root-a',
+          rootMeta: {},
+          onMetaChange: vi.fn(),
+        })
+      )
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      act(() => {
+        if (scope === 'all') {
+          result.current.onShowAllNotes()
+        } else {
+          result.current.onSelectFolder(folder)
+        }
+      })
+      mockCreateNote.mockResolvedValue(newNote.filePath)
+      const scannedNotes = [newNote, NOTE_A, NOTE_B]
+      mockScanNotes.mockResolvedValue({
+        notes: scannedNotes,
+        tree: {
+          name: '',
+          relativePath: '',
+          children: [],
+          notes: scannedNotes,
+        },
+      })
+
+      await act(async () => {
+        await result.current.onCreateNote('New')
+      })
+
+      const expectedNotes =
+        scope === 'all'
+          ? scannedNotes
+          : [newNote, scope === 'root' ? NOTE_A : NOTE_B]
+      expect(mockCreateNote).toHaveBeenCalledWith('/root-a', folder, 'New')
+      expect(result.current.showAllNotes).toBe(scope === 'all')
+      expect(result.current.selectedFolder).toBe(folder)
+      expect(result.current.allNotes).toEqual(scannedNotes)
+      expect(result.current.filteredNotes).toEqual(expectedNotes)
+      expect(result.current.folderFilteredNotes).toEqual(expectedNotes)
+    }
+  )
 
   it('rootDirがundefinedの場合はフォルダ未選択状態になる', async () => {
     const { result } = renderHookWithProviders(() =>

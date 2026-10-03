@@ -1,3 +1,4 @@
+import { NotyraLogo } from './NotyraLogo'
 import { useEffect, useState } from 'react'
 import {
   LuMinus,
@@ -66,62 +67,6 @@ export function CustomTitleBar({
   const handleClose = async () => {
     await App.window.close()
   }
-
-  // NotyraロゴSVG
-  const NotyraLogo = () => (
-    <svg
-      fill="none"
-      height="24"
-      viewBox="0 0 24 24"
-      width="24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <linearGradient
-          id="notyra-gradient"
-          x1="0%"
-          x2="100%"
-          y1="0%"
-          y2="100%"
-        >
-          <stop
-            offset="0%"
-            style={{ stopColor: 'var(--theme-gradient-from)' }}
-          />
-          <stop
-            offset="100%"
-            style={{ stopColor: 'var(--theme-gradient-to)' }}
-          />
-        </linearGradient>
-      </defs>
-      {/* 流れるようなドキュメントの形 */}
-      <path
-        className="fill-gray-200 dark:fill-white"
-        d="M6 2C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2H6Z"
-        fillOpacity="0.95"
-      />
-      <path
-        className="fill-gray-200 dark:fill-white"
-        d="M14 2V6C14 7.10457 14.8954 8 16 8H20"
-        fillOpacity="0.7"
-      />
-      {/* マークダウン記号 */}
-      <path
-        d="M7 11H11M7 14H13M7 17H10"
-        stroke="url(#notyra-gradient)"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
-      <circle cx="15" cy="14" fill="url(#notyra-gradient)" r="1.5" />
-      <circle
-        cx="17"
-        cy="17"
-        fill="url(#notyra-gradient)"
-        fillOpacity="0.6"
-        r="1"
-      />
-    </svg>
-  )
 
   return (
     <div className="h-11 flex items-center justify-between border-b border-border select-none relative z-50 bg-background">

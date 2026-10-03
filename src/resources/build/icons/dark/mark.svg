@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="128 128 768 768" fill="none">
-  <title>Notyra - Glass Scribe</title>
-  <defs>
+<defs>
     <linearGradient id="surface" x1="512" y1="80" x2="512" y2="944" gradientUnits="userSpaceOnUse">
       <stop stop-color="#deedff"/>
       <stop offset="1" stop-color="#cdd8f7"/>
@@ -68,7 +67,7 @@
       <use href="#page" stroke="url(#rim)" stroke-width="3"/>
     </g>
   </defs>
-  <g id="foreground" filter="url(#depth)">
+<g id="foreground" filter="url(#depth)">
     <use href="#pane"/>
   </g>
 </svg>
