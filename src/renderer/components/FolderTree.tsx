@@ -405,7 +405,7 @@ export function FolderTree({
 
   return (
     <div
-      className={`${width === undefined ? 'w-64' : ''} border-r border-border bg-sidebar flex flex-col h-full`}
+      className={`${width === undefined ? 'w-64' : ''} border-r border-border bg-sidebar flex flex-col flex-shrink-0 h-full`}
       style={width === undefined ? undefined : { width }}
     >
       <div
