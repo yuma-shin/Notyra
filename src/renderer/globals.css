@@ -352,6 +352,13 @@ pre {
   background-color: transparent;
 }
 
+/* Allow text selection in editor and preview */
+.cm-editor,
+.markdown-body {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .markdown-body[data-color-mode] {
   font-family: var(--font-sans);
 }
@@ -366,13 +373,6 @@ pre {
 
 .dark .markdown-body {
   color-scheme: dark;
-}
-
-/* Allow text selection in editor and preview */
-.cm-editor,
-.markdown-body {
-  -webkit-user-select: text;
-  user-select: text;
 }
 
 /* Image insertion inline loading indicator */
@@ -945,14 +945,6 @@ pre {
   color: #0969da;
 }
 
-.dark .markdown-body blockquote.alert-note::before {
-  background-color: #4493f8;
-}
-
-.dark .markdown-body blockquote.alert-note .alert-title {
-  color: #4493f8;
-}
-
 /* GitHub Alerts - Tip (Green) */
 .markdown-body blockquote.alert-tip::before {
   background-color: #1a7f37;
@@ -960,14 +952,6 @@ pre {
 
 .markdown-body blockquote.alert-tip .alert-title {
   color: #1a7f37;
-}
-
-.dark .markdown-body blockquote.alert-tip::before {
-  background-color: #3fb950;
-}
-
-.dark .markdown-body blockquote.alert-tip .alert-title {
-  color: #3fb950;
 }
 
 /* GitHub Alerts - Important (uses theme accent) */
@@ -988,14 +972,6 @@ pre {
   color: #bf8700;
 }
 
-.dark .markdown-body blockquote.alert-warning::before {
-  background-color: #d29922;
-}
-
-.dark .markdown-body blockquote.alert-warning .alert-title {
-  color: #d29922;
-}
-
 /* GitHub Alerts - Caution (Red) */
 .markdown-body blockquote.alert-caution::before {
   background-color: #d1242f;
@@ -1003,6 +979,31 @@ pre {
 
 .markdown-body blockquote.alert-caution .alert-title {
   color: #d1242f;
+}
+
+/* GitHub Alerts - Dark mode overrides */
+.dark .markdown-body blockquote.alert-note::before {
+  background-color: #4493f8;
+}
+
+.dark .markdown-body blockquote.alert-note .alert-title {
+  color: #4493f8;
+}
+
+.dark .markdown-body blockquote.alert-tip::before {
+  background-color: #3fb950;
+}
+
+.dark .markdown-body blockquote.alert-tip .alert-title {
+  color: #3fb950;
+}
+
+.dark .markdown-body blockquote.alert-warning::before {
+  background-color: #d29922;
+}
+
+.dark .markdown-body blockquote.alert-warning .alert-title {
+  color: #d29922;
 }
 
 .dark .markdown-body blockquote.alert-caution::before {

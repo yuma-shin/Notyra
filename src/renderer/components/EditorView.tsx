@@ -539,11 +539,11 @@ export function EditorView({
                     ? 'bg-[color:var(--theme-accent)]'
                     : 'bg-border hover:bg-[color:var(--theme-accent)]'
                 } sticky top-0 cursor-col-resize flex-shrink-0 transition-colors`}
-                style={{ height: 'var(--split-pane-height)' }}
                 onMouseDown={e => {
                   e.preventDefault()
                   setIsDragging(true)
                 }}
+                style={{ height: 'var(--split-pane-height)' }}
                 type="button"
               />
 
