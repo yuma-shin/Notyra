@@ -1,7 +1,15 @@
 import { spawnSync } from 'node:child_process'
-import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises'
 import { isAbsolute, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { generateInstallerSidebar } from './generate-installer-sidebar.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const icons = join(root, 'src/resources/build/icons')
@@ -70,9 +78,7 @@ try {
   const page = source.match(/<path\b[^>]*\bid="page"[^>]*\/>/)[0]
   await writeFile(
     join(layers, 'foreground.svg'),
-    svg(
-      `<defs>${page}</defs>\n<use href="#page" fill="white"/>`
-    )
+    svg(`<defs>${page}</defs>\n<use href="#page" fill="white"/>`)
   )
   for (const [theme, name] of [
     ['light', 'notyra-logo.svg'],
@@ -103,6 +109,13 @@ try {
     `-----BEGIN CERTIFICATE-----\n${base64.match(/.{1,64}/g).join('\n')}\n-----END CERTIFICATE-----\n`
   )
   console.log('Updated public and README icons')
+  const installer = join(root, 'src/resources/build/installer')
+  await mkdir(installer, { recursive: true })
+  await generateInstallerSidebar(
+    join(icons, 'dark/png/128x128.png'),
+    join(installer, 'sidebar.bmp')
+  )
+  console.log('Updated NSIS installer sidebar with the current app icon')
   // Keep generated SVG attributes consistent with the repository lint rules.
   const lintResult = spawnSync(
     process.execPath,
@@ -126,7 +139,9 @@ try {
     temporaryPath.includes('/') ||
     temporaryPath.includes('\\')
   ) {
-    throw new Error(`Refusing to remove a directory outside the workspace: ${temporary}`)
+    throw new Error(
+      `Refusing to remove a directory outside the workspace: ${temporary}`
+    )
   }
   await rm(temporary, { recursive: true, force: true })
 }
