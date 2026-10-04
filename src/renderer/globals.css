@@ -467,6 +467,13 @@ pre {
   background-color: var(--background);
 }
 
+/* Split mode uses the surrounding pane for native wheel/touch scrolling.
+ * CodeMirror remains programmatically scrollable for source-line alignment. */
+.cm-editor .cm-scroller.split-editor-scroller {
+  overflow-y: hidden;
+  overscroll-behavior: auto;
+}
+
 .cm-editor .cm-gutters {
   background-color: var(--background);
   border-right-color: var(--border);

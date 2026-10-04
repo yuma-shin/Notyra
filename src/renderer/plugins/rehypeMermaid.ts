@@ -31,6 +31,7 @@ export function rehypeMermaid() {
       ;(parent as Element).children[index] = {
         type: 'element',
         tagName: 'div',
+        position: node.position,
         properties: {
           className: ['mermaid-placeholder'],
           'data-diagram': encodeURIComponent(text),

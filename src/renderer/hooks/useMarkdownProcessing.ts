@@ -7,11 +7,13 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeStringify from 'rehype-stringify'
 import { rehypeLocalImages } from '@/renderer/plugins/rehypeLocalImages'
 import { rehypeMermaid } from '@/renderer/plugins/rehypeMermaid'
+import { rehypeSourceLines } from '@/renderer/plugins/rehypeSourceLines'
 
 export function useMarkdownProcessing(content: string, noteDir?: string) {
   const [html, setHtml] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     const processMarkdown = async () => {
       try {
         let pipeline = remark()
@@ -26,6 +28,7 @@ export function useMarkdownProcessing(content: string, noteDir?: string) {
         const result = await pipeline
           .use(rehypeMermaid)
           .use(rehypeHighlight)
+          .use(rehypeSourceLines)
           .use(rehypeStringify, { allowDangerousHtml: true })
           .process(content)
 
@@ -36,8 +39,8 @@ export function useMarkdownProcessing(content: string, noteDir?: string) {
 
         // コードブロックに行番号とコピーボタンを追加
         html = html.replace(
-          /<pre><code class="([^"]*)">([\s\S]*?)<\/code><\/pre>/g,
-          (_match, className, code) => {
+          /<pre([^>]*)><code class="([^"]*)">([\s\S]*?)<\/code><\/pre>/g,
+          (_match, preAttributes, className, code) => {
             const tempDiv = document.createElement('div')
             tempDiv.innerHTML = `<code>${code}</code>`
             const textContent = tempDiv.textContent || ''
@@ -50,18 +53,21 @@ export function useMarkdownProcessing(content: string, noteDir?: string) {
               (_, i) => i + 1
             ).join('\n')
 
-            return `<pre class="has-line-numbers"><div class="line-numbers" aria-hidden="true">${lineNumbers}</div><code class="${className}">${code}</code><button type="button" class="copy-button" title="コードをコピー"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></pre>`
+            return `<pre${preAttributes} class="has-line-numbers"><div class="line-numbers" aria-hidden="true">${lineNumbers}</div><code class="${className}">${code}</code><button type="button" class="copy-button" title="コードをコピー"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></pre>`
           }
         )
 
-        setHtml(html)
+        if (!cancelled) setHtml(html)
       } catch (error) {
         console.error('Markdown processing error:', error)
-        setHtml('<p>プレビューの生成に失敗しました</p>')
+        if (!cancelled) setHtml('<p>プレビューの生成に失敗しました</p>')
       }
     }
 
     processMarkdown()
+    return () => {
+      cancelled = true
+    }
   }, [content, noteDir])
 
   return html
