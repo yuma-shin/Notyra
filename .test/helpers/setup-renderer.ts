@@ -4,6 +4,15 @@ import { initReactI18next } from 'react-i18next'
 import en from '@/locales/en.json'
 import ja from '@/locales/ja.json'
 
+// jsdom does not measure layout or provide ResizeObserver.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
 // jsdomはwindow.matchMediaに非対応のため、テーマのシステム設定判定が
 // 参照するmatchMediaをno-opでポリフィルする
 if (!window.matchMedia) {

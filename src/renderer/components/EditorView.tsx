@@ -178,10 +178,12 @@ export function EditorView({
   // Custom hooks
   const { splitPosition, isDragging, containerRef, setIsDragging } =
     useSplitView()
-  const { handleEditorScroll, handlePreviewScroll } = useEditorScrollSync(
+  const { handlePreviewScroll, scrollSyncExtension } = useEditorScrollSync(
     layoutMode,
     editorScrollRef,
-    previewScrollRef
+    previewScrollRef,
+    editorViewRef,
+    filePath
   )
   const {
     handleTextSelection,
@@ -244,12 +246,14 @@ export function EditorView({
       alertExtension,
       blockquoteDecorationExtension,
       editorStatusListener,
+      scrollSyncExtension,
     ],
     [
       imageHandlerExtension,
       alertExtension,
       blockquoteDecorationExtension,
       editorStatusListener,
+      scrollSyncExtension,
     ]
   )
 
@@ -310,6 +314,9 @@ export function EditorView({
   // エディタインスタンスを保存
   const handleEditorCreate = (view: CodemirrorEditorView) => {
     editorViewRef.current = view
+    if (layoutMode === 'split') {
+      view.scrollDOM.classList.add('hide-scrollbar', 'split-editor-scroller')
+    }
 
     // エディタをクリックしたらパレットをすべて閉じる
     view.dom.addEventListener('mousedown', closeAllPalettes)
@@ -484,58 +491,71 @@ export function EditorView({
         )}
 
         {layoutMode === 'split' && (
-          <>
+          <div
+            className="flex-1 min-w-0 overflow-auto"
+            onScroll={handlePreviewScroll}
+            ref={previewScrollRef}
+          >
             <div
-              className="overflow-auto hide-scrollbar"
-              onScroll={handleEditorScroll}
-              ref={editorScrollRef}
-              style={{ width: `${splitPosition}%`, flexShrink: 0 }}
-            >
-              <CodeMirror
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: true,
-                  highlightActiveLineGutter: true,
-                  highlightActiveLine: true,
-                  bracketMatching: true,
-                  syntaxHighlighting: true,
-                }}
-                extensions={extensions}
-                initialState={initialState ?? undefined}
-                key={filePath}
-                onChange={handleChange}
-                onCreateEditor={handleEditorCreate}
-                theme={currentTheme}
-                value={initialState ? undefined : localContent}
-              />
-            </div>
-
-            <button
-              aria-label="Resize editor and preview panes"
-              className={`w-0.5 ${
-                isDragging
-                  ? 'bg-[color:var(--theme-accent)]'
-                  : 'bg-border hover:bg-[color:var(--theme-accent)]'
-              } cursor-col-resize flex-shrink-0 transition-colors`}
-              onMouseDown={e => {
-                e.preventDefault()
-                setIsDragging(true)
+              className="flex items-start"
+              style={{
+                minHeight: 'max(100%, var(--split-content-height, 0px))',
               }}
-              type="button"
-            />
-
-            <div
-              className="flex-1 overflow-auto"
-              onScroll={handlePreviewScroll}
-              ref={previewScrollRef}
             >
-              <MarkdownPreview
-                content={localContent}
-                noteDir={rootDir}
-                onChange={handleChange}
+              <div
+                className="sticky top-0 overflow-hidden min-h-0"
+                ref={editorScrollRef}
+                style={{
+                  width: `${splitPosition}%`,
+                  flexShrink: 0,
+                  height: 'var(--split-pane-height)',
+                }}
+              >
+                <CodeMirror
+                  basicSetup={{
+                    lineNumbers: true,
+                    foldGutter: true,
+                    highlightActiveLineGutter: true,
+                    highlightActiveLine: true,
+                    bracketMatching: true,
+                    syntaxHighlighting: true,
+                  }}
+                  className="h-full"
+                  extensions={extensions}
+                  height="100%"
+                  initialState={initialState ?? undefined}
+                  key={filePath}
+                  onChange={handleChange}
+                  onCreateEditor={handleEditorCreate}
+                  theme={currentTheme}
+                  value={initialState ? undefined : localContent}
+                />
+              </div>
+
+              <button
+                aria-label="Resize editor and preview panes"
+                className={`w-0.5 ${
+                  isDragging
+                    ? 'bg-[color:var(--theme-accent)]'
+                    : 'bg-border hover:bg-[color:var(--theme-accent)]'
+                } sticky top-0 cursor-col-resize flex-shrink-0 transition-colors`}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  setIsDragging(true)
+                }}
+                style={{ height: 'var(--split-pane-height)' }}
+                type="button"
               />
+
+              <div className="flex-1 min-w-0" data-split-preview>
+                <MarkdownPreview
+                  content={localContent}
+                  noteDir={rootDir}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
-          </>
+          </div>
         )}
 
         {layoutMode === 'preview' && (
