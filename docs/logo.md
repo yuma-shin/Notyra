@@ -23,6 +23,8 @@ SVG を変更したら、プロジェクトルートで `pnpm icons` を実行�
 
 類似するアイコンの確認結果は [調査メモ](icon-similarity-review.md) を参照してください。
 
+Windows のインストールウィザードの左側には、アプリアイコンとは別の `src/resources/build/installer/sidebar.bmp` を使います。`pnpm icons` はこの画像も現在のロゴから再生成します。NSIS 用の 164×314px、24-bit BMP とし、背景の青紫のグラデーションにロゴを中央配置しています。
+
 ## Apple の Liquid Glass 用レイヤー
 
 再生成時に `src/resources/build/icons/layers/` に以下を出力します。
