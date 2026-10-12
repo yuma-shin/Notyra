@@ -8,7 +8,7 @@
     "email": "yuma@y-shin.net"
   },
   "license": "MIT",
-  "packageManager": "pnpm@12.9.0",
+  "packageManager": "pnpm@12.9.1",
   "scripts": {
     "icons": "node scripts/generate-icons.mjs",
     "dev": "tauri dev",
@@ -80,7 +80,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.3",
     "fast-check": "^4.10.2",
-    "jsdom": "^30.1.1",
+    "jsdom": "^30.1.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",
