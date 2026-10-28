@@ -8,7 +8,7 @@
     "email": "yuma@y-shin.net"
   },
   "license": "MIT",
-  "packageManager": "pnpm@12.14.0",
+  "packageManager": "pnpm@12.15.0",
   "scripts": {
     "icons": "node scripts/generate-icons.mjs",
     "dev": "tauri dev",
@@ -66,9 +66,9 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.15",
+    "@biomejs/biome": "^2.6.2",
     "@tailwindcss/vite": "^4.3.3",
-    "@tauri-apps/cli": "^2.12.3",
+    "@tauri-apps/cli": "^2.12.4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/hast": "^3.0.5",
