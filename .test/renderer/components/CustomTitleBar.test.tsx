@@ -21,6 +21,19 @@ vi.mock('@/renderer/lib/tauriApi', () => ({
 }))
 
 describe('CustomTitleBar', () => {
+  it('toggles the plugin side panel and reflects its persisted open state', () => {
+    const onToggleSidePanel = vi.fn()
+    renderWithProviders(
+      <CustomTitleBar showSidePanel onToggleSidePanel={onToggleSidePanel} />
+    )
+    const button = screen.getByRole('button', { pressed: true })
+    fireEvent.click(button)
+    expect(onToggleSidePanel).toHaveBeenCalledTimes(1)
+  })
+  it('omits the side panel toggle in windows without a handler', () => {
+    renderWithProviders(<CustomTitleBar />)
+    expect(screen.queryByRole('button', { name: /side panel/i })).toBeNull()
+  })
   afterEach(() => {
     cleanup()
   })

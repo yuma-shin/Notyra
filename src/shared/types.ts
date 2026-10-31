@@ -40,6 +40,11 @@ export interface AppSettings {
   showNoteList?: boolean
   sidebarWidth?: number
   noteListWidth?: number
+  // Side_Panel（メインウィンドウのみ）。未設定なら閉じた状態・先頭のビュー・既定幅
+  sidePanelOpen?: boolean
+  /** 選択中の Side_Panel_View の実 ID（`${pluginId}:${id}`） */
+  sidePanelActiveView?: string
+  sidePanelWidth?: number
 }
 
 export interface NoteContent {

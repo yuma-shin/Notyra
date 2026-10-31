@@ -250,8 +250,14 @@ pub async fn delete_note_images(
     root_dir: String,
     note_base_name: String,
 ) -> Result<CleanupResult, String> {
-    let images_dir = PathBuf::from(&root_dir).join("images");
-    let sanitized = sanitize_note_basename(&note_base_name);
+    Ok(delete_images_for_note(Path::new(&root_dir), &note_base_name).await)
+}
+
+/// `<root>/images` からノートに紐づく画像（`<sanitize(note_base_name)>_` で始まるファイル）を削除する。
+/// `delete_note_images` と Plugin 用の `plugin_notes_delete` で共有する。
+pub(crate) async fn delete_images_for_note(root: &Path, note_base_name: &str) -> CleanupResult {
+    let images_dir = root.join("images");
+    let sanitized = sanitize_note_basename(note_base_name);
 
     let all_files = match tokio::fs::read_dir(&images_dir).await {
         Ok(mut rd) => {
@@ -263,7 +269,7 @@ pub async fn delete_note_images(
             }
             files
         }
-        Err(_) => return Ok(CleanupResult { success: true, deleted_files: vec![], errors: vec![] }),
+        Err(_) => return CleanupResult { success: true, deleted_files: vec![], errors: vec![] },
     };
 
     let note_files: Vec<_> = all_files.iter()
@@ -282,7 +288,7 @@ pub async fn delete_note_images(
         }
     }
 
-    Ok(CleanupResult { success: true, deleted_files: deleted, errors })
+    CleanupResult { success: true, deleted_files: deleted, errors }
 }
 
 /// 画像ファイルを読み込み、`data:{mime};base64,{data}` 形式の文字列を返す。

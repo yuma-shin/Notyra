@@ -9,6 +9,9 @@
 # production
 /dist
 
+# Separate plugin ecosystem repository checkouts
+/.plugin-ecosystem/
+
 # Tauri build artifacts (large, auto-generated)
 src-tauri/target/
 

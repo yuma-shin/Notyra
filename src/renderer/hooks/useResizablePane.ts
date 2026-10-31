@@ -7,6 +7,11 @@ export interface UseResizablePaneOptions {
   maxWidth: number
   /** ドラッグ確定時（mouseup）に1回だけ発火。永続化専用 */
   onWidthCommit?: (width: number) => void
+  /**
+   * ハンドルがペインの左端にある（右側に配置したペイン）場合は true。
+   * 左へドラッグすると幅が広がる。既定は false（右端のハンドル）
+   */
+  reverse?: boolean
 }
 
 export interface UseResizablePaneResult {
@@ -27,6 +32,7 @@ export function useResizablePane({
   minWidth,
   maxWidth,
   onWidthCommit,
+  reverse = false,
 }: UseResizablePaneOptions): UseResizablePaneResult {
   const [width, setWidth] = useState(() =>
     clamp(initialWidth, minWidth, maxWidth)
@@ -49,7 +55,8 @@ export function useResizablePane({
     if (!isDragging) return
 
     const handleMouseMove = (event: MouseEvent) => {
-      const delta = event.clientX - startXRef.current
+      const moved = event.clientX - startXRef.current
+      const delta = reverse ? -moved : moved
       setWidth(clamp(startWidthRef.current + delta, minWidth, maxWidth))
     }
 
@@ -69,7 +76,7 @@ export function useResizablePane({
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
-  }, [isDragging, minWidth, maxWidth])
+  }, [isDragging, minWidth, maxWidth, reverse])
 
   const onMouseDown = useCallback((event: React.MouseEvent) => {
     startXRef.current = event.clientX

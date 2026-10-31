@@ -24,6 +24,7 @@ import { SimpleTooltip } from '../ui/tooltip'
 import { Button } from '../ui/button'
 import { ALERT_OPTIONS } from '@/renderer/lib/alertOptions'
 import { ICON_SIZE } from '@/renderer/lib/iconConstants'
+import { PluginToolbarButtons } from './PluginToolbarButtons'
 
 type ListType = 'bullet' | 'ordered'
 
@@ -283,6 +284,9 @@ export function MarkdownToolbar({
           </Button>
         </SimpleTooltip>
       )}
+
+      {/* Plugin のボタン（右寄せのエクスポートより前の末尾） */}
+      <PluginToolbarButtons separator={sep} />
 
       {/* エクスポート */}
       {hasExport && (

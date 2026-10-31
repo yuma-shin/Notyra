@@ -65,6 +65,7 @@
       "pdfExporting": "エクスポート中..."
     },
     "layoutMode": {
+      "label": "表示モード",
       "editorOnly": "エディタのみ",
       "splitView": "分割表示",
       "previewOnly": "プレビューのみ"
@@ -192,7 +193,8 @@
     "navigation": "設定ナビゲーション",
     "appearance": "外観",
     "font": "フォント",
-    "language": "言語"
+    "language": "言語",
+    "plugins": "プラグイン"
   },
   "sortDropdown": {
     "sortBy": "並び替え",
@@ -200,5 +202,249 @@
     "dateAsc": "日付 (古い順)",
     "titleAsc": "タイトル (A-Z)",
     "titleDesc": "タイトル (Z-A)"
+  },
+  "plugins": {
+    "title": "プラグイン",
+    "description": "プラグインで Notyra の機能や外観を拡張できます",
+    "status": {
+      "loading": "プラグインの情報を読み込み中...",
+      "unavailable": "この環境ではプラグイン機能を利用できません",
+      "loadFailed": "プラグインの情報を読み込めませんでした: {{message}}"
+    },
+    "thirdPartyWarning": {
+      "title": "サードパーティのプラグインについて",
+      "message": "プラグインは Notyra の開発者以外が作成したコードで、Notyra 本体と同じ権限で実行されます。プラグインが宣言した権限は Notyra の API 内でのみ確認され、プラグインのコードがそれを迂回することを技術的に防ぐことはできません。信頼できるプラグインのみを、ご自身の責任でインストールしてください。",
+      "acknowledge": "了解"
+    },
+    "installed": {
+      "title": "インストール済み",
+      "empty": "インストール済みのプラグインはありません",
+      "version": "バージョン {{version}}",
+      "author": "作者: {{author}}",
+      "source": "取得元",
+      "sourceGithub": "GitHub: {{owner}}/{{repo}}",
+      "sourceLocal": "ローカルフォルダ: {{path}}",
+      "typeFeature": "機能",
+      "typeTheme": "テーマ",
+      "enabled": "有効",
+      "disabled": "無効",
+      "toggleEnabled": "{{name}} の有効/無効を切り替え",
+      "settings": "設定",
+      "uninstall": "アンインストール",
+      "update": "更新",
+      "updating": "更新中...",
+      "updateAvailable": "新しいバージョン {{version}} があります",
+      "development": "開発中",
+      "reload": "再読み込み",
+      "reloading": "再読み込み中...",
+      "pendingConsent": "同意待ち: 追加された権限への同意が必要です。再読み込みボタンを押すと再度同意を求めます",
+      "activateFailed": "起動に失敗したため無効化されました",
+      "incompatible": "このバージョンの Notyra には対応していません（対応バージョン: {{range}}、現在のバージョン: {{current}}）",
+      "manifestUnreadable": "package.json を読み取れません",
+      "sessionErrors": "このセッションで発生したエラー",
+      "keybindingConflicts": "キーバインドの重複",
+      "keybindingConflictBuiltin": "{{key}}（{{command}}）は Notyra 本体のキーバインドと重複しているため無効です",
+      "keybindingConflictPlugin": "{{key}}（{{command}}）はプラグイン {{plugin}} のキーバインドと重複しているため無効です"
+    },
+    "uninstallDialog": {
+      "title": "プラグインをアンインストール",
+      "message": "「{{name}}」をアンインストールしますか？\nプラグインのファイルと設定値が削除されます。",
+      "messageDev": "「{{name}}」の登録を解除しますか？\nローカルフォルダ内のファイルは変更されません。",
+      "confirm": "アンインストール"
+    },
+    "repoInstall": {
+      "title": "リポジトリを指定してインストール",
+      "label": "GitHub リポジトリ",
+      "placeholder": "owner/repo または https://github.com/owner/repo",
+      "install": "インストール",
+      "installing": "インストール中...",
+      "installed": "{{name}} をインストールしました"
+    },
+    "updates": {
+      "check": "更新を確認",
+      "checking": "確認中...",
+      "upToDate": "すべてのプラグインは最新です",
+      "available": "{{count}} 件の更新があります",
+      "updated": "{{name}} をバージョン {{version}} に更新しました"
+    },
+    "registry": {
+      "title": "プラグインを探す",
+      "searchPlaceholder": "プラグインを検索...",
+      "loading": "プラグイン一覧を読み込み中...",
+      "empty": "掲載されているプラグインはありません",
+      "searchEmpty": "一致するプラグインはありません",
+      "author": "作者: {{author}}",
+      "repository": "リポジトリ",
+      "openRepository": "{{repo}} を開く",
+      "install": "インストール",
+      "installing": "インストール中...",
+      "installed": "インストール済み",
+      "error": "プラグイン一覧を取得できませんでした",
+      "retry": "再試行",
+      "unavailableHint": "プラグイン一覧は現在利用できません。リポジトリを指定してインストールすることはできます。"
+    },
+    "developerMode": {
+      "title": "開発者モード",
+      "description": "ローカルフォルダから開発中のプラグインを読み込みます",
+      "toggle": "開発者モードを有効にする",
+      "loadFolder": "フォルダからプラグインを読み込む",
+      "loading": "読み込み中..."
+    },
+    "consent": {
+      "titleInstall": "「{{name}}」をインストール",
+      "titleUpdate": "「{{name}}」を更新",
+      "titleDevLoad": "「{{name}}」を読み込む",
+      "titleDevReload": "「{{name}}」を再読み込み",
+      "author": "作者",
+      "authorUnknown": "不明",
+      "source": "取得元",
+      "permissions": "このプラグインは次の権限を要求します",
+      "addedPermissions": "新しいバージョンは次の権限を追加で要求します",
+      "noPermissions": "このプラグインは権限を要求しません",
+      "purpose": "利用目的: {{purpose}}",
+      "privateNetwork": "ローカル・プライベートネットワークへの通信のみを行います",
+      "destinations": "通信先",
+      "addedDestinations": "追加された通信先",
+      "publicWarningTitle": "外部への通信",
+      "publicWarning": "このプラグインはインターネット上の次の通信先と通信します。ノートの内容などが外部へ送信される可能性があります。",
+      "consentNote": "同意すると、表示されたすべての権限と通信先を許可します。",
+      "accept": "同意してインストール",
+      "acceptUpdate": "同意して更新",
+      "acceptLoad": "同意して読み込む",
+      "cancel": "キャンセル"
+    },
+    "permissions": {
+      "notes": {
+        "read": {
+          "label": "ノートの読み取り",
+          "description": "登録済みルートフォルダの一覧、ノートの一覧、ノートの本文と Front Matter を読み取ります"
+        },
+        "write": {
+          "label": "ノートの書き込み",
+          "description": "ノートの作成、本文と Front Matter の更新、名前変更、移動、削除を行います（削除には毎回確認が表示されます）"
+        }
+      },
+      "clipboard": {
+        "label": "クリップボード",
+        "description": "クリップボードのテキストを読み取り、書き込みます"
+      },
+      "shell": {
+        "openExternal": {
+          "label": "外部アプリケーションで開く",
+          "description": "http、https、mailto の URL を OS の既定のアプリケーションで開きます"
+        }
+      },
+      "network": {
+        "label": "ネットワーク通信",
+        "description": "宣言された通信先とのみ HTTP / HTTPS で通信します"
+      }
+    },
+    "destinationClass": {
+      "private": "ローカル・プライベート",
+      "public": "外部"
+    },
+    "toast": {
+      "close": "閉じる",
+      "pluginError": "{{name}}: {{message}}",
+      "pluginErrorWithSource": "{{name}}（{{source}}）: {{message}}"
+    },
+    "errorSource": {
+      "load": "読み込み",
+      "activate": "起動",
+      "deactivate": "停止",
+      "command": "コマンド",
+      "markdown": "Markdown 処理",
+      "theme": "テーマ",
+      "sidePanel": "サイドパネル",
+      "editorExtension": "エディタ拡張"
+    },
+    "sidePanel": {
+      "title": "サイドパネル",
+      "toggle": "サイドパネルを表示/非表示",
+      "tabs": "サイドパネルのビュー",
+      "empty": "表示できるビューはありません",
+      "emptyHint": "サイドパネルにビューを追加するプラグインをインストールすると、ここに表示されます",
+      "renderError": "このビューの表示中にエラーが発生しました: {{message}}",
+      "resize": "サイドパネルの幅を変更"
+    },
+    "settingsForm": {
+      "title": "{{name}} の設定",
+      "empty": "このプラグインに設定項目はありません",
+      "invalidString": "文字列を入力してください",
+      "invalidNumber": "数値を入力してください",
+      "invalidBoolean": "オンまたはオフを選択してください",
+      "invalidSelect": "選択肢から選んでください",
+      "saveFailed": "設定を保存できませんでした: {{message}}"
+    },
+    "notesDelete": {
+      "title": "プラグインによるノートの削除",
+      "message": "プラグイン「{{plugin}}」がノート「{{note}}」を削除しようとしています。\nノートと関連付けられた画像は完全に削除され、元に戻せません。",
+      "confirm": "削除"
+    },
+    "errors": {
+      "repoSpecEmpty": "リポジトリを入力してください",
+      "repoSpecFormat": "owner/repo または https://github.com/owner/repo の形式で入力してください",
+      "repoNotFound": "リポジトリが見つかりません",
+      "noRelease": "リポジトリにリリースがありません",
+      "noPackage": "最新のリリースに対象プラグインの配布 ZIP がありません",
+      "rateLimited": "GitHub API の利用制限に達しました。しばらくしてから再度お試しください",
+      "rateLimitedUntil": "GitHub API の利用制限に達しました。{{resetAt}} 以降に再度お試しください",
+      "network": "通信に失敗しました: {{message}}",
+      "tooLarge": "プラグインパッケージのサイズが上限を超えています",
+      "invalidZip": "プラグインパッケージを展開できません: {{message}}",
+      "manifestMissing": "プラグインパッケージに package.json がありません",
+      "manifestInvalid": "package.json に {{count}} 件のエラーがあります",
+      "alreadyInstalled": "このプラグインは既にインストールされています",
+      "alreadyInstalledWithId": "プラグイン {{id}} は既にインストールされています",
+      "idMismatch": "プラグイン ID が一致しません（レジストリ: {{expected}}、パッケージ: {{actual}}）",
+      "incompatible": "このプラグインは現在の Notyra に対応していません（対応バージョン: {{range}}、現在のバージョン: {{current}}）",
+      "notInstalled": "このプラグインはインストールされていません",
+      "developerModeDisabled": "開発者モードが無効です。開発者モードを有効にしてから操作してください",
+      "io": "ファイルの読み書きに失敗しました: {{message}}",
+      "permissionDenied": "権限 {{permission}} が許可されていません",
+      "schemeNotAllowed": "スキーム {{scheme}} は許可されていません",
+      "blocked": "{{host}}:{{port}} への通信をブロックしました",
+      "blockReason": {
+        "notDeclared": "同意済みの通信先に含まれていません",
+        "redirectNotDeclared": "リダイレクト先が同意済みの通信先に含まれていません",
+        "resolvedToPrivate": "外部の通信先として同意したホストがプライベートアドレスに解決されました",
+        "resolvedToNonPrivate": "localhost がプライベート範囲外のアドレスに解決されました"
+      },
+      "outOfScope": "パスが登録済みルートフォルダの範囲外です: {{path}}",
+      "notFound": "ノートが存在しません: {{path}}",
+      "nameConflict": "同じ名前のノートが既に存在します: {{path}}",
+      "deleteRejected": "ユーザーがノートの削除を拒否しました",
+      "tooManyRedirects": "リダイレクトの回数が上限を超えました",
+      "responseTooLarge": "応答のサイズが上限を超えています",
+      "timeout": "処理が時間内に完了しませんでした",
+      "corruptState": "プラグインの状態ファイルが破損しているため、プラグインを読み込めませんでした。破損したファイルは退避しました: {{message}}",
+      "invalidArgument": "引数が不正です: {{message}}",
+      "pluginNotActive": "プラグインが起動していないため、この操作は実行できません",
+      "themeInvalid": "テーマ定義が不正です: {{message}}",
+      "themeIdDuplicate": "テーマ ID {{id}} は既に使われています",
+      "registryInvalid": "プラグイン一覧の形式が不正です",
+      "unknown": "予期しないエラーが発生しました: {{message}}"
+    },
+    "manifestErrors": {
+      "structural": {
+        "invalidJson": "package.json を JSON として解析できません",
+        "missingNotyra": "notyra フィールドがありません",
+        "missingField": "{{field}}: 必須項目がありません",
+        "typeMismatch": "{{field}}: 型が正しくありません（値: {{value}}）"
+      },
+      "value": {
+        "unknownType": "{{field}}: 未知の種別です（値: {{value}}）",
+        "unknownPermission": "{{field}}: 未知の権限です（値: {{value}}）",
+        "networkWithoutDestinations": "{{field}}: network 権限には通信先を1件以上宣言する必要があります",
+        "invalidRange": "{{field}}: 対応バージョン範囲を解析できません（値: {{value}}）",
+        "invalidId": "{{field}}: プラグイン ID が不正です（値: {{value}}）",
+        "invalidVersion": "{{field}}: バージョンが semver 形式ではありません（値: {{value}}）",
+        "invalidDestination": "{{field}}: 通信先の書式が不正です（値: {{value}}）",
+        "forbiddenForTheme": "{{field}}: テーマ種別のプラグインでは宣言できません",
+        "invalidSetting": "{{field}}: 設定項目の宣言が不正です（値: {{value}}）",
+        "duplicatePermission": "{{field}}: 権限が重複しています（値: {{value}}）",
+        "invalidPath": "{{field}}: ファイルパスが不正です（値: {{value}}）"
+      }
+    }
   }
 }

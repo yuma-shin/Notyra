@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
@@ -20,6 +20,8 @@ import { useSplitView } from '@/renderer/hooks/useSplitView'
 import { useEditorStateCache } from '@/renderer/hooks/useEditorStateCache'
 import { useImageInsertion } from '@/renderer/hooks/useImageInsertion'
 import { usePdfExport } from '@/renderer/hooks/usePdfExport'
+import { usePluginEditorIntegration } from '@/renderer/hooks/usePluginEditorIntegration'
+import { scrollPreviewToLine } from '@/renderer/lib/editorScrollSync'
 import { createBlockquoteDecorationExtension } from '@/renderer/lib/codemirror/blockquoteDecoration'
 import {
   createEditorStatusListener,
@@ -237,6 +239,19 @@ export function EditorView({
     [onCursorChange, onSelectionStatsChange]
   )
 
+  const scrollPreview = useCallback((line: number) => {
+    const preview = previewScrollRef.current
+    return preview ? scrollPreviewToLine(preview, line) : false
+  }, [])
+
+  // Plugin のエディタ拡張と、現在の表示モードに対応する移動先の登録
+  const { pluginExtensions, registerActiveEditor, releaseActiveEditor } =
+    usePluginEditorIntegration(
+      layoutMode === 'preview' ? scrollPreview : undefined
+    )
+
+  // Plugin 拡張は既存の拡張の末尾に連結する。pluginExtensions は内容が変わらない限り
+  // 同一参照のため、Plugin 拡張の登録・解除がない限り extensions の参照は変わらない
   const extensions = useMemo(
     () => [
       markdown({ codeLanguages: languages }),
@@ -247,6 +262,7 @@ export function EditorView({
       blockquoteDecorationExtension,
       editorStatusListener,
       scrollSyncExtension,
+      ...pluginExtensions,
     ],
     [
       imageHandlerExtension,
@@ -254,6 +270,7 @@ export function EditorView({
       blockquoteDecorationExtension,
       editorStatusListener,
       scrollSyncExtension,
+      pluginExtensions,
     ]
   )
 
@@ -276,6 +293,8 @@ export function EditorView({
     if (layoutMode === 'preview') {
       onCursorChange?.(null)
       onSelectionStatsChange?.(null)
+      // CodeMirror が破棄されるため、アクティブエディタの登録も解除する
+      releaseActiveEditor()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutMode])
@@ -314,6 +333,8 @@ export function EditorView({
   // エディタインスタンスを保存
   const handleEditorCreate = (view: CodemirrorEditorView) => {
     editorViewRef.current = view
+    // Plugin_API の scrollToLine の対象として登録する（前のエディタの登録は解除される）
+    registerActiveEditor(view)
     if (layoutMode === 'split') {
       view.scrollDOM.classList.add('hide-scrollbar', 'split-editor-scroller')
     }
@@ -559,7 +580,7 @@ export function EditorView({
         )}
 
         {layoutMode === 'preview' && (
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto" ref={previewScrollRef}>
             <MarkdownPreview
               content={localContent}
               noteDir={rootDir}

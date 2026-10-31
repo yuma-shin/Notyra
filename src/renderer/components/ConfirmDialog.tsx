@@ -43,7 +43,9 @@ export function ConfirmDialog({
             size={24}
           />
         )}
-        <p className="text-sm text-muted-foreground">{message}</p>
+        <p className="text-sm text-muted-foreground whitespace-pre-line">
+          {message}
+        </p>
       </div>
       <div className="flex justify-end gap-3 mt-4">
         <Button onClick={onCancel} variant="secondary">

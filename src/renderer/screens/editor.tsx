@@ -4,8 +4,11 @@ import { CustomTitleBar } from '../components/CustomTitleBar'
 import { EditorView } from '../components/EditorView'
 import { StatusBar } from '../components/StatusBar'
 import { useApp } from '../contexts/AppContext'
+import { PluginHostProvider } from '../contexts/PluginHostContext'
+import { ToastProvider } from '../components/ui/toast'
 import { useEditorStatus } from '@/renderer/hooks/useEditorStatus'
 import { useAppVersion } from '@/renderer/hooks/useAppVersion'
+import { useActiveNoteEvents } from '@/renderer/hooks/useActiveNoteEvents'
 import { invalidateEditorStateCache } from '@/renderer/hooks/useEditorStateCache'
 import type { MarkdownNoteMeta } from '@/shared/types'
 import type {
@@ -17,6 +20,16 @@ import { tauriApi as App } from '@/renderer/lib/tauriApi'
 const EXTERNAL_CHANGE_COOLDOWN_MS = 5000
 
 export function EditorScreen() {
+  return (
+    <ToastProvider>
+      <PluginHostProvider windowKind="note">
+        <EditorScreenContent />
+      </PluginHostProvider>
+    </ToastProvider>
+  )
+}
+
+function EditorScreenContent() {
   const [searchParams] = useSearchParams()
   const [note, setNote] = useState<MarkdownNoteMeta | null>(null)
   const [noteContent, setNoteContent] = useState<string>('')
@@ -38,6 +51,17 @@ export function EditorScreen() {
   const [selectionStats, setSelectionStats] = useState<SelectionStats | null>(
     null
   )
+
+  // Active_Note_Event の発行。note と noteContent は同時に設定されるため、
+  // 本文は常に表示中のノートのものとして扱う
+  useActiveNoteEvents({
+    windowKind: 'note',
+    path: note?.filePath ?? null,
+    title: note?.title ?? '',
+    rootFolder: rootDir ?? '',
+    body: noteContent,
+    bodyPath: note?.filePath ?? null,
+  })
 
   // ノート切り替え時に前ノートのカーソル/選択状態をリセットする
   useEffect(() => {

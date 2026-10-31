@@ -66,6 +66,7 @@
     "includes": [
       ".",
       "src/**/*",
+      "!!.plugin-ecosystem",
       "!src/lib/electron-app/extensions/**/*",
       "!node_modules/**/*",
       "!dist/**/*"

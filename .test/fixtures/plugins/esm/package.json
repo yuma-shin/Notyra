@@ -1,0 +1,12 @@
+{
+  "name": "fixture-esm",
+  "version": "1.0.0",
+  "type": "module",
+  "notyra": {
+    "displayName": "Handwritten ESM fixture",
+    "type": "feature",
+    "notyraVersion": "*",
+    "main": "index.js",
+    "permissions": []
+  }
+}

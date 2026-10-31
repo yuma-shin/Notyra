@@ -10,11 +10,14 @@ import {
 } from 'react-icons/lu'
 import { useTranslation } from 'react-i18next'
 import { useApp } from '../../contexts/AppContext'
+import { usePluginColorThemes } from '../../hooks/usePluginColorThemes'
+import { formatPluginThemeError } from '../../lib/plugins/pluginThemeErrorMessage'
 import {
   builtinThemes,
   getThemeName,
   loadCustomThemes,
   addCustomTheme,
+  mergeThemes,
   removeCustomTheme,
   validateTheme,
   type ColorTheme,
@@ -41,9 +44,13 @@ export function AppearanceSection() {
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // 設定ウィンドウでは Theme_Plugin のテーマ JSON をデータとして読み込む（コードは実行しない）
+  const { themes: pluginThemes, errors: pluginThemeErrors } =
+    usePluginColorThemes()
+
   const isDark = document.documentElement.classList.contains('dark')
 
-  const allThemes = [...builtinThemes, ...customThemes]
+  const allThemes = mergeThemes(builtinThemes, customThemes, pluginThemes)
 
   const handleThemeModeChange = (mode: AppSettings['theme']) => {
     updateSettings({ theme: mode })
@@ -140,7 +147,10 @@ export function AppearanceSection() {
         <div className="flex flex-col gap-0.5 max-h-64 overflow-y-auto rounded-md border border-border p-1.5">
           {allThemes.map(theme => {
             const isSelected = (settings.colorTheme ?? 'gray') === theme.id
-            const isBuiltin = builtinThemes.some(b => b.id === theme.id)
+            // 削除できるのはカスタムテーマだけ（Plugin のテーマは Plugins_Tab で管理する）
+            const isCustom =
+              !builtinThemes.some(b => b.id === theme.id) &&
+              customThemes.some(c => c.id === theme.id)
             const swatches = isDark ? theme.swatchesDark : theme.swatches
             return (
               <div
@@ -185,7 +195,7 @@ export function AppearanceSection() {
                   />
                 )}
                 {/* Delete button for custom themes */}
-                {!isBuiltin && (
+                {isCustom && (
                   <button
                     className="opacity-0 group-hover/row:opacity-100 p-0.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground shrink-0 transition-all"
                     onClick={e => handleDelete(theme.id, e)}
@@ -199,6 +209,17 @@ export function AppearanceSection() {
             )
           })}
         </div>
+
+        {/* Theme_Plugin のテーマを選択肢に追加できなかった理由（Requirement 11.3、11.4） */}
+        {pluginThemeErrors.length > 0 && (
+          <ul className="flex flex-col gap-0.5" role="alert">
+            {pluginThemeErrors.map(error => (
+              <li className="text-xs text-destructive" key={error.pluginId}>
+                {formatPluginThemeError(t, error)}
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* Import section */}
         <div className="flex flex-col gap-1.5">

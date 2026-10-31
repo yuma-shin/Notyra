@@ -10,6 +10,7 @@ import {
 import type { MarkdownNoteMeta, FolderNode, AppSettings } from '@/shared/types'
 import { ANIMATION_DURATION_MS } from '@/renderer/lib/noteListAnimation'
 import type { NoteListMutation } from '@/renderer/lib/noteListAnimation'
+import { useActiveNoteEvents } from '@/renderer/hooks/useActiveNoteEvents'
 
 const EXTERNAL_CHANGE_COOLDOWN_MS = 5000
 
@@ -84,6 +85,9 @@ export function useNoteWorkspace({
     null
   )
   const [noteContent, setNoteContent] = useState<string>('')
+  // noteContent がどのノートの本文か（ノート切り替え中の本文読み込み前は前のノートを指す）。
+  // Active_Note_Event を本文の読み込み完了後に発行するために使う
+  const [contentNotePath, setContentNotePath] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [showSidebar, setShowSidebar] = useState(settings.showSidebar ?? true)
@@ -154,6 +158,7 @@ export function useNoteWorkspace({
       clearEditorStateCache()
       setSelectedNote(null)
       setNoteContent('')
+      setContentNotePath(null)
       setAllNotes([])
       setFilteredNotes([])
       setFolderFilteredNotes([])
@@ -451,6 +456,7 @@ export function useNoteWorkspace({
       const content = await App.markdown.getNoteContent(note.filePath)
       if (content) {
         setNoteContent(content.content)
+        setContentNotePath(note.filePath)
       }
     } catch (error) {
       console.error('Failed to load note content:', error)
@@ -507,6 +513,7 @@ export function useNoteWorkspace({
             )
             if (content) {
               setNoteContent(content.content)
+              setContentNotePath(selectedNote.filePath)
             }
           } catch (error) {
             console.error('Failed to reload note:', error)
@@ -529,6 +536,8 @@ export function useNoteWorkspace({
   const onContentChange = (content: string) => {
     lastLocalEditTimeRef.current = Date.now()
     setNoteContent(content)
+    // 入力内容は選択中のノートに保存されるため、そのノートの本文として扱う
+    setContentNotePath(selectedNote?.filePath ?? null)
     scheduleSave(content)
   }
 
@@ -956,6 +965,16 @@ export function useNoteWorkspace({
   const onSaveErrorDismiss = () => {
     setSaveError(null)
   }
+
+  // Active_Note_Event の発行（PluginHostProvider の外では何もしない）
+  useActiveNoteEvents({
+    windowKind: 'main',
+    path: selectedNote?.filePath ?? null,
+    title: selectedNote?.title ?? '',
+    rootFolder: rootDir ?? '',
+    body: noteContent,
+    bodyPath: contentNotePath,
+  })
 
   return {
     isLoading,

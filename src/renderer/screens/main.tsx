@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
+import { PluginHostProvider } from '../contexts/PluginHostContext'
+import { ToastProvider } from '../components/ui/toast'
 import { CustomTitleBar } from '../components/CustomTitleBar'
 import { WelcomeScreen } from '../components/WelcomeScreen'
 import { CreateNoteDialog } from '../components/CreateNoteDialog'
@@ -20,6 +22,16 @@ const DEFAULT_SIDEBAR_WIDTH = 256
 const DEFAULT_NOTE_LIST_WIDTH = 320
 
 export function MainScreen() {
+  return (
+    <ToastProvider>
+      <PluginHostProvider windowKind="main">
+        <MainScreenContent />
+      </PluginHostProvider>
+    </ToastProvider>
+  )
+}
+
+function MainScreenContent() {
   const { t } = useTranslation()
   const { settings, updateSettings, isLoading: settingsLoading } = useApp()
   const rootFolders = useRootFolders()
@@ -201,6 +213,15 @@ export function MainScreen() {
         }
         onSelectNote={handleSelectNote}
         onSidebarWidthCommit={width => updateSettings({ sidebarWidth: width })}
+        onSidePanelViewChange={viewId =>
+          updateSettings({ sidePanelActiveView: viewId })
+        }
+        onSidePanelWidthCommit={width =>
+          updateSettings({ sidePanelWidth: width })
+        }
+        onToggleSidePanel={() =>
+          updateSettings({ sidePanelOpen: !settings.sidePanelOpen })
+        }
         settings={settings}
         tabBar={tabBar}
         workspace={workspace}

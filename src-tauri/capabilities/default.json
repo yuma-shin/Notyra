@@ -29,6 +29,8 @@
     "store:allow-save",
     "store:allow-set",
     "store:allow-get",
-    "opener:default"
+    "opener:default",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text"
   ]
 }

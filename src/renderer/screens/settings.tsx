@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { LuMinus, LuX } from 'react-icons/lu'
 import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { usePluginThemeSync } from '../hooks/usePluginThemeSync'
 import {
   SettingsSidebar,
   type SettingsSection,
@@ -9,6 +10,7 @@ import {
 import { AppearanceSection } from '../components/settings/AppearanceSection'
 import { FontSection } from '../components/settings/FontSection'
 import { LanguageSection } from '../components/settings/LanguageSection'
+import { PluginsSection } from '../components/settings/PluginsSection'
 import { Button } from '../components/ui/button'
 import { ICON_SIZE } from '@/renderer/lib/iconConstants'
 import { tauriApi as App } from '@/renderer/lib/tauriApi'
@@ -82,6 +84,8 @@ function SettingsTitlebar() {
 // ---------------------------------------------------------------------------
 
 export function SettingsScreen() {
+  // Plugin のカラーテーマをデータとして読み込み、このウィンドウにも適用する（コードは実行しない）
+  usePluginThemeSync(null)
   const isDesktop = useMediaQuery('(min-width: 640px)')
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('appearance')
@@ -105,6 +109,8 @@ export function SettingsScreen() {
         return <FontSection />
       case 'language':
         return <LanguageSection />
+      case 'plugins':
+        return <PluginsSection />
     }
   }
 
@@ -115,6 +121,8 @@ export function SettingsScreen() {
       <FontSection />
       <div className="border-t border-border my-4" />
       <LanguageSection />
+      <div className="border-t border-border my-4" />
+      <PluginsSection />
     </>
   )
 
