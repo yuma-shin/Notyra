@@ -541,7 +541,7 @@ mod tests {
     fn rejects_symlink_pointing_outside() {
         let f = fixture(false);
         let dir = f.store.installed_root().join("gh");
-        std::os::unix::fs::symlink(&f.outside, dir.join("link.txt")).unwrap();
+        std::os::unix::fs::symlink(&f._outside, dir.join("link.txt")).unwrap();
         assert_eq!(resolve_plugin_file(&dir, "link.txt"), Err(ProtocolError::InvalidPath));
     }
 
