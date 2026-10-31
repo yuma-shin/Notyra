@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CustomTitleBar } from '../components/CustomTitleBar'
 import { EditorView } from '../components/EditorView'
 import { StatusBar } from '../components/StatusBar'
@@ -9,15 +10,13 @@ import { ToastProvider } from '../components/ui/toast'
 import { useEditorStatus } from '@/renderer/hooks/useEditorStatus'
 import { useAppVersion } from '@/renderer/hooks/useAppVersion'
 import { useActiveNoteEvents } from '@/renderer/hooks/useActiveNoteEvents'
-import { invalidateEditorStateCache } from '@/renderer/hooks/useEditorStateCache'
+import { useNoteFileSync } from '@/renderer/hooks/useNoteFileSync'
 import type { MarkdownNoteMeta } from '@/shared/types'
 import type {
   EditorCursorPosition,
   SelectionStats,
 } from '@/renderer/lib/codemirror/editorStatus'
 import { tauriApi as App } from '@/renderer/lib/tauriApi'
-
-const EXTERNAL_CHANGE_COOLDOWN_MS = 5000
 
 export function EditorScreen() {
   return (
@@ -30,18 +29,17 @@ export function EditorScreen() {
 }
 
 function EditorScreenContent() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { t } = useTranslation()
   const [note, setNote] = useState<MarkdownNoteMeta | null>(null)
   const [noteContent, setNoteContent] = useState<string>('')
+  const [contentNotePath, setContentNotePath] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isDeleted, setIsDeleted] = useState(false)
   const [layoutMode, setLayoutMode] = useState<'editor' | 'preview' | 'split'>(
     'split'
   )
-  const saveTimeoutRef = useRef<number | undefined>(undefined)
-  const lastSaveTimeRef = useRef<number>(0)
-  const lastLocalEditTimeRef = useRef<number>(0)
-  const lastLocalWriteTimeRef = useRef<number>(0)
-  const reloadTimeoutRef = useRef<number | undefined>(undefined)
+  const noteRef = useRef<MarkdownNoteMeta | null>(null)
   const { settings } = useApp()
   const rootParam = searchParams.get('root')
   const rootDir = rootParam ? decodeURIComponent(rootParam) : undefined
@@ -52,15 +50,52 @@ function EditorScreenContent() {
     null
   )
 
-  // Active_Note_Event の発行。note と noteContent は同時に設定されるため、
-  // 本文は常に表示中のノートのものとして扱う
+  const {
+    session: saves,
+    isLocked,
+    isSaving,
+  } = useNoteFileSync({
+    path: note?.filePath ?? null,
+    onSaved: () => setSaveError(null),
+    onError: error =>
+      setSaveError(error instanceof Error ? error.message : String(error)),
+    onRebind: path => {
+      if (path !== noteRef.current?.filePath) {
+        setSearchParams(
+          previous => {
+            const next = new URLSearchParams(previous)
+            if (path) next.set('note', encodeURIComponent(path))
+            else next.delete('note')
+            return next
+          },
+          { replace: true }
+        )
+      }
+      setIsDeleted(path === null)
+      const next =
+        noteRef.current && path
+          ? { ...noteRef.current, filePath: path, id: path }
+          : null
+      noteRef.current = next
+      setNote(next)
+      setContentNotePath(null)
+    },
+    onReload: content => {
+      noteRef.current = content?.meta ?? null
+      setNote(content?.meta ?? null)
+      setNoteContent(content?.content ?? '')
+      setContentNotePath(content?.meta.filePath ?? null)
+    },
+  })
+
+  // パス変更後も、そのパスの本文を読み終わるまで通知を待つ。
   useActiveNoteEvents({
     windowKind: 'note',
     path: note?.filePath ?? null,
     title: note?.title ?? '',
     rootFolder: rootDir ?? '',
     body: noteContent,
-    bodyPath: note?.filePath ?? null,
+    bodyPath: contentNotePath,
   })
 
   // ノート切り替え時に前ノートのカーソル/選択状態をリセットする
@@ -90,112 +125,34 @@ function EditorScreenContent() {
   }, [settings.theme])
 
   useEffect(() => {
-    const loadNote = async () => {
-      const notePath = searchParams.get('note')
-      if (!notePath) return
-
-      try {
-        const content = await App.markdown.getNoteContent(
-          decodeURIComponent(notePath)
-        )
-        if (content) {
-          setNoteContent(content.content)
-          setNote(content.meta)
-        }
-      } catch (error) {
-        console.error('Failed to load note:', error)
-      }
-    }
-
-    loadNote()
-
+    let cancelled = false
     const notePath = searchParams.get('note')
     if (notePath) {
-      const decodedPath = decodeURIComponent(notePath)
-
-      // ファイルの監視を開始
-      App.markdown.watchFile(decodedPath)
-
-      // ファイル変更イベントのリスナーを設定
-      const unsubscribe = App.markdown.onFileChanged(changedPath => {
-        if (changedPath === decodedPath) {
-          if (saveTimeoutRef.current) {
-            return
-          }
-
-          const timeSinceLastEdit = Date.now() - lastLocalEditTimeRef.current
-          if (timeSinceLastEdit < 2000) {
-            return
-          }
-
-          const timeSinceLastLocalWrite =
-            Date.now() - lastLocalWriteTimeRef.current
-          if (timeSinceLastLocalWrite < EXTERNAL_CHANGE_COOLDOWN_MS) {
-            return
-          }
-
-          const timeSinceLastSave = Date.now() - lastSaveTimeRef.current
-          if (timeSinceLastSave < 1000) {
-            return
-          }
-
-          if (reloadTimeoutRef.current) {
-            clearTimeout(reloadTimeoutRef.current)
-          }
-
-          reloadTimeoutRef.current = window.setTimeout(() => {
-            // 外部変更検知時にキャッシュを無効化
-            invalidateEditorStateCache(decodedPath)
-            loadNote()
-          }, 300)
-        }
-      })
-
-      // クリーンアップ
-      return () => {
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current)
-        }
-        if (reloadTimeoutRef.current) {
-          clearTimeout(reloadTimeoutRef.current)
-        }
-        App.markdown.unwatchFile(decodedPath)
-        unsubscribe()
-      }
+      const path = decodeURIComponent(notePath)
+      saves.bind(path)
+      const version = saves.version
+      void App.markdown
+        .getNoteContent(path)
+        .then(content => {
+          if (cancelled || !content || saves.version !== version) return
+          noteRef.current = content.meta
+          setNoteContent(content.content)
+          setContentNotePath(content.meta.filePath)
+          setIsDeleted(false)
+          setNote(content.meta)
+        })
+        .catch(error => setSaveError(String(error)))
     }
-
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-      if (reloadTimeoutRef.current) {
-        clearTimeout(reloadTimeoutRef.current)
-      }
+      cancelled = true
     }
-  }, [searchParams])
+  }, [searchParams, saves])
 
   const handleContentChange = (content: string) => {
-    lastLocalEditTimeRef.current = Date.now()
-    setNoteContent(content)
-
-    // デバウンス処理
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
+    if (saves.schedule(content)) {
+      setNoteContent(content)
+      setContentNotePath(noteRef.current?.filePath ?? null)
     }
-
-    saveTimeoutRef.current = window.setTimeout(async () => {
-      if (!note) return
-      try {
-        await App.markdown.saveNote(note.filePath, content)
-        lastSaveTimeRef.current = Date.now()
-        lastLocalWriteTimeRef.current = Date.now()
-        setSaveError(null)
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error)
-        console.error('Failed to save note:', msg)
-        setSaveError(msg)
-      }
-    }, 1000)
   }
 
   if (!note) {
@@ -205,7 +162,7 @@ function EditorScreenContent() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600 dark:text-gray-400">
-              ノートを読み込んでいます...
+              {isDeleted ? t('editor.noteDeleted') : t('common.loading')}
             </p>
           </div>
         </div>
@@ -225,14 +182,21 @@ function EditorScreenContent() {
         <EditorView
           content={noteContent}
           filePath={note?.filePath}
+          isSaving={isSaving}
           isStandaloneWindow={true}
           layoutMode={layoutMode}
           noteMeta={note}
           onChange={handleContentChange}
           onCursorChange={setCursor}
           onLayoutModeChange={setLayoutMode}
-          onSaveErrorDismiss={() => setSaveError(null)}
+          onSaveErrorDismiss={() => {
+            void saves
+              .retryReconcile()
+              .then(() => setSaveError(null))
+              .catch(error => setSaveError(String(error)))
+          }}
           onSelectionStatsChange={setSelectionStats}
+          readOnly={isLocked}
           rootDir={rootDir}
           saveError={saveError}
         />

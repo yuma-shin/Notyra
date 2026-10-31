@@ -56,6 +56,7 @@ pub fn run() {
                 shared_modules: plugins::protocol::SharedModuleRegistry::new(),
                 plugin_diagnostics: plugins::diagnostics::PluginDiagnostics::new(),
                 plugin_ops: tokio::sync::Mutex::new(()),
+                note_sync: plugins::note_sync::NoteSync::default(),
             });
 
             // アプリアイコンをウィンドウに設定（dev モードでも正しいアイコンが表示されるよう埋め込む）
@@ -151,6 +152,7 @@ pub fn run() {
             commands::plugin_notes::plugin_notes_rename,
             commands::plugin_notes::plugin_notes_move,
             commands::plugin_notes::plugin_notes_delete,
+            commands::plugin_notes::ack_note_mutation,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -108,7 +108,7 @@ impl StopBarrier {
     }
 
     /// 待機対象を登録し requestId を返す。
-    fn begin(&self, targets: impl IntoIterator<Item = String>) -> String {
+    pub(crate) fn begin(&self, targets: impl IntoIterator<Item = String>) -> String {
         let request_id = new_request_id();
         let entry = BarrierEntry {
             remaining: targets.into_iter().collect(),
@@ -138,7 +138,7 @@ impl StopBarrier {
     }
 
     /// 待機対象が空になるか、タイムアウトするまで待つ。完了後にエントリを削除する。
-    async fn wait<F>(&self, request_id: &str, timeout: Duration, mut open_labels: F) -> StopOutcome
+    pub(crate) async fn wait<F>(&self, request_id: &str, timeout: Duration, mut open_labels: F) -> StopOutcome
     where
         F: FnMut() -> HashSet<String>,
     {
@@ -177,14 +177,14 @@ impl StopBarrier {
 }
 
 /// 開いている Plugin_Host_Window のラベル集合
-fn open_host_labels<R: Runtime>(app: &AppHandle<R>) -> HashSet<String> {
+pub(crate) fn open_host_labels<R: Runtime>(app: &AppHandle<R>) -> HashSet<String> {
     app.webview_windows()
         .into_keys()
         .filter(|label| is_host_window_label(label))
         .collect()
 }
 
-fn new_request_id() -> String {
+pub(crate) fn new_request_id() -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)

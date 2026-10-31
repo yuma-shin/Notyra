@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 use serde_json::{json, Map, Value};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, State, WebviewWindow};
 
 use crate::commands::image::delete_images_for_note;
 use crate::commands::markdown::{self, MarkdownNoteMeta};
@@ -74,6 +74,7 @@ pub async fn plugin_notes_read(
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
 pub async fn plugin_notes_create(
+    app: AppHandle,
     state: State<'_, AppState>,
     plugin_id: String,
     roots: Vec<String>,
@@ -84,18 +85,23 @@ pub async fn plugin_notes_create(
     front_matter: Option<Value>,
 ) -> Result<String, PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    create(
-        &snapshot,
-        &plugin_id,
-        &roots,
-        &root,
-        CreateInput { folder: folder.as_deref(), title: &title, body, front_matter },
-    )
-    .await
+    require_permission(&snapshot, &plugin_id, Permission::NotesWrite)?;
+    registered_root(&root, &roots)?;
+    state.note_sync.mutate(&app, "create", vec![], async {
+        let saved = create(
+            &snapshot,
+            &plugin_id,
+            &roots,
+            &root,
+            CreateInput { folder: folder.as_deref(), title: &title, body, front_matter },
+        )
+        .await?;
+        Ok((saved.clone(), Some(saved)))
+    }).await
 }
 
 /// ノートの本文と Front Matter を書き込み、ノートを開いているエディタへ
-/// 外部変更として通知する（notes:write、Requirement 18.10）
+/// プラグイン由来の変更として同期する（notes:write、Requirement 18.10）
 #[tauri::command]
 pub async fn plugin_notes_update(
     app: AppHandle,
@@ -107,18 +113,18 @@ pub async fn plugin_notes_update(
     front_matter: Value,
 ) -> Result<(), PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    let changed = update(&snapshot, &plugin_id, &roots, &path, &body, &front_matter).await?;
-    // atomic_write はリネームで差し替えるため watch_file の Modify 通知が届かない場合がある。
-    // そのため明示的に通知する
-    for p in changed {
-        let _ = app.emit("file-changed", p);
-    }
-    Ok(())
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    require_object(&front_matter)?;
+    state.note_sync.mutate(&app, "update", paths, async {
+        update(&snapshot, &plugin_id, &roots, &path, &body, &front_matter).await?;
+        Ok(((), None))
+    }).await
 }
 
 /// ノートの名前を変更し、新しいパスを返す。既存のノートは上書きしない（notes:write）
 #[tauri::command]
 pub async fn plugin_notes_rename(
+    app: AppHandle,
     state: State<'_, AppState>,
     plugin_id: String,
     roots: Vec<String>,
@@ -126,12 +132,17 @@ pub async fn plugin_notes_rename(
     new_title: String,
 ) -> Result<String, PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    rename(&snapshot, &plugin_id, &roots, &path, &new_title).await
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    state.note_sync.mutate(&app, "rename", paths, async {
+        let saved = rename(&snapshot, &plugin_id, &roots, &path, &new_title).await?;
+        Ok((saved.clone(), Some(saved)))
+    }).await
 }
 
 /// ノートを移動し、実際に保存したパスを返す（notes:write）
 #[tauri::command]
 pub async fn plugin_notes_move(
+    app: AppHandle,
     state: State<'_, AppState>,
     plugin_id: String,
     roots: Vec<String>,
@@ -140,13 +151,18 @@ pub async fn plugin_notes_move(
     target_folder: String,
 ) -> Result<String, PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    move_note(&snapshot, &plugin_id, &roots, &root, &path, &target_folder).await
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    state.note_sync.mutate(&app, "move", paths, async {
+        let saved = move_note(&snapshot, &plugin_id, &roots, &root, &path, &target_folder).await?;
+        Ok((saved.clone(), Some(saved)))
+    }).await
 }
 
 /// ノートと関連付けられた画像を削除する（notes:write）。
 /// 確認ダイアログは Renderer 側で表示し、確定後にのみ呼び出される（Requirement 18.12）
 #[tauri::command]
 pub async fn plugin_notes_delete(
+    app: AppHandle,
     state: State<'_, AppState>,
     plugin_id: String,
     roots: Vec<String>,
@@ -154,7 +170,49 @@ pub async fn plugin_notes_delete(
     path: String,
 ) -> Result<(), PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    delete(&snapshot, &plugin_id, &roots, &root, &path).await
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    state.note_sync.mutate(&app, "delete", paths, async {
+        let result = delete(&snapshot, &plugin_id, &roots, &root, &path).await;
+        // Image cleanup can fail after the note has already been deleted.
+        // Editors must still clear the deleted path before returning that error.
+        match result {
+            Err(error) if Path::new(&path).exists() => Err(error),
+            result => Ok((result, None)),
+        }
+    }).await?
+}
+
+/// Only the calling window may acknowledge its own editor synchronization.
+#[tauri::command]
+pub fn ack_note_mutation(
+    state: State<'_, AppState>,
+    webview_window: WebviewWindow,
+    request_id: String,
+    error: Option<String>,
+) {
+    state.note_sync.ack(&request_id, webview_window.label(), error);
+}
+
+fn mutation_paths(
+    state: &PluginStateFile,
+    plugin_id: &str,
+    roots: &[String],
+    path: &str,
+) -> Result<Vec<String>, PluginError> {
+    require_permission(state, plugin_id, Permission::NotesWrite)?;
+    let resolved = resolve_note(path, &root_paths(roots))?;
+    let mut paths = vec![path.to_string(), path_string(&resolved)];
+    // An editor can use a registered junction/symlink root while a plugin uses
+    // the canonical path returned by notes.read. Notify both spellings.
+    for root in roots {
+        if let Ok(base) = resolve_within_roots(Path::new(root), &root_paths(roots)) {
+            if let Ok(relative) = resolved.strip_prefix(base) {
+                let alias = path_string(&Path::new(root).join(relative));
+                if !paths.contains(&alias) { paths.push(alias); }
+            }
+        }
+    }
+    Ok(paths)
 }
 
 // ---------------------------------------------------------------------------
@@ -249,7 +307,7 @@ pub(crate) async fn create(
     Ok(path_string(&saved))
 }
 
-/// 書き込み後に `file-changed` で通知するパス（呼び出し元の表記と解決後の表記）を返す
+/// 書き込んだノートのパス（呼び出し元の表記と解決後の表記）を返す
 pub(crate) async fn update(
     state: &PluginStateFile,
     plugin_id: &str,
@@ -266,8 +324,8 @@ pub(crate) async fn update(
         .await
         .map_err(io_error)?;
 
-    // エディタは `file-changed` のペイロードを自身の filePath と文字列で比較するため、
-    // 呼び出し元の表記と解決後の表記の両方で通知する
+    // 呼び出し元と実際に書き込んだファイルの両方の表記を保持する。
+    // エディタとの同期自体はコマンド層の notes:mutation が行う。
     let mut changed = Vec::new();
     for p in [path.to_string(), path.replace('\\', "/"), path_string(&note)] {
         if !changed.contains(&p) {
@@ -496,6 +554,19 @@ mod tests {
 
     fn input(title: &str) -> CreateInput<'_> {
         CreateInput { folder: None, title, body: None, front_matter: None }
+    }
+
+    #[test]
+    fn mutation_events_include_registered_root_aliases_and_validate_permissions() {
+        let (_tmp, root, _) = setup();
+        fs::write(root.join("a.md"), "body").unwrap();
+        let root = path_string(&root);
+        let roots = vec![format!("{root}/.")];
+        let path = format!("{root}/a.md");
+        let paths = mutation_paths(&rw(), ID, &roots, &path).unwrap();
+        assert!(paths.contains(&path));
+        assert!(paths.contains(&format!("{root}/./a.md")));
+        assert!(matches!(mutation_paths(&state_with(vec![]), ID, &roots, &path), Err(PluginError::PermissionDenied { .. })));
     }
 
     #[tokio::test]

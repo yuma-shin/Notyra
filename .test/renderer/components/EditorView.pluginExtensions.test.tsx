@@ -1,5 +1,6 @@
 import { EditorView as CodemirrorEditorView } from '@codemirror/view'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react'
+import { useEditorStateCache } from '@/renderer/hooks/useEditorStateCache'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EditorView } from '@/renderer/components/EditorView'
 import {
@@ -44,6 +45,18 @@ afterEach(() => {
 })
 
 describe('EditorView の Plugin エディタ拡張', () => {
+  it('キャッシュから復元したエディタにもプラグイン更新後の本文を反映する', async () => {
+    const path = '/notes/cached-plugin-update.md'
+    const first = render(<EditorView content="before" filePath={path} layoutMode="editor" onChange={noop} onLayoutModeChange={noop} />)
+    const cache = renderHook(() => useEditorStateCache())
+    cache.result.current.saveCurrentState(path, getCodeMirrorView())
+    first.unmount()
+    const editor = render(<EditorView content="before" filePath={path} layoutMode="editor" onChange={noop} onLayoutModeChange={noop} />)
+    editor.rerender(<EditorView content="after plugin update" filePath={path} layoutMode="editor" onChange={noop} onLayoutModeChange={noop} />)
+    await waitFor(() => expect(getCodeMirrorView().state.doc.toString()).toBe('after plugin update'))
+    cache.result.current.invalidate(path)
+  })
+
   it('プレビューのみでも Plugin_API から見出しへ移動し、アンマウントで解除する', async () => {
     const onChange = vi.fn()
     const { unmount } = render(

@@ -92,6 +92,7 @@ interface EditorViewProps {
   folderTree?: FolderNode
   currentFolder?: string
   isSaving?: boolean
+  readOnly?: boolean
   saveError?: string | null
   onSaveErrorDismiss?: () => void
   rootDir?: string
@@ -117,6 +118,7 @@ export function EditorView({
   folderTree,
   currentFolder,
   isSaving = false,
+  readOnly = false,
   saveError = null,
   onSaveErrorDismiss,
   rootDir,
@@ -319,6 +321,7 @@ export function EditorView({
   }, [])
 
   const handleChange = (value: string) => {
+    if (readOnly) return
     setLocalContent(value)
     onChange(value)
   }
@@ -393,7 +396,8 @@ export function EditorView({
 
   return (
     <div
-      className="group/editor-view flex flex-col h-full w-full overflow-hidden relative"
+      aria-busy={readOnly}
+      className={`group/editor-view flex flex-col h-full w-full overflow-hidden relative ${readOnly ? 'pointer-events-none' : ''}`}
       ref={containerRef}
     >
       {/* 保存中プログレスバー */}
@@ -413,7 +417,7 @@ export function EditorView({
 
       {/* 保存エラーバナー */}
       {saveError && (
-        <div className="absolute top-0 left-0 right-0 z-50 flex items-center gap-2 px-3 py-1.5 bg-destructive/10 border-b border-destructive/30 text-destructive text-xs">
+        <div className="absolute top-0 left-0 right-0 z-50 flex items-center gap-2 px-3 py-1.5 bg-destructive/10 border-b border-destructive/30 text-destructive text-xs pointer-events-auto">
           <span className="flex-1 truncate">{saveError}</span>
           <button
             className="shrink-0 rounded px-1.5 py-0.5 hover:bg-destructive/20 transition-colors"
@@ -505,8 +509,9 @@ export function EditorView({
               key={filePath}
               onChange={handleChange}
               onCreateEditor={handleEditorCreate}
+              readOnly={readOnly}
               theme={currentTheme}
-              value={initialState ? undefined : localContent}
+              value={localContent}
             />
           </div>
         )}
@@ -548,8 +553,9 @@ export function EditorView({
                   key={filePath}
                   onChange={handleChange}
                   onCreateEditor={handleEditorCreate}
+                  readOnly={readOnly}
                   theme={currentTheme}
-                  value={initialState ? undefined : localContent}
+                  value={localContent}
                 />
               </div>
 

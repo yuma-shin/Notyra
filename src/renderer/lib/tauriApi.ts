@@ -8,6 +8,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import type { NoteMutation } from '@/shared/noteMutation'
 
 import type {
   MarkdownNoteMeta,
@@ -118,26 +119,19 @@ const markdown = {
   unwatchFile: (filePath: string): Promise<boolean> =>
     invoke<boolean>('unwatch_file', { filePath }),
 
+  onNoteMutation: (callback: (event: NoteMutation) => void): (() => void) =>
+    subscribe<NoteMutation>('notes:mutation', callback),
+
+  ackNoteMutation: (requestId: string, error?: string): Promise<void> =>
+    invoke<void>('ack_note_mutation', { requestId, error }),
+
   /**
    * ファイル変更イベントを購読する。
    * Electron の ipcRenderer.on('markdown:fileChanged') に相当する。
    * 非同期で listen を登録し、同期的にアンサブスクライブ関数を返す。
    */
-  onFileChanged: (callback: (filePath: string) => void): (() => void) => {
-    let unlisten: (() => void) | null = null
-
-    listen<string>('file-changed', event => {
-      callback(event.payload)
-    }).then(fn => {
-      unlisten = fn
-    })
-
-    return () => {
-      if (unlisten) {
-        unlisten()
-      }
-    }
-  },
+  onFileChanged: (callback: (filePath: string) => void): (() => void) =>
+    subscribe<string>('file-changed', callback),
 }
 
 // ---------------------------------------------------------------------------

@@ -7,6 +7,7 @@ pub mod destination;
 pub mod diagnostics;
 pub mod error;
 pub mod gateway;
+pub mod note_sync;
 pub mod notes_scope;
 pub mod package;
 pub mod protocol;

@@ -1,5 +1,5 @@
 /**
- * MainScreen の自動保存デバウンス・ファイル監視クールダウン・
+ * MainScreen の自動保存デバウンス・外部変更の反映・
  * 連続保存時の再スケジュール挙動を固定するベースライン特性テスト。
  *
  * app-ui-redesign タスク 4.2 で useNoteWorkspace フックへロジックを
@@ -7,7 +7,7 @@
  * 変更なく合格することを確認するための回帰防止テスト。
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
+import { act, render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../helpers/test-app-provider'
 import { MainScreen } from '@/renderer/screens/main'
 
@@ -99,10 +99,12 @@ vi.mock('@/renderer/components/NoteList', () => ({
 
 vi.mock('@/renderer/components/EditorView', () => ({
   EditorView: (props: {
+    content: string
     isSaving?: boolean
     onChange: (content: string) => void
   }) => (
     <div>
+      <span data-testid="note-body">{props.content}</span>
       <span data-testid="is-saving">{String(Boolean(props.isSaving))}</span>
       <button
         onClick={() => props.onChange('changed body')}
@@ -174,7 +176,7 @@ describe('MainScreen ベースライン特性（抽出前）', () => {
     expect(mockSaveNote).toHaveBeenCalledTimes(1)
   })
 
-  it('ファイル監視: 直近の編集・保存から十分な時間が経過していない外部変更通知はリロードをスキップする', async () => {
+  it('ファイル監視: 保存直後の外部変更も取りこぼさず本文へ反映する', async () => {
     renderWithProviders(<MainScreen />, { settings: { rootDir: '/notes' } })
     await selectNote()
 
@@ -185,11 +187,15 @@ describe('MainScreen ベースライン特性（抽出前）', () => {
 
     mockGetNoteContent.mockClear()
 
-    // 保存完了直後（編集から1000ms・保存書込みから0ms）に外部変更通知が来てもリロードされない
+    mockGetNoteContent.mockResolvedValueOnce({
+      meta: NOTE_META, content: 'external body', rawContent: 'external body',
+    })
+    // 自分の保存と異なる内容なら、クールダウンで通知を捨てない。
     fileChangedCallback?.(NOTE_META.filePath)
-    await vi.advanceTimersByTimeAsync(500)
+    await act(async () => { await vi.advanceTimersByTimeAsync(500) })
 
-    expect(mockGetNoteContent).not.toHaveBeenCalled()
+    expect(mockGetNoteContent).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('note-body')).toHaveTextContent('external body')
   })
 
   it('ファイル監視: 編集や保存から十分に時間が経過していれば外部変更でリロードする', async () => {

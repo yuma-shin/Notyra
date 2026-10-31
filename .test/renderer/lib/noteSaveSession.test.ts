@@ -1,0 +1,198 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { NoteSaveSession, sameNotePath } from '@/renderer/lib/noteSaveSession'
+import type { NoteMutation } from '@/shared/noteMutation'
+import type { NoteContent } from '@/shared/types'
+
+const content = (body: string, path = '/notes/a.md'): NoteContent => ({
+  content: body, rawContent: body,
+  meta: { id: path, filePath: path, relativePath: path.split('/').at(-1)!, title: 'Note' },
+})
+function event(phase: NoteMutation['phase'], kind: NoteMutation['kind'] = 'update', newPath: string | null = null): NoteMutation {
+  return { requestId: phase, transactionId: 'tx', phase, kind, paths: ['/notes/a.md'], newPath }
+}
+function setup() {
+  let disk = content('initial')
+  const save = vi.fn(async (path: string, body: string) => {
+    disk = content(body, path)
+    return body
+  })
+  const load = vi.fn(async () => disk)
+  const reload = vi.fn(), rebind = vi.fn(), structure = vi.fn(async () => {})
+  const session = new NoteSaveSession({ save, load, reload, rebind, structure, error: vi.fn(), locked: vi.fn(), saving: vi.fn() })
+  session.bind('/notes/a.md')
+  return { session, save, load, reload, rebind, structure, write: (next: NoteContent) => { disk = next } }
+}
+beforeEach(() => vi.useFakeTimers())
+afterEach(() => vi.useRealTimers())
+
+it('drains a pending autosave before plugin update and cannot overwrite its committed body', async () => {
+  const { session, save, reload, write } = setup()
+  session.schedule('typed')
+  await vi.advanceTimersByTimeAsync(200)
+  await session.mutation(event('prepare'))
+  expect(save).toHaveBeenLastCalledWith('/notes/a.md', 'typed')
+  expect(session.isLocked).toBe(true)
+  expect(session.schedule('stale edit during the write')).toBe(false)
+  write(content('typed + plugin'))
+  await session.mutation(event('commit'))
+  expect(reload).toHaveBeenLastCalledWith(content('typed + plugin'), '/notes/a.md')
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(save).toHaveBeenCalledTimes(1)
+  expect(session.isLocked).toBe(false)
+  session.schedule('typed + plugin + next edit')
+  await vi.advanceTimersByTimeAsync(1000)
+  expect(save).toHaveBeenLastCalledWith('/notes/a.md', 'typed + plugin + next edit')
+})
+
+it('awaits an autosave that already started before acknowledging prepare', async () => {
+  const { session, save } = setup()
+  let finish!: (raw: string) => void
+  save.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  session.schedule('in flight')
+  await vi.advanceTimersByTimeAsync(1000)
+  let prepared = false
+  const preparing = session.mutation(event('prepare')).then(() => { prepared = true })
+  await Promise.resolve()
+  expect(prepared).toBe(false)
+  finish('in flight')
+  await preparing
+  expect(prepared).toBe(true)
+})
+
+it('also waits for a metadata write already running in the editor', async () => {
+  const { session } = setup()
+  let finish!: () => void
+  const write = session.runWrite(() => new Promise<void>(resolve => { finish = resolve }))
+  await Promise.resolve()
+  let prepared = false
+  const prepare = session.mutation(event('prepare')).then(() => { prepared = true })
+  await Promise.resolve()
+  expect(prepared).toBe(false)
+  finish()
+  await Promise.all([write, prepare])
+  expect(prepared).toBe(true)
+})
+
+it('rechecks watcher notifications deferred by a UI metadata write', async () => {
+  const { session, load, reload, write } = setup()
+  let finish!: () => void
+  const writing = session.runWrite(() => new Promise<void>(resolve => { finish = resolve }))
+  await Promise.resolve()
+  await session.reloadFromWatcher()
+  expect(load).not.toHaveBeenCalled()
+  write(content('external change'))
+  finish()
+  await writing
+  expect(reload).toHaveBeenLastCalledWith(content('external change'), '/notes/a.md')
+})
+
+it('blocks UI writes to a mutating note even when a different note is selected', async () => {
+  const { session } = setup()
+  session.bind('/notes/b.md')
+  await session.mutation(event('prepare'))
+  expect(session.isLocked).toBe(false)
+  const deleting = vi.fn(async () => {})
+  await expect(session.runWrite(deleting, ['/notes/a.md'])).rejects.toThrow('in progress')
+  expect(deleting).not.toHaveBeenCalled()
+  await session.mutation(event('abort'))
+  await session.runWrite(deleting, ['/notes/a.md'])
+  expect(deleting).toHaveBeenCalledOnce()
+})
+
+it.each(['rename', 'move'] as const)('rebinds %s synchronously and only saves subsequent edits to the new path', async kind => {
+  const { session, save, rebind, write } = setup()
+  session.schedule('unsaved')
+  await session.mutation(event('prepare', kind))
+  write(content('unsaved', '/notes/sub/new.md'))
+  const committing = session.mutation(event('commit', kind, '/notes/sub/new.md'))
+  expect(rebind).toHaveBeenLastCalledWith('/notes/sub/new.md')
+  expect(session.schedule('too early')).toBe(false)
+  await committing
+  session.schedule('after rename')
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(save.mock.calls).toEqual([
+    ['/notes/a.md', 'unsaved'], ['/notes/sub/new.md', 'after rename'],
+  ])
+})
+
+it('clears a deleted editor and never recreates the old file', async () => {
+  const { session, save, reload } = setup()
+  session.schedule('last edit')
+  await session.mutation(event('prepare', 'delete'))
+  await session.mutation(event('commit', 'delete'))
+  expect(reload).toHaveBeenLastCalledWith(null, null)
+  expect(session.schedule('recreate')).toBe(false)
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(save).toHaveBeenCalledTimes(1)
+})
+
+it('distinguishes self-generated watcher echoes by bytes and defers other notifications during saves', async () => {
+  const { session, reload, write } = setup()
+  session.schedule('local')
+  await session.reloadFromWatcher()
+  expect(reload).not.toHaveBeenCalled()
+  await vi.advanceTimersByTimeAsync(1000)
+  expect(reload).not.toHaveBeenCalled()
+  write(content('external'))
+  await session.reloadFromWatcher()
+  expect(reload).toHaveBeenLastCalledWith(content('external'), '/notes/a.md')
+})
+
+it('does not acknowledge a failed flush, and abort releases the editor without losing its retry snapshot', async () => {
+  const { session, save } = setup()
+  save.mockRejectedValueOnce(new Error('disk full'))
+  session.schedule('keep this')
+  await expect(session.mutation(event('prepare'))).rejects.toThrow('disk full')
+  expect(session.isLocked).toBe(true)
+  await session.mutation(event('abort'))
+  expect(session.isLocked).toBe(false)
+  await session.flush()
+  expect(save).toHaveBeenLastCalledWith('/notes/a.md', 'keep this')
+})
+
+it('keeps stale content locked if commit reload fails, and allows retry at the new path', async () => {
+  const { session, load, reload, write } = setup()
+  await session.mutation(event('prepare', 'rename'))
+  load.mockRejectedValueOnce(new Error('read failed'))
+  await expect(session.mutation(event('commit', 'rename', '/notes/b.md'))).rejects.toThrow('read failed')
+  expect(session.schedule('stale')).toBe(false)
+  write(content('renamed', '/notes/b.md'))
+  await session.retryReconcile()
+  expect(load).toHaveBeenLastCalledWith('/notes/b.md')
+  expect(reload).toHaveBeenLastCalledWith(content('renamed', '/notes/b.md'), '/notes/b.md')
+  expect(session.isLocked).toBe(false)
+})
+
+it('does not apply a late commit or watcher read to a different selected note', async () => {
+  const { session, reload, load, structure } = setup()
+  let finish!: (value: NoteContent) => void
+  load.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const reading = session.reloadFromWatcher()
+  await session.mutation(event('prepare'))
+  session.bind('/other/b.md')
+  finish(content('stale'))
+  await reading
+  await session.mutation(event('commit'))
+  expect(reload).not.toHaveBeenCalled()
+  expect(structure).toHaveBeenCalled()
+  expect(session.isLocked).toBe(false)
+})
+
+it('invalidates an older read when a newly opened window receives commit without prepare', async () => {
+  const { session, load, reload, write } = setup()
+  let finish!: (value: NoteContent) => void
+  load.mockImplementationOnce(() => new Promise(resolve => { finish = resolve }))
+  const reading = session.reloadFromWatcher()
+  write(content('plugin result'))
+  await session.mutation(event('commit'))
+  finish(content('old read'))
+  await reading
+  expect(reload).toHaveBeenCalledTimes(1)
+  expect(reload).toHaveBeenLastCalledWith(content('plugin result'), '/notes/a.md')
+})
+
+it('recognizes Windows path aliases without conflating case-sensitive Unix paths', () => {
+  expect(sameNotePath('C:\\Notes\\A.md', '//?/C:/notes/a.md')).toBe(true)
+  expect(sameNotePath('\\\\?\\UNC\\server\\share\\A.md', '//server/share/a.md')).toBe(true)
+  expect(sameNotePath('/notes/A.md', '/notes/a.md')).toBe(false)
+})

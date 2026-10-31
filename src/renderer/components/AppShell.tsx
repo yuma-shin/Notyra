@@ -220,6 +220,7 @@ export function AppShell({
               onSelectionStatsChange={setSelectionStats}
               onToggleNoteList={workspace.onToggleNoteList}
               onToggleSidebar={workspace.onToggleSidebar}
+              readOnly={workspace.isNoteLocked}
               rootDir={activeRootPath}
               saveError={workspace.saveError}
               showNoteList={workspace.showNoteList}

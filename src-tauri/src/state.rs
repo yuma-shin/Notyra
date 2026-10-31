@@ -26,4 +26,5 @@ pub struct AppState {
     /// インストール・更新・アンインストール・開発者モードの再読み込みなど、
     /// Plugin のファイルを操作する処理を直列化する（StopBarrier の待機中も保持する）
     pub plugin_ops: tokio::sync::Mutex<()>,
+    pub note_sync: crate::plugins::note_sync::NoteSync,
 }

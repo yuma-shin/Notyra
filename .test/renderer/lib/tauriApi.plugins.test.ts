@@ -79,3 +79,17 @@ it('unsubscribes even when disposal precedes the asynchronous listen result', as
   await Promise.resolve()
   expect(unlisten).toHaveBeenCalledTimes(1)
 })
+
+it('subscribes to structural note changes separately from watcher notifications and acknowledges the request', async () => {
+  mocked.listen.mockResolvedValue(vi.fn())
+  mocked.invoke.mockResolvedValue(undefined)
+  const callback = vi.fn()
+  const dispose = tauriApi.markdown.onNoteMutation(callback)
+  expect(mocked.listen.mock.calls[0][0]).toBe('notes:mutation')
+  const payload = { requestId: 'commit', transactionId: 'tx', phase: 'commit', kind: 'rename', paths: ['/old.md'], newPath: '/new.md' }
+  mocked.listen.mock.calls[0][1]({ payload })
+  expect(callback).toHaveBeenCalledWith(payload)
+  await tauriApi.markdown.ackNoteMutation('commit', 'reload failed')
+  expect(mocked.invoke).toHaveBeenCalledWith('ack_note_mutation', { requestId: 'commit', error: 'reload failed' })
+  dispose()
+})
