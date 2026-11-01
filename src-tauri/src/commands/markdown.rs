@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use gray_matter::engine::YAML;
@@ -9,6 +9,7 @@ use tauri::{command, AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
 
 use crate::state::{AppState, WatcherHandle};
+use crate::plugins::notes_scope::resolve_within_roots;
 
 // ---------------------------------------------------------------------------
 // 共有型定義
@@ -174,7 +175,12 @@ async fn read_header(path: &Path) -> std::io::Result<String> {
 
 /// ファイルからノートメタデータを抽出する
 async fn get_note_meta(root: &Path, file_path: &Path) -> Option<MarkdownNoteMeta> {
-    let header = read_header(file_path).await.ok()?;
+    get_note_meta_at(root, file_path, file_path).await
+}
+
+/// Keep the visible path for metadata while reading only the validated target.
+async fn get_note_meta_at(root: &Path, file_path: &Path, read_path: &Path) -> Option<MarkdownNoteMeta> {
+    let header = read_header(read_path).await.ok()?;
     let matter = Matter::<YAML>::new();
     let parsed = matter.parse::<Pod>(&header).ok()?;
 
@@ -223,6 +229,54 @@ fn collect_md_files(dir: &Path, out: &mut Vec<PathBuf>) {
             out.push(path);
         }
     }
+}
+
+/// Check every target before reading its directory or collecting its file.
+/// Track ancestors, rather than all visited directories, to allow valid aliases
+/// while cutting links back to an ancestor (including links to the root).
+fn collect_scoped_md_files(
+    visible: &Path,
+    candidate: &Path,
+    roots: &[PathBuf],
+    ancestors: &mut HashSet<PathBuf>,
+    out: &mut Vec<(PathBuf, PathBuf)>,
+) {
+    let Ok(resolved) = resolve_within_roots(candidate, roots) else {
+        return;
+    };
+    if resolved.is_dir() {
+        if !ancestors.insert(resolved.clone()) {
+            return;
+        }
+        if let Ok(entries) = std::fs::read_dir(&resolved) {
+            for entry in entries.flatten() {
+                collect_scoped_md_files(
+                    &visible.join(entry.file_name()), &entry.path(), roots, ancestors, out,
+                );
+            }
+        }
+        ancestors.remove(&resolved);
+    } else if visible.extension().and_then(|e| e.to_str()) == Some("md")
+        && resolved.extension().and_then(|e| e.to_str()) == Some("md")
+        && resolved.is_file()
+    {
+        out.push((visible.to_path_buf(), resolved));
+    }
+}
+
+async fn get_scoped_note_meta(
+    root: &Path,
+    visible: &Path,
+    candidate: &Path,
+    roots: &[PathBuf],
+) -> Option<MarkdownNoteMeta> {
+    // Recheck immediately before reading: a collected file or its parent may
+    // have become a link since the directory walk finished.
+    let resolved = resolve_within_roots(candidate, roots).ok()?;
+    if !resolved.is_file() || resolved.extension().and_then(|e| e.to_str()) != Some("md") {
+        return None;
+    }
+    get_note_meta_at(root, visible, &resolved).await
 }
 
 /// フォルダツリーを構築する
@@ -343,7 +397,7 @@ pub async fn scan_notes_and_build_folder_tree(root_dir: String) -> Result<ScanRe
 }
 
 /// ルート配下の .md ファイルを走査し、メタデータを updatedAt 降順で返す。
-/// `scan_notes_and_build_folder_tree` と Plugin 用の `plugin_notes_list` で共有する。
+/// 通常 UI 用。Plugin の一覧には `scan_notes_scoped` を使う。
 pub(crate) async fn scan_notes(root: &Path) -> Vec<MarkdownNoteMeta> {
     // .md ファイルを収集
     let mut file_paths: Vec<PathBuf> = Vec::new();
@@ -367,6 +421,30 @@ pub(crate) async fn scan_notes(root: &Path) -> Vec<MarkdownNoteMeta> {
         b.updated_at.as_deref().unwrap_or("").cmp(a.updated_at.as_deref().unwrap_or(""))
     });
 
+    notes
+}
+
+/// Plugin listing shares metadata parsing with the UI, but checks every file
+/// and directory against the same registered roots as notes.read().
+pub(crate) async fn scan_notes_scoped(root: &Path, roots: &[PathBuf]) -> Vec<MarkdownNoteMeta> {
+    let Ok(resolved_root) = resolve_within_roots(root, roots) else {
+        return Vec::new();
+    };
+    if !resolved_root.is_dir() {
+        return Vec::new();
+    }
+    let mut files = Vec::new();
+    collect_scoped_md_files(root, &resolved_root, roots, &mut HashSet::new(), &mut files);
+    let tasks: Vec<_> = files.into_iter().map(|(visible, candidate)| {
+        let root = root.to_path_buf();
+        let roots = roots.to_vec();
+        tokio::spawn(async move { get_scoped_note_meta(&root, &visible, &candidate, &roots).await })
+    }).collect();
+    let mut notes = Vec::new();
+    for task in tasks {
+        if let Ok(Some(meta)) = task.await { notes.push(meta); }
+    }
+    notes.sort_by(|a, b| b.updated_at.as_deref().unwrap_or("").cmp(a.updated_at.as_deref().unwrap_or("")));
     notes
 }
 
@@ -794,6 +872,26 @@ fn epoch_to_ymd_hms(epoch: u64) -> (u64, u64, u64, u64, u64, u64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn scoped_metadata_rechecks_a_collected_target_before_reading_it() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("notes");
+        std::fs::create_dir(&root).unwrap();
+        let file = root.join("note.md");
+        let outside = tmp.path().join("outside.md");
+        std::fs::write(&file, "allowed").unwrap();
+        std::fs::write(&outside, "PRIVATE_EXCERPT").unwrap();
+        let roots = vec![root.clone()];
+        let mut collected = Vec::new();
+        collect_scoped_md_files(&root, &root, &roots, &mut HashSet::new(), &mut collected);
+        assert_eq!(collected.len(), 1);
+        std::fs::remove_file(&file).unwrap();
+        std::os::unix::fs::symlink(&outside, &file).unwrap();
+        let (visible, candidate) = &collected[0];
+        assert!(get_scoped_note_meta(&root, visible, candidate, &roots).await.is_none());
+    }
 
     // -----------------------------------------------------------------------
     // atomic_write ユーティリティのテスト

@@ -261,8 +261,8 @@ pub(crate) async fn list(
 ) -> Result<Vec<MarkdownNoteMeta>, PluginError> {
     require_permission(state, plugin_id, Permission::NotesRead)?;
     let (_, registered) = registered_root(root, roots)?;
-    // 登録済みルートの文字列で走査し、UI と同じ形式の filePath を返す
-    Ok(markdown::scan_notes(Path::new(registered)).await)
+    // 表示用のパスは登録時の表記を保ち、各読み込み先を notes.read と同じスコープで検証する。
+    Ok(markdown::scan_notes_scoped(Path::new(registered), &root_paths(roots)).await)
 }
 
 pub(crate) async fn read(
@@ -587,6 +587,76 @@ mod tests {
 
     fn input(title: &str) -> CreateInput<'_> {
         CreateInput { folder: None, title, body: None, front_matter: None }
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn list_does_not_disclose_notes_through_links_outside_registered_roots() {
+        let (tmp, root, roots) = setup();
+        let outside = tmp.path().join("outside");
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(outside.join("secret.md"), "---\ntitle: PRIVATE_TITLE\ntags: [private-tag]\n---\nPRIVATE_BODY_EXCERPT").unwrap();
+        fs::write(root.join("sub/allowed.md"), "allowed body").unwrap();
+        link_directory(&outside, &root.join("escape"));
+        let escaped = s(&root.join("escape/secret.md"));
+        assert!(matches!(read(&rw(), ID, &roots, &escaped).await, Err(PluginError::OutOfScope { .. })));
+        let notes = list(&rw(), ID, &roots, &roots[0]).await.unwrap();
+        assert_eq!(notes.iter().map(|note| note.relative_path.as_str()).collect::<Vec<_>>(), ["sub/allowed.md"]);
+        let serialized = serde_json::to_string(&notes).unwrap();
+        for secret in ["PRIVATE_TITLE", "private-tag", "PRIVATE_BODY_EXCERPT"] {
+            assert!(!serialized.contains(secret));
+        }
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn list_preserves_registered_root_aliases_and_in_scope_links_without_following_cycles() {
+        let tmp = TempDir::new().unwrap();
+        let real = tmp.path().join("real notes");
+        let other = tmp.path().join("other registered root");
+        fs::create_dir_all(real.join("sub")).unwrap();
+        fs::create_dir_all(&other).unwrap();
+        fs::write(real.join("sub/a.md"), "allowed A").unwrap();
+        fs::write(other.join("b.md"), "allowed B").unwrap();
+        let alias = tmp.path().join("registered alias");
+        link_directory(&real, &alias);
+        link_directory(&real.join("sub"), &real.join("sub-alias"));
+        link_directory(&other, &real.join("other"));
+        link_directory(&real, &real.join("loop"));
+        let empty = real.join("missing-target");
+        fs::create_dir(&empty).unwrap();
+        link_directory(&empty, &real.join("broken-link"));
+        fs::remove_dir(empty).unwrap();
+        let roots = vec![s(&alias), s(&other)];
+        let notes = list(&rw(), ID, &roots, &roots[0]).await.unwrap();
+        let mut relative: Vec<_> = notes.iter().map(|note| note.relative_path.as_str()).collect();
+        relative.sort();
+        assert_eq!(relative, ["other/b.md", "sub-alias/a.md", "sub/a.md"]);
+        for note in notes {
+            assert_eq!(note.file_path, format!("{}/{}", path_string(&alias), note.relative_path));
+            let content = read(&rw(), ID, &roots, &note.file_path).await.unwrap();
+            assert!(content.body.starts_with("allowed"));
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn list_validates_file_symlink_targets_as_well_as_directories() {
+        let (tmp, root, roots) = setup();
+        let outside = tmp.path().join("secret.md");
+        fs::write(&outside, "PRIVATE_EXCERPT").unwrap();
+        fs::write(root.join("inside.md"), "allowed").unwrap();
+        fs::write(root.join("inside.txt"), "NOT_A_NOTE").unwrap();
+        std::os::unix::fs::symlink(&outside, root.join("escape.md")).unwrap();
+        std::os::unix::fs::symlink(root.join("inside.md"), root.join("alias.md")).unwrap();
+        std::os::unix::fs::symlink(root.join("missing.md"), root.join("broken.md")).unwrap();
+        std::os::unix::fs::symlink(root.join("inside.txt"), root.join("fake.md")).unwrap();
+        let notes = list(&rw(), ID, &roots, &roots[0]).await.unwrap();
+        let mut paths: Vec<_> = notes.iter().map(|note| note.relative_path.as_str()).collect();
+        paths.sort();
+        assert_eq!(paths, ["alias.md", "inside.md"]);
+        assert!(!serde_json::to_string(&notes).unwrap().contains("PRIVATE_EXCERPT"));
+        assert!(matches!(read(&rw(), ID, &roots, &s(&root.join("escape.md"))).await, Err(PluginError::OutOfScope { .. })));
     }
 
     #[cfg(any(unix, windows))]
