@@ -16,7 +16,7 @@ use serde::Serialize;
 use serde_json::{json, Map, Value};
 use tauri::{AppHandle, State, WebviewWindow};
 
-use crate::commands::image::delete_images_for_note;
+use crate::commands::image::{delete_image_files, note_image_paths};
 use crate::commands::markdown::{self, MarkdownNoteMeta};
 use crate::plugins::notes_scope::resolve_within_roots;
 use crate::plugins::store::{Permission, PluginStateFile};
@@ -428,15 +428,33 @@ pub(crate) async fn delete(
     let (resolved_root, _) = registered_root(root, roots)?;
     let note = resolve_note(path, std::slice::from_ref(&resolved_root))?;
 
-    tokio::fs::remove_file(&note).await?;
-
-    // 既存 UI と同じく、ファイル名（拡張子なし）に紐づく画像を削除する
+    // Validate the entire image cleanup plan before deleting anything.
     let base_name = note
         .file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_default();
-    if !base_name.is_empty() {
-        let result = delete_images_for_note(&resolved_root, &base_name).await;
+    let images = if base_name.is_empty() {
+        vec![]
+    } else {
+        let scope = root_paths(roots);
+        let images_dir = resolve_within_roots(&resolved_root.join("images"), &scope)?;
+        let paths = match note_image_paths(&images_dir, &base_name).await {
+            Ok(paths) => paths,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => vec![],
+            Err(error) => return Err(error.into()),
+        };
+        for path in &paths {
+            resolve_within_roots(path, &scope)?;
+        }
+        // Paths use the resolved directory, but retain the final filename so
+        // remove_file unlinks a file symlink instead of deleting its target.
+        paths
+    };
+
+    tokio::fs::remove_file(&note).await?;
+
+    if !images.is_empty() {
+        let result = delete_image_files(&images).await;
         if !result.errors.is_empty() {
             return Err(io_error(format!(
                 "note was deleted but some images could not be deleted: {}",
@@ -946,6 +964,88 @@ mod tests {
         assert_eq!(fs::read_to_string(root.join("x.md")).unwrap(), "root");
         assert_eq!(fs::read_to_string(root.join("x-1.md")).unwrap(), "sub");
         assert!(!root.join("sub").join("x.md").exists());
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn delete_rejects_images_directory_links_outside_registered_roots() {
+        let (tmp, root, roots) = setup();
+        let outside = tmp.path().join("outside images");
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(root.join("note.md"), "body").unwrap();
+        fs::write(outside.join("note_1_001.png"), "keep private image").unwrap();
+        link_directory(&outside, &root.join("images"));
+        let result = delete(&rw(), ID, &roots, &roots[0], &s(&root.join("note.md"))).await;
+        assert!(matches!(result, Err(PluginError::OutOfScope { .. })), "{result:?}");
+        assert_eq!(fs::read_to_string(root.join("note.md")).unwrap(), "body");
+        assert_eq!(fs::read_to_string(outside.join("note_1_001.png")).unwrap(), "keep private image");
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn delete_validates_each_linked_image_target_before_removing_the_note() {
+        let (tmp, root, roots) = setup();
+        let outside = tmp.path().join("outside");
+        fs::create_dir_all(&outside).unwrap();
+        fs::create_dir_all(root.join("images")).unwrap();
+        fs::write(root.join("note.md"), "body").unwrap();
+        fs::write(root.join("images/note_1_001.png"), "keep until validation succeeds").unwrap();
+        fs::write(outside.join("private.png"), "private").unwrap();
+        link_directory(&outside, &root.join("images").join("note_1_002.png"));
+        let result = delete(&rw(), ID, &roots, &roots[0], &s(&root.join("note.md"))).await;
+        assert!(matches!(result, Err(PluginError::OutOfScope { .. })), "{result:?}");
+        assert!(root.join("note.md").exists());
+        assert!(root.join("images/note_1_001.png").exists());
+        assert_eq!(fs::read_to_string(outside.join("private.png")).unwrap(), "private");
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn delete_cleans_images_through_links_to_registered_roots() {
+        for external in [false, true] {
+            let (tmp, root, mut roots) = setup();
+            let images = if external { tmp.path().join("other registered root") } else { root.join("assets") };
+            fs::create_dir_all(&images).unwrap();
+            if external { roots.push(s(&images)); }
+            fs::write(root.join("note.md"), "body").unwrap();
+            fs::write(images.join("note_1_001.png"), "associated").unwrap();
+            fs::write(images.join("other_1_001.png"), "unrelated").unwrap();
+            link_directory(&images, &root.join("images"));
+            delete(&rw(), ID, &roots, &roots[0], &s(&root.join("note.md"))).await.unwrap();
+            assert!(!root.join("note.md").exists());
+            assert!(!images.join("note_1_001.png").exists());
+            assert_eq!(fs::read_to_string(images.join("other_1_001.png")).unwrap(), "unrelated");
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn delete_rejects_file_symlinks_to_unregistered_images() {
+        let (tmp, root, roots) = setup();
+        fs::create_dir_all(root.join("images")).unwrap();
+        fs::write(root.join("note.md"), "body").unwrap();
+        let outside = tmp.path().join("private.png");
+        fs::write(&outside, "private").unwrap();
+        std::os::unix::fs::symlink(&outside, root.join("images/note_1_001.png")).unwrap();
+        let result = delete(&rw(), ID, &roots, &roots[0], &s(&root.join("note.md"))).await;
+        assert!(matches!(result, Err(PluginError::OutOfScope { .. })), "{result:?}");
+        assert!(root.join("note.md").exists());
+        assert_eq!(fs::read_to_string(outside).unwrap(), "private");
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn delete_unlinks_in_scope_image_aliases_without_deleting_their_targets() {
+        let (_tmp, root, roots) = setup();
+        fs::create_dir_all(root.join("images")).unwrap();
+        fs::write(root.join("note.md"), "body").unwrap();
+        let target = root.join("images/other_1_001.png");
+        fs::write(&target, "shared image").unwrap();
+        let alias = root.join("images/note_1_001.png");
+        std::os::unix::fs::symlink(&target, &alias).unwrap();
+        delete(&rw(), ID, &roots, &roots[0], &s(&root.join("note.md"))).await.unwrap();
+        assert!(!alias.exists());
+        assert_eq!(fs::read_to_string(target).unwrap(), "shared image");
     }
 
     #[tokio::test]

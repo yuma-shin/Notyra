@@ -136,9 +136,14 @@ export function createPluginApi(
   const { backend, registries } = deps
   const commandTimeoutMs = deps.commandTimeoutMs ?? DEFAULT_COMMAND_TIMEOUT_MS
 
-  const requireSession = (): PluginSession => {
+  const requireSession = (expected?: PluginSession): PluginSession => {
     const session = deps.getSession()
-    if (!session || session.disposed || session.pluginId !== pluginId) {
+    if (
+      !session ||
+      session.disposed ||
+      session.pluginId !== pluginId ||
+      (expected !== undefined && session !== expected)
+    ) {
       throw new PluginApiError(
         'pluginNotActive',
         `Plugin "${pluginId}" is not active`
@@ -201,12 +206,12 @@ export function createPluginApi(
   /** 権限付きの非同期 API。セッション → Permission → 本体の順に確認する */
   const gated = async <T>(
     permission: Permission,
-    run: () => Promise<T>
+    run: (session: PluginSession) => Promise<T>
   ): Promise<T> => {
-    requireSession()
+    const session = requireSession()
     requirePermission(permission)
     try {
-      return await run()
+      return await run(session)
     } catch (error) {
       throw toPluginApiError(error)
     }
@@ -497,12 +502,12 @@ export function createPluginApi(
         }),
 
       delete: (path: string): Promise<void> =>
-        gated('notes:write', async () => {
+        gated('notes:write', async session => {
           assertNonEmptyString(path, 'path')
           const root = await backend.notes.resolveRoot(pluginId, path)
           // Root resolution is asynchronous; stopping during it must not open
-          // a confirmation dialog for an inactive plugin.
-          requireSession()
+          // a confirmation dialog for an inactive or replaced session.
+          requireSession(session)
 
           let confirmed = false
           try {
@@ -523,8 +528,8 @@ export function createPluginApi(
               { path }
             )
           }
-          // ダイアログの表示中に停止された場合は削除しない
-          requireSession()
+          // ダイアログ表示中に停止・置換されたセッションの要求は実行しない。
+          requireSession(session)
           await backend.notes.delete(pluginId, root, path)
         }),
     }),

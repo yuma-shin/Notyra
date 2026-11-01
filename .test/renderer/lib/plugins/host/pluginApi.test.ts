@@ -592,6 +592,48 @@ describe('createPluginApi: notes', () => {
     expect(backend.notes.delete).not.toHaveBeenCalled()
   })
 
+  it.each(['root resolution', 'confirmation'] as const)('rejects a deletion from a session replaced during %s', async phase => {
+    const s = setup({ permissions: ['notes:write'] })
+    const original = s.getSession()!
+    const replacement = new PluginSession(PLUGIN)
+    const replace = () => {
+      original.disposeAll()
+      s.setSession(replacement)
+    }
+    if (phase === 'root resolution') {
+      vi.mocked(s.backend.notes.resolveRoot).mockImplementationOnce(async () => {
+        replace()
+        return '/notes'
+      })
+    } else {
+      s.confirmDelete.mockImplementationOnce(async () => {
+        replace()
+        return true
+      })
+    }
+    await expect(s.api.notes.delete('/notes/a.md')).rejects.toMatchObject({ kind: 'pluginNotActive' })
+    expect(s.backend.notes.delete).not.toHaveBeenCalled()
+    expect(s.confirmDelete).toHaveBeenCalledTimes(phase === 'confirmation' ? 1 : 0)
+    // The facade remains usable for a new call from the replacement session.
+    await s.api.notes.delete('/notes/b.md')
+    expect(s.backend.notes.delete).toHaveBeenCalledExactlyOnceWith(PLUGIN, '/notes', '/notes/b.md')
+    replacement.disposeAll()
+  })
+
+  it('rejects a pending deletion when its session is replaced without disposal', async () => {
+    const s = setup({ permissions: ['notes:write'] })
+    const original = s.getSession()!
+    const replacement = new PluginSession(PLUGIN)
+    s.confirmDelete.mockImplementationOnce(async () => {
+      s.setSession(replacement)
+      return true
+    })
+    await expect(s.api.notes.delete('/notes/a.md')).rejects.toMatchObject({ kind: 'pluginNotActive' })
+    expect(s.backend.notes.delete).not.toHaveBeenCalled()
+    original.disposeAll()
+    replacement.disposeAll()
+  })
+
   it('requires write permission before resolving a deletion root', async () => {
     const { api, backend, confirmDelete } = setup({ permissions: ['notes:read'] })
     await expect(api.notes.delete('/notes/a.md')).rejects.toMatchObject({ kind: 'permissionDenied' })
