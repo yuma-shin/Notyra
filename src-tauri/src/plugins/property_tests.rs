@@ -265,17 +265,42 @@ async fn unspecified_dns_addresses_are_blocked() {
 #[tokio::test]
 async fn rename_to_same_filename_preserves_note() {
     let dir = tempfile::tempdir().unwrap();
-    let file = dir.path().join("Same.md");
+    // sanitize_filename lowercases titles. Start with the actual destination
+    // name so this is a same-path rename on case-sensitive filesystems too.
+    let file = dir.path().join("same.md");
     fs::write(&file, "# keep body\n").unwrap();
     let path = file.to_string_lossy().replace('\\', "/");
-    markdown::rename_note(path.clone(), "Same".into())
+    let saved = markdown::rename_note(path, "Same".into())
         .await
+        .unwrap()
         .unwrap();
+    assert_eq!(Path::new(&saved), file);
     assert!(file.is_file());
     assert!(fs::read_to_string(&file).unwrap().contains("# keep body"));
-    #[cfg(windows)]
-    {
-        markdown::rename_note(path, "same".into()).await.unwrap();
+    // Exercise case aliases only when this filesystem actually supports them.
+    let alias = dir.path().join("SAME.md");
+    if alias.is_file() {
+        markdown::rename_note(alias.to_string_lossy().into_owned(), "Same".into()).await.unwrap();
         assert!(file.is_file());
+        assert!(fs::read_to_string(&file).unwrap().contains("# keep body"));
     }
+}
+
+#[tokio::test]
+async fn rename_normalizes_filename_case_without_losing_note() {
+    let dir = tempfile::tempdir().unwrap();
+    let original = dir.path().join("Same.md");
+    let destination = dir.path().join("same.md");
+    fs::write(&original, "# keep body\n").unwrap();
+    // Detect the filesystem's behavior, rather than assuming every Unix
+    // filesystem is case-sensitive (macOS commonly is not).
+    let same_file = destination.is_file();
+    let saved = markdown::rename_note(original.to_string_lossy().into_owned(), "Same".into())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(Path::new(&saved), destination);
+    assert!(destination.is_file());
+    assert!(fs::read_to_string(&destination).unwrap().contains("# keep body"));
+    assert_eq!(original.is_file(), same_file);
 }

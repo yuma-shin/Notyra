@@ -25,6 +25,11 @@ interface SessionOptions {
   error(error: unknown): void
 }
 
+interface PendingReconcile {
+  event: NoteMutation
+  needsReload: boolean
+}
+
 /** Owns debounce snapshots and serializes writes, even across note switches. */
 export class NoteSaveSession {
   private path: string | null = null
@@ -33,7 +38,7 @@ export class NoteSaveSession {
   private writes: Promise<void> = Promise.resolve()
   private activeWrites = 0
   private readonly locks = new Map<string, NoteMutation>()
-  private pendingReconcile: NoteMutation | null = null
+  private readonly pendingReconciles = new Map<string, PendingReconcile>()
   private watcherPending = false
   private generation = 0
   private readonly knownContents = new Map<string, string>()
@@ -161,7 +166,10 @@ export class NoteSaveSession {
 
   async mutation(event: NoteMutation): Promise<void> {
     if (event.phase === 'abort') {
-      this.unlock(event.transactionId)
+      // An abort can release prepare, but cannot undo a committed write whose
+      // editor reconciliation still needs to succeed.
+      if (!this.pendingReconciles.has(event.transactionId))
+        this.unlock(event.transactionId)
       return
     }
     const currentPath = this.path
@@ -180,9 +188,15 @@ export class NoteSaveSession {
       await this.flush()
       return
     }
-    const previousReconcile = this.pendingReconcile
-    this.pendingReconcile = event
+    const previousReconciles = [...this.pendingReconciles]
+    const pending = this.pendingReconciles.get(event.transactionId) ?? {
+      event,
+      needsReload: affected,
+    }
+    this.pendingReconciles.set(event.transactionId, pending)
+    const reloadedPaths: string[] = []
     if (affected) {
+      pending.needsReload = true
       this.generation++
       this.locks.set(event.transactionId, event)
       this.options.locked(true)
@@ -198,21 +212,69 @@ export class NoteSaveSession {
       if (this.path === path && generation === this.generation) {
         this.options.reload(content, path)
         if (content && path) this.knownContents.set(path, content.rawContent)
+        pending.needsReload = false
+        reloadedPaths.push(...event.paths)
+        if (currentPath) reloadedPaths.push(currentPath)
+        if (path) reloadedPaths.push(path)
       }
       this.watcherPending = false
     }
     await this.options.structure(event)
-    if (this.pendingReconcile === event) this.pendingReconcile = null
     if (
-      previousReconcile &&
-      previousReconcile.transactionId !== event.transactionId
-    )
-      this.unlock(previousReconcile.transactionId)
-    this.unlock(event.transactionId)
+      !pending.needsReload &&
+      this.pendingReconciles.get(event.transactionId) === pending
+    ) {
+      this.pendingReconciles.delete(event.transactionId)
+      this.unlock(event.transactionId)
+    }
+    // A fresh load can recover earlier failures of this same note (including
+    // rename/move), but must never release an unrelated note's protection.
+    let remaining = previousReconciles
+    while (remaining.length > 0 && reloadedPaths.length > 0) {
+      const unresolved: typeof remaining = []
+      let recovered = false
+      for (const [id, previous] of remaining) {
+        const paths = [
+          ...previous.event.paths,
+          ...(previous.event.newPath ? [previous.event.newPath] : []),
+        ]
+        if (
+          this.pendingReconciles.get(id) === previous &&
+          paths.some(path =>
+            reloadedPaths.some(reloaded => sameNotePath(path, reloaded))
+          )
+        ) {
+          this.pendingReconciles.delete(id)
+          this.unlock(id)
+          reloadedPaths.push(...paths)
+          recovered = true
+        } else if (this.pendingReconciles.get(id) === previous) {
+          unresolved.push([id, previous])
+        }
+      }
+      if (!recovered) break
+      remaining = unresolved
+    }
   }
 
   async retryReconcile(): Promise<void> {
-    if (this.pendingReconcile) await this.mutation(this.pendingReconcile)
+    const errors: Array<{
+      id: string
+      pending: PendingReconcile
+      error: unknown
+    }> = []
+    for (const [id, pending] of [...this.pendingReconciles]) {
+      if (this.pendingReconciles.get(id) !== pending) continue
+      try {
+        await this.mutation(pending.event)
+      } catch (error) {
+        errors.push({ id, pending, error })
+      }
+    }
+    const failed = errors.find(
+      ({ id, pending }) => this.pendingReconciles.get(id) === pending
+    )
+    if (failed) throw failed.error
   }
 
   private unlock(transactionId: string): void {
