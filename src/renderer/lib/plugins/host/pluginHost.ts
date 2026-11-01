@@ -7,8 +7,8 @@
  *
  * - 調停・停止要求・破棄は直列化キューで1つずつ実行する（並行調停を防ぐ）
  * - Theme_Plugin はテーマ JSON（と追加CSS）を読み込んでレジストリに登録する
- * - Feature_Plugin は独自スキームからエントリモジュールを `import()` し、`activate()` を
- *   10秒のタイムアウト付きで呼ぶ。失敗したら登録をすべて解除して無効化を永続化する
+ * - Feature_Plugin のエントリモジュール読み込みと `activate()` はそれぞれ10秒まで待つ。
+ *   失敗時は登録をすべて解除し、activate() の失敗は無効化を永続化する
  * - Plugin_Stop は `activate()` が完了した Plugin に限り `deactivate()` を呼び、失敗しても
  *   登録の解除を続行する
  * - エラーは Toast と Plugins_Tab（`plugin_report_error`）に互いに独立して報告する
@@ -63,7 +63,7 @@ export const PLUGIN_HOST_GLOBAL = '__NOTYRA_PLUGIN_HOST__'
 /** 共有モジュールの仮想モジュールが参照するグローバル名 */
 export const SHARED_MODULES_GLOBAL = '__NOTYRA_SHARED__'
 
-/** `activate()` / `deactivate()` の待機上限（Requirement 8.4、8.8） */
+/** モジュール読み込み / `activate()` / `deactivate()` の待機上限 */
 export const PLUGIN_LIFECYCLE_TIMEOUT_MS = 10_000
 
 /** 独自 URI スキームのベース URL（Windows / WebView2） */
@@ -339,7 +339,7 @@ export interface PluginHostDeps {
   importModule?(url: string): Promise<unknown>
   /** 読み込みごとの `<nonce>`。既定は時刻とカウンタ */
   createNonce?(): string
-  /** 登録済みルートフォルダ（`notes.delete` のルート決定）。既定は空 */
+  /** 登録済みルートのホスト構成。既定は空。操作時のルート解決はバックエンドで行う */
   getRootFolders?(): readonly string[]
   /** `notes.delete` の確認ダイアログ。既定は常に拒否 */
   confirmDelete?(request: NoteDeleteConfirmation): Promise<boolean>
@@ -347,7 +347,7 @@ export interface PluginHostDeps {
   formatErrorToast?(info: PluginErrorToastInfo): string
   /** 起動時の問題（state.json の破損など）の Toast 文言 */
   formatStartupError?(error: PluginErrorPayload): string
-  /** `activate()` / `deactivate()` の待機上限。既定は 10秒 */
+  /** モジュール読み込み / `activate()` / `deactivate()` の待機上限。既定は10秒 */
   lifecycleTimeoutMs?: number
   /** グローバルを定義する対象。既定は `globalThis` */
   globalObject?: object
@@ -754,7 +754,12 @@ export class PluginHost {
         createNonce(),
         manifest.main
       )
-      mod = toPluginModule(await importModule(url))
+      const result = await runWithTimeout(
+        () => importModule(url),
+        this.timeoutMs
+      )
+      if (!result.ok) throw result.error
+      mod = toPluginModule(result.value)
     } catch (error) {
       // activate() は呼ばない（Requirement 8.14）。評価中の登録は巻き戻す
       this.failLoad(entry, 'load', error)

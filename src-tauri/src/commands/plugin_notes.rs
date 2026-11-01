@@ -70,6 +70,17 @@ pub async fn plugin_notes_read(
     read(&snapshot, &plugin_id, &roots, &path).await
 }
 
+/// 削除確認前に、リンク解決後のノートを含む登録済みルートを返す（notes:write）。
+#[tauri::command]
+pub async fn plugin_notes_resolve_root(
+    state: State<'_, AppState>,
+    plugin_id: String,
+    roots: Vec<String>,
+    path: String,
+) -> Result<String, PluginError> {
+    resolve_delete_root(&state.plugin_store.snapshot(), &plugin_id, &roots, &path)
+}
+
 /// ノートを作成し、実際に保存したパスを返す（notes:write）
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
@@ -442,6 +453,28 @@ fn root_paths(roots: &[String]) -> Vec<PathBuf> {
     roots.iter().map(PathBuf::from).collect()
 }
 
+pub(crate) fn resolve_delete_root(
+    state: &PluginStateFile,
+    plugin_id: &str,
+    roots: &[String],
+    path: &str,
+) -> Result<String, PluginError> {
+    require_permission(state, plugin_id, Permission::NotesWrite)?;
+    let note = resolve_note(path, &root_paths(roots))?;
+    let mut best: Option<(usize, &String)> = None;
+    for root in roots {
+        let Ok((resolved, _)) = registered_root(root, roots) else {
+            continue;
+        };
+        let depth = resolved.components().count();
+        if note.starts_with(&resolved) && best.is_none_or(|(previous, _)| depth > previous) {
+            best = Some((depth, root));
+        }
+    }
+    best.map(|(_, root)| root.clone())
+        .ok_or_else(|| PluginError::OutOfScope { path: path.to_string() })
+}
+
 /// `root` が登録済みルートのいずれか（正規化後に一致）であれば、
 /// 解決後のパスと登録済みルートの文字列を返す。サブフォルダや範囲外は `OutOfScope`
 fn registered_root<'a>(root: &str, roots: &'a [String]) -> Result<(PathBuf, &'a str), PluginError> {
@@ -554,6 +587,72 @@ mod tests {
 
     fn input(title: &str) -> CreateInput<'_> {
         CreateInput { folder: None, title, body: None, front_matter: None }
+    }
+
+    #[cfg(any(unix, windows))]
+    fn link_directory(target: &Path, link: &Path) {
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(target, link).unwrap();
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            let output = std::process::Command::new("cmd.exe")
+                .args(["/D", "/C", "mklink", "/J"])
+                .arg(link)
+                .arg(target)
+                .creation_flags(0x08000000)
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "junction creation failed: {output:?}");
+        }
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn delete_resolves_canonical_paths_returned_by_note_operations_through_linked_roots() {
+        let tmp = TempDir::new().unwrap();
+        let real = tmp.path().join("real notes");
+        fs::create_dir_all(real.join("sub")).unwrap();
+        let alias = tmp.path().join("registered notes");
+        let nested = tmp.path().join("subroot");
+        link_directory(&real, &alias);
+        link_directory(&real.join("sub"), &nested);
+        let roots = vec![s(&alias), s(&nested)];
+        fs::write(real.join("a.md"), "body").unwrap();
+        let read_path = read(&rw(), ID, &roots, &s(&alias.join("a.md"))).await.unwrap().path;
+        assert!(!Path::new(&read_path).starts_with(&alias));
+        let created = create(&rw(), ID, &roots, &roots[0], input("created")).await.unwrap();
+        let source = create(&rw(), ID, &roots, &roots[0], input("before-rename")).await.unwrap();
+        let renamed = rename(&rw(), ID, &roots, &source, "renamed").await.unwrap();
+        let source = create(&rw(), ID, &roots, &roots[0], input("before-move")).await.unwrap();
+        let moved = move_note(&rw(), ID, &roots, &roots[0], &source, "sub").await.unwrap();
+        for (path, expected) in [(&read_path, &roots[0]), (&created, &roots[0]), (&renamed, &roots[0]), (&moved, &roots[1])] {
+            let root = resolve_delete_root(&state_with(vec![Permission::NotesWrite]), ID, &roots, path).unwrap();
+            assert_eq!(&root, expected);
+            delete(&rw(), ID, &roots, &root, path).await.unwrap();
+            assert!(!Path::new(path).exists());
+        }
+    }
+
+    #[cfg(any(unix, windows))]
+    #[test]
+    fn delete_root_resolution_rejects_symlink_escapes_and_checks_write_permission() {
+        let tmp = TempDir::new().unwrap();
+        let real = tmp.path().join("real");
+        let outside = tmp.path().join("outside");
+        fs::create_dir_all(&real).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(real.join("a.md"), "inside").unwrap();
+        fs::write(outside.join("b.md"), "keep").unwrap();
+        let alias = tmp.path().join("registered");
+        link_directory(&real, &alias);
+        link_directory(&outside, &real.join("escape"));
+        let roots = vec![s(&alias)];
+        for path in [s(&alias.join("escape/b.md")), s(&outside.join("b.md"))] {
+            assert!(matches!(resolve_delete_root(&rw(), ID, &roots, &path), Err(PluginError::OutOfScope { .. })));
+        }
+        assert!(matches!(resolve_delete_root(&state_with(vec![Permission::NotesRead]), ID, &roots, &s(&real.join("a.md"))), Err(PluginError::PermissionDenied { .. })));
+        assert_eq!(fs::read_to_string(outside.join("b.md")).unwrap(), "keep");
     }
 
     #[test]

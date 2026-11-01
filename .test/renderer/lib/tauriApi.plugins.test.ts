@@ -42,6 +42,10 @@ it('forwards plugin commands and current note roots with the correct argument na
     roots: ['/notes'],
     path: '/notes/a.md',
   })
+  await tauriApi.plugins.notes.resolveRoot('p', '/canonical/notes/a.md')
+  expect(mocked.invoke).toHaveBeenLastCalledWith('plugin_notes_resolve_root', {
+    pluginId: 'p', roots: ['/notes'], path: '/canonical/notes/a.md',
+  })
   dispose()
   await tauriApi.plugins.notes.listRoots('p')
   expect(mocked.invoke).toHaveBeenLastCalledWith('plugin_notes_list_roots', {

@@ -147,6 +147,7 @@ pub fn run() {
             commands::plugin_notes::plugin_notes_list_roots,
             commands::plugin_notes::plugin_notes_list,
             commands::plugin_notes::plugin_notes_read,
+            commands::plugin_notes::plugin_notes_resolve_root,
             commands::plugin_notes::plugin_notes_create,
             commands::plugin_notes::plugin_notes_update,
             commands::plugin_notes::plugin_notes_rename,

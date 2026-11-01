@@ -172,7 +172,7 @@ import type { Permission, SettingDeclaration } from '@/shared/plugin/types'
 
 const PLUGIN = 'toc'
 
-function createBackend(): PluginApiBackend {
+function createBackend(roots: readonly string[] = ['/notes']): PluginApiBackend {
   return {
     clipboardRead: vi.fn(async () => 'clip'),
     clipboardWrite: vi.fn(async () => {}),
@@ -184,6 +184,11 @@ function createBackend(): PluginApiBackend {
       url: 'https://api.example.com/',
     })),
     notes: {
+      resolveRoot: vi.fn(async (_id: string, path: string) => {
+        const root = findContainingRoot(path, roots)
+        if (root === null) throw new PluginApiError('outOfScope', 'outside roots', { path })
+        return root
+      }),
       listRoots: vi.fn(async () => ['/notes']),
       list: vi.fn(async () => []),
       read: vi.fn(async (_id: string, path: string) => ({
@@ -209,7 +214,7 @@ interface Setup {
 
 function setup(options: Setup = {}) {
   const registries = createRegistries({ platform: 'other', document })
-  const backend = createBackend()
+  const backend = createBackend(options.roots)
   let session: PluginSession | null = new PluginSession(PLUGIN)
   let permissions = options.permissions ?? []
   const confirmDelete = vi.fn(async () => options.confirm ?? true)
@@ -559,6 +564,41 @@ describe('createPluginApi: network.fetch', () => {
 })
 
 describe('createPluginApi: notes', () => {
+  it.each(['read', 'create', 'rename', 'move'] as const)('deletes a canonical path returned by %s using the root resolved by the backend', async operation => {
+    const { api, backend, confirmDelete } = setup({ permissions: ['notes:read', 'notes:write'], roots: ['/home/user/notes'] })
+    const canonical = '/mnt/notes/a.md'
+    vi.mocked(backend.notes.resolveRoot).mockResolvedValue('/home/user/notes')
+    vi.mocked(backend.notes.read).mockResolvedValue({ path: canonical, body: 'body', frontMatter: {} })
+    vi.mocked(backend.notes[operation === 'read' ? 'create' : operation]).mockResolvedValue(canonical)
+    let path: string
+    if (operation === 'read') path = (await api.notes.read('/home/user/notes/a.md')).path
+    else if (operation === 'create') path = await api.notes.create({ rootFolder: '/home/user/notes', title: 'A' })
+    else if (operation === 'rename') path = await api.notes.rename('/home/user/notes/old.md', 'A')
+    else path = await api.notes.move('/home/user/notes', '/home/user/notes/sub/a.md', '')
+    await api.notes.delete(path)
+    expect(backend.notes.resolveRoot).toHaveBeenCalledWith(PLUGIN, canonical)
+    expect(confirmDelete).toHaveBeenCalledWith(expect.objectContaining({ path: canonical }))
+    expect(backend.notes.delete).toHaveBeenCalledWith(PLUGIN, '/home/user/notes', canonical)
+  })
+
+  it('does not show a deletion dialog when the plugin stops during root resolution', async () => {
+    const { api, backend, confirmDelete, getSession } = setup({ permissions: ['notes:write'] })
+    vi.mocked(backend.notes.resolveRoot).mockImplementationOnce(async () => {
+      getSession()?.disposeAll()
+      return '/notes'
+    })
+    await expect(api.notes.delete('/notes/a.md')).rejects.toMatchObject({ kind: 'pluginNotActive' })
+    expect(confirmDelete).not.toHaveBeenCalled()
+    expect(backend.notes.delete).not.toHaveBeenCalled()
+  })
+
+  it('requires write permission before resolving a deletion root', async () => {
+    const { api, backend, confirmDelete } = setup({ permissions: ['notes:read'] })
+    await expect(api.notes.delete('/notes/a.md')).rejects.toMatchObject({ kind: 'permissionDenied' })
+    expect(backend.notes.resolveRoot).not.toHaveBeenCalled()
+    expect(confirmDelete).not.toHaveBeenCalled()
+  })
+
   it('maps create input to the backend', async () => {
     const { api, backend } = setup({ permissions: ['notes:write'] })
     await expect(

@@ -64,6 +64,7 @@ export interface PluginApiBackend {
     | 'listRoots'
     | 'list'
     | 'read'
+    | 'resolveRoot'
     | 'create'
     | 'update'
     | 'rename'
@@ -109,7 +110,7 @@ export interface PluginApiDeps {
   getDisplayName(): string
   /** Plugin_Manifest の Plugin_Settings 宣言 */
   getSettingDeclarations(): readonly SettingDeclaration[]
-  /** 登録済みルートフォルダのパス（`notes.delete` のルート決定に使う） */
+  /** 登録済みルートのホスト構成。操作時のルート解決はバックエンドで行う */
   getRootFolders(): readonly string[]
   /**
    * 削除の確認ダイアログを表示し、確定なら true を返す。
@@ -498,14 +499,10 @@ export function createPluginApi(
       delete: (path: string): Promise<void> =>
         gated('notes:write', async () => {
           assertNonEmptyString(path, 'path')
-          const root = findContainingRoot(path, deps.getRootFolders())
-          if (root === null) {
-            throw new PluginApiError(
-              'outOfScope',
-              `path is outside the registered root folders: ${path}`,
-              { path }
-            )
-          }
+          const root = await backend.notes.resolveRoot(pluginId, path)
+          // Root resolution is asynchronous; stopping during it must not open
+          // a confirmation dialog for an inactive plugin.
+          requireSession()
 
           let confirmed = false
           try {
@@ -776,7 +773,7 @@ function isCaseInsensitivePath(normalized: string): boolean {
 }
 
 /**
- * パスを含む登録済みルートフォルダ（ルート自身を含む）を返す。
+ * パスを含むルートを字句的に探す。ファイル操作のスコープ判定には使わない。
  * 複数が該当する場合は最も深いルート。該当しなければ null。
  * Windows のドライブ文字・UNC パスは大文字小文字を区別せずに比較する。
  */

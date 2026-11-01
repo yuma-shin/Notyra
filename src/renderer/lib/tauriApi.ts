@@ -339,6 +339,13 @@ const currentRoots = (): string[] => notesRootsProvider().map(r => r.path)
 
 /** Plugin 用ノートコマンド（`roots` は呼び出しごとに自動付与する） */
 const pluginNotes = {
+  resolveRoot: (pluginId: string, path: string): Promise<string> =>
+    invokePlugin<string>('plugin_notes_resolve_root', {
+      pluginId,
+      roots: currentRoots(),
+      path,
+    }),
+
   listRoots: (pluginId: string): Promise<string[]> =>
     invokePlugin<string[]>('plugin_notes_list_roots', {
       pluginId,

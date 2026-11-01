@@ -303,6 +303,7 @@ function createBackend(initial: PluginStateView) {
     openExternal: vi.fn(async () => {}),
     httpRequest: vi.fn(),
     notes: {
+      resolveRoot: vi.fn(),
       listRoots: vi.fn(async () => []),
       list: vi.fn(async () => []),
       read: vi.fn(),
@@ -514,6 +515,91 @@ describe('PluginHost.start', () => {
 })
 
 describe('PluginHost: failures', () => {
+  it.each(['entry', 'dependency'] as const)('bounds native ESM top-level await in the %s module', async location => {
+    vi.useFakeTimers()
+    let release!: () => void
+    let evaluated!: () => void
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const evaluating = new Promise<void>(resolve => { evaluated = resolve })
+    const activateA = vi.fn(), activateB = vi.fn()
+    const dataUrl = (code: string) => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
+    const waiting = `const host = globalThis.__NOTYRA_FIXTURE_HOST__;
+      host.getPluginApi('a').styles.add('body { color: red }');
+      host.evaluated(); await host.gate;`
+    const code = location === 'entry'
+      ? `${waiting}\nexport function activate() { host.activate() }`
+      : `import ${JSON.stringify(dataUrl(waiting))};
+         const host = globalThis.__NOTYRA_FIXTURE_HOST__;
+         export function activate() { host.activate() }`
+    const native = createRequire(import.meta.url)(resolve('.test/fixtures/plugins/native-loader.cjs')) as {
+      load(url: string, host: object): Promise<PluginModule>
+    }
+    let imported: Promise<PluginModule> | undefined
+    const s = setup(state([plugin('a', featureJson('a')), plugin('b', featureJson('b'))]), {
+      loader: async url => {
+        if (url.includes('/b/')) return { activate: activateB }
+        imported = native.load(dataUrl(code), { getPluginApi: s.apiFor, gate, evaluated, activate: activateA })
+        return imported
+      },
+    })
+    const started = s.host.start()
+    try {
+      await evaluating
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(activateB).toHaveBeenCalledOnce()
+      await started
+      expect(s.registries.styles.store.getSnapshot()).toEqual([])
+      expect(s.host.getLoadedPlugins()[0]).toMatchObject({ id: 'a', failed: true, activated: false })
+      expect(() => s.apiFor('a').styles.add('body{}')).toThrow()
+      release()
+      await imported
+      expect(activateA).not.toHaveBeenCalled()
+    } finally {
+      release()
+      await imported?.catch(() => {})
+      await started
+      await s.host.dispose()
+    }
+  })
+
+  it.each(['resolve', 'reject'] as const)('times out module evaluation and drains startup, stop and reconcile queues despite a late %s', async late => {
+    vi.useFakeTimers()
+    let finish!: (module: PluginModule) => void
+    let reject!: (error: Error) => void
+    const lateActivate = vi.fn()
+    const activateB = vi.fn()
+    const s = setup(state([plugin('a', featureJson('a')), plugin('b', featureJson('b'))]), {
+      loader: async url => {
+        if (url.includes('/b/')) return { activate: activateB }
+        s.apiFor('a').styles.add('body { color: red }')
+        return new Promise<PluginModule>((resolve, fail) => { finish = resolve; reject = fail })
+      },
+    })
+    const started = s.host.start()
+    try {
+      await vi.advanceTimersByTimeAsync(1)
+      s.emitStop({ id: 'a', requestId: 'stop-a' })
+      s.emitState(state([plugin('b', featureJson('b'))]))
+      await vi.advanceTimersByTimeAsync(9_999)
+      expect(activateB).toHaveBeenCalledOnce()
+      await started
+      await s.host.whenIdle()
+      expect(s.registries.styles.store.getSnapshot()).toEqual([])
+      expect(s.backend.reportError).toHaveBeenCalledWith('a', 'load', expect.stringContaining('Timed out'))
+      expect(s.backend.ackStop).toHaveBeenCalledWith('stop-a')
+      expect(s.host.getLoadedPlugins().map(p => p.id)).toEqual(['b'])
+      expect(() => s.apiFor('a').styles.add('body{}')).toThrow()
+      if (late === 'resolve') finish({ activate: lateActivate })
+      else reject(new Error('late import rejection'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(lateActivate).not.toHaveBeenCalled()
+    } finally {
+      finish?.({})
+      await started
+      await s.host.dispose()
+    }
+  })
+
   it('rolls back registrations, disables and reports when activate() throws', async () => {
     const s = setup(state([plugin('a', featureJson('a'))]), {
       modules: {
