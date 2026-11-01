@@ -942,6 +942,68 @@ describe('PluginHost: theme plugins', () => {
     expect(s.registries.styles.store.getSnapshot()).toEqual([])
   })
 
+  it.each(['disable', 'remove', 'update'] as const)('recovers a conflicting theme after the owner is resolved by %s', async operation => {
+    const a = plugin('a', themeJson('a'))
+    const b = plugin('b', themeJson('b'))
+    const initial = state([a, b])
+    const s = setup(initial)
+    let updated = false
+    s.backend.readText.mockImplementation(async (id, path) =>
+      path === 'theme.json'
+        ? JSON.stringify(colorTheme(id === 'a' && updated ? 'forest' : 'ocean'))
+        : `/* ${id} */`
+    )
+    await s.host.start()
+    expect(s.registries.themes.find('ocean')?.pluginId).toBe('a')
+    expect(s.host.getLoadedPlugins().find(p => p.id === 'b')?.failed).toBe(true)
+    const reads = s.backend.readText.mock.calls.length
+    await s.host.reconcile(initial)
+    expect(s.backend.readText).toHaveBeenCalledTimes(reads)
+
+    updated = operation === 'update'
+    const next = operation === 'remove' ? [b] : [
+      { ...a, enabled: operation !== 'disable', generation: updated ? 1 : 0 }, b,
+    ]
+    s.emitState(state(next))
+    await s.host.whenIdle()
+    expect(s.registries.themes.find('ocean')?.pluginId).toBe('b')
+    expect(s.host.getLoadedPlugins().find(p => p.id === 'b')).toMatchObject({
+      failed: false, activated: true,
+    })
+    expect(s.registries.styles.store.getByPlugin('b')).toHaveLength(1)
+    await s.host.dispose()
+  })
+
+  it('retries conflicting themes in load order without retrying the remaining conflict', async () => {
+    const themes = ['a', 'b', 'c'].map(id => plugin(id, themeJson(id)))
+    const s = setup(state(themes))
+    s.backend.readText.mockImplementation(async (_id, path) =>
+      path === 'theme.json' ? JSON.stringify(colorTheme('ocean')) : 'body{}'
+    )
+    await s.host.start()
+    const cReads = s.backend.readText.mock.calls.filter(([id]) => id === 'c').length
+    await s.host.reconcile(state(themes.slice(1)))
+    expect(s.registries.themes.find('ocean')?.pluginId).toBe('b')
+    expect(s.backend.readText.mock.calls.filter(([id]) => id === 'c')).toHaveLength(cReads)
+    await s.host.reconcile(state(themes.slice(2)))
+    expect(s.registries.themes.find('ocean')?.pluginId).toBe('c')
+    await s.host.dispose()
+  })
+
+  it('does not retry malformed or reserved themes on unrelated state notifications', async () => {
+    const initial = state(['invalid', 'reserved'].map(id => plugin(id, themeJson(id))))
+    const s = setup(initial)
+    s.backend.readText.mockImplementation(async id =>
+      id === 'invalid' ? 'invalid json' : JSON.stringify(colorTheme('gray'))
+    )
+    await s.host.start()
+    expect(s.backend.readText).toHaveBeenCalledTimes(2)
+    await s.host.reconcile(initial)
+    await s.host.reconcile(initial)
+    expect(s.backend.readText).toHaveBeenCalledTimes(2)
+    await s.host.dispose()
+  })
+
   it('reports an invalid or duplicate theme without registering it', async () => {
     const s = setup(state([plugin('t', themeJson('t'))]))
     s.backend.readText.mockImplementation(async (_id, path) =>

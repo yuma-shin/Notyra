@@ -361,8 +361,10 @@ interface LoadedPlugin {
   readonly desired: DesiredPlugin
   readonly session: PluginSession
   module: PluginModule | null
-  /** 読み込み・起動に失敗した（loadKey が変わるまで再試行しない） */
+  /** 読み込み・起動に失敗した（キー変更またはテーマ競合解消時に再試行） */
   failed: boolean
+  /** 競合が解消した場合だけ再試行するテーマ ID */
+  conflictingThemeId?: string
   /** 読み込み中に `plugins:settings-changed` を受信した */
   settingsFromEvent: boolean
 }
@@ -666,9 +668,18 @@ export class PluginHost {
     for (const id of toStop) {
       await this.stopPluginSafely(id)
     }
-    for (const plugin of toLoad) {
+    const toLoadIds = new Set(toLoad.map(plugin => plugin.id))
+    // Retry conflicts after stops have released their registrations, checking
+    // each candidate in load order so only the first available theme wins.
+    for (const plugin of desired) {
       if (this.disposed) break
       if (this.stopRequests.has(plugin.id)) continue
+      const previous = this.loaded.get(plugin.id)
+      const retryTheme =
+        previous?.conflictingThemeId !== undefined &&
+        !this.registries.themes.has(previous.conflictingThemeId)
+      if (!toLoadIds.has(plugin.id) && !retryTheme) continue
+      if (retryTheme) await this.stopPluginSafely(plugin.id)
       try {
         await this.loadPlugin(plugin)
       } catch (error) {
@@ -713,6 +724,8 @@ export class PluginHost {
 
     const result = this.registries.themes.register(id, theme)
     if (!result.ok) {
+      if (result.reason === 'duplicateId')
+        entry.conflictingThemeId = result.themeId
       this.failLoad(
         entry,
         'theme',

@@ -43,7 +43,7 @@ export class PluginThemeRegistry {
   register(pluginId: string, theme: unknown): ThemeRegisterResult {
     if (!validateTheme(theme)) return { ok: false, reason: 'invalidTheme' }
     const colorTheme = theme as ColorTheme
-    if (this.isTaken(colorTheme.id)) {
+    if (this.has(colorTheme.id)) {
       return { ok: false, reason: 'duplicateId', themeId: colorTheme.id }
     }
     return {
@@ -61,7 +61,8 @@ export class PluginThemeRegistry {
     return entry ? { pluginId: entry.pluginId, theme: entry.item } : undefined
   }
 
-  private isTaken(themeId: string): boolean {
+  /** 組み込み・カスタム・Plugin のいずれかがテーマ ID を使用中か */
+  has(themeId: string): boolean {
     for (const id of this.getReservedThemeIds()) {
       if (id === themeId) return true
     }

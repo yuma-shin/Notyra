@@ -124,7 +124,8 @@ pub async fn plugin_notes_update(
     front_matter: Value,
 ) -> Result<(), PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    let open_paths: Vec<_> = state.watchers.lock().keys().cloned().collect();
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path, &open_paths)?;
     require_object(&front_matter)?;
     state.note_sync.mutate(&app, "update", paths, async {
         update(&snapshot, &plugin_id, &roots, &path, &body, &front_matter).await?;
@@ -143,7 +144,8 @@ pub async fn plugin_notes_rename(
     new_title: String,
 ) -> Result<String, PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    let open_paths: Vec<_> = state.watchers.lock().keys().cloned().collect();
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path, &open_paths)?;
     state.note_sync.mutate(&app, "rename", paths, async {
         let saved = rename(&snapshot, &plugin_id, &roots, &path, &new_title).await?;
         Ok((saved.clone(), Some(saved)))
@@ -162,7 +164,8 @@ pub async fn plugin_notes_move(
     target_folder: String,
 ) -> Result<String, PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    let open_paths: Vec<_> = state.watchers.lock().keys().cloned().collect();
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path, &open_paths)?;
     state.note_sync.mutate(&app, "move", paths, async {
         let saved = move_note(&snapshot, &plugin_id, &roots, &root, &path, &target_folder).await?;
         Ok((saved.clone(), Some(saved)))
@@ -181,7 +184,8 @@ pub async fn plugin_notes_delete(
     path: String,
 ) -> Result<(), PluginError> {
     let snapshot = state.plugin_store.snapshot();
-    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path)?;
+    let open_paths: Vec<_> = state.watchers.lock().keys().cloned().collect();
+    let paths = mutation_paths(&snapshot, &plugin_id, &roots, &path, &open_paths)?;
     state.note_sync.mutate(&app, "delete", paths, async {
         let result = delete(&snapshot, &plugin_id, &roots, &root, &path).await;
         // Image cleanup can fail after the note has already been deleted.
@@ -209,6 +213,7 @@ fn mutation_paths(
     plugin_id: &str,
     roots: &[String],
     path: &str,
+    open_paths: &[String],
 ) -> Result<Vec<String>, PluginError> {
     require_permission(state, plugin_id, Permission::NotesWrite)?;
     let resolved = resolve_note(path, &root_paths(roots))?;
@@ -221,6 +226,17 @@ fn mutation_paths(
                 let alias = path_string(&Path::new(root).join(relative));
                 if !paths.contains(&alias) { paths.push(alias); }
             }
+        }
+    }
+    // Watcher keys preserve the spelling used by each open editor. Resolve
+    // those paths before rename/delete, while file and directory links still
+    // exist, and retain the aliases for both prepare and commit notifications.
+    let roots = root_paths(roots);
+    for open_path in open_paths {
+        if matches!(resolve_note(open_path, &roots), Ok(note) if note == resolved)
+            && !paths.contains(open_path)
+        {
+            paths.push(open_path.clone());
         }
     }
     Ok(paths)
@@ -732,10 +748,53 @@ mod tests {
         let root = path_string(&root);
         let roots = vec![format!("{root}/.")];
         let path = format!("{root}/a.md");
-        let paths = mutation_paths(&rw(), ID, &roots, &path).unwrap();
+        let paths = mutation_paths(&rw(), ID, &roots, &path, &[]).unwrap();
         assert!(paths.contains(&path));
         assert!(paths.contains(&format!("{root}/./a.md")));
-        assert!(matches!(mutation_paths(&state_with(vec![]), ID, &roots, &path), Err(PluginError::PermissionDenied { .. })));
+        assert!(matches!(mutation_paths(&state_with(vec![]), ID, &roots, &path, &[]), Err(PluginError::PermissionDenied { .. })));
+    }
+
+    #[cfg(any(unix, windows))]
+    #[tokio::test]
+    async fn mutation_events_include_open_editors_through_nested_directory_links() {
+        let tmp = TempDir::new().unwrap();
+        let real = tmp.path().join("real notes");
+        fs::create_dir_all(real.join("sub")).unwrap();
+        fs::write(real.join("sub/a.md"), "body").unwrap();
+        fs::write(real.join("sub/b.md"), "unrelated").unwrap();
+        let registered = tmp.path().join("registered notes");
+        link_directory(&real, &registered);
+        link_directory(&real.join("sub"), &real.join("sub-alias"));
+        link_directory(&real.join("sub-alias"), &real.join("nested-alias"));
+        let roots = vec![s(&registered)];
+        let aliases = vec![
+            s(&registered.join("sub-alias/a.md")),
+            s(&registered.join("nested-alias/a.md")),
+            s(&real.join("sub-alias/a.md")),
+        ];
+        let unrelated = s(&registered.join("sub-alias/b.md"));
+        let mut open_paths = aliases.clone();
+        open_paths.push(unrelated.clone());
+        let canonical = read(&rw(), ID, &roots, &aliases[0]).await.unwrap().path;
+        let paths = mutation_paths(&rw(), ID, &roots, &canonical, &open_paths).unwrap();
+        for alias in &aliases {
+            assert!(paths.contains(alias), "missing editor alias: {alias}");
+        }
+        assert!(!paths.contains(&unrelated));
+        assert!(matches!(mutation_paths(&state_with(vec![]), ID, &roots, &canonical, &open_paths), Err(PluginError::PermissionDenied { .. })));
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn mutation_events_include_open_file_symlinks() {
+        let (_tmp, root, roots) = setup();
+        fs::write(root.join("a.md"), "body").unwrap();
+        let alias = root.join("alias.md");
+        std::os::unix::fs::symlink(root.join("a.md"), &alias).unwrap();
+        let alias = s(&alias);
+        let canonical = read(&rw(), ID, &roots, &alias).await.unwrap().path;
+        let paths = mutation_paths(&rw(), ID, &roots, &canonical, std::slice::from_ref(&alias)).unwrap();
+        assert!(paths.contains(&alias));
     }
 
     #[tokio::test]

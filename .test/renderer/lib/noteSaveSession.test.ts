@@ -355,6 +355,32 @@ it('invalidates an older read when a newly opened window receives commit without
   expect(reload).toHaveBeenLastCalledWith(content('plugin result'), '/notes/a.md')
 })
 
+it.each(['update', 'rename', 'move', 'delete'] as const)('synchronizes an editor opened through a nested link for %s', async kind => {
+  const { session, save, reload, rebind, write } = setup()
+  const alias = '/notes/sub-alias/a.md'
+  const canonical = '/notes/sub/a.md'
+  session.bind(alias)
+  const newPath = kind === 'rename' || kind === 'move' ? '/notes/sub/new.md' : null
+  const mutation = (phase: NoteMutation['phase']) => ({
+    ...event(phase, kind, newPath), paths: [canonical, alias],
+  })
+  session.schedule('local edit')
+  await session.mutation(mutation('prepare'))
+  expect(save).toHaveBeenLastCalledWith(alias, 'local edit')
+  expect(session.isLocked).toBe(true)
+  expect(session.schedule('stale edit')).toBe(false)
+  const destination = kind === 'delete' ? null : newPath ?? alias
+  write(content('plugin change', destination ?? alias))
+  await session.mutation(mutation('commit'))
+  expect(rebind).toHaveBeenLastCalledWith(destination)
+  expect(reload).toHaveBeenLastCalledWith(
+    destination ? content('plugin change', destination) : null, destination
+  )
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(save).toHaveBeenCalledTimes(1)
+  expect(session.isLocked).toBe(false)
+})
+
 it('recognizes Windows path aliases without conflating case-sensitive Unix paths', () => {
   expect(sameNotePath('C:\\Notes\\A.md', '//?/C:/notes/a.md')).toBe(true)
   expect(sameNotePath('\\\\?\\UNC\\server\\share\\A.md', '//server/share/a.md')).toBe(true)
