@@ -147,8 +147,13 @@ export class NoteSaveSession {
         this.activeWrites--
         if (this.activeWrites === 0) this.options.saving(false)
       })
-    this.writes = result.then(() => {})
-    void this.writes.catch(() => {})
+    // The caller receives the operation's own failure below. The queue only
+    // tracks completion, so a failed structural operation (permission error
+    // etc.) must not make later flush()/prepare reject with the same error.
+    this.writes = result.then(
+      () => {},
+      () => {}
+    )
     const value = await result
     if (this.watcherPending && !this.pending && !this.isLocked)
       await this.reloadFromWatcher()

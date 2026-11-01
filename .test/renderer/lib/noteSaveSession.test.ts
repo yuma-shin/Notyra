@@ -386,3 +386,23 @@ it('recognizes Windows path aliases without conflating case-sensitive Unix paths
   expect(sameNotePath('\\\\?\\UNC\\server\\share\\A.md', '//server/share/a.md')).toBe(true)
   expect(sameNotePath('/notes/A.md', '/notes/a.md')).toBe(false)
 })
+
+it('returns a failed structural write to its caller but keeps the queue usable', async () => {
+  const { session, save } = setup()
+  const failure = new Error('permission denied')
+  await expect(session.runWrite(async () => { throw failure })).rejects.toBe(failure)
+
+  // Nothing pending: flush must not replay the earlier failure
+  await expect(session.flush()).resolves.toBeUndefined()
+
+  // A plugin operation on an unrelated note can still prepare
+  const other: NoteMutation = { requestId: 'p', transactionId: 'tx-other', phase: 'prepare', kind: 'update', paths: ['/notes/b.md'], newPath: null }
+  await expect(session.mutation(other)).resolves.toBeUndefined()
+  await session.mutation({ ...other, phase: 'abort' })
+
+  // Later writes still run and resolve normally
+  await expect(session.runWrite(async () => 'ok')).resolves.toBe('ok')
+  session.schedule('after failure')
+  await session.flush()
+  expect(save).toHaveBeenLastCalledWith('/notes/a.md', 'after failure')
+})
