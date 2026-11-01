@@ -32,7 +32,7 @@ export function DropdownMenu<T>({
     setOpen(next)
     if (next) {
       const selectedIndex = items.findIndex(item => item.value === value)
-      setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0)
+      setActiveIndex(Math.max(selectedIndex, 0))
     } else {
       setActiveIndex(null)
     }

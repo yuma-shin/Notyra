@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { screen, cleanup } from '@testing-library/react'
+const mockPluginHost = vi.hoisted(() => vi.fn())
+vi.mock('@/renderer/lib/plugins/host/pluginHost', () => ({
+  PluginHost: mockPluginHost,
+}))
+import { screen, cleanup, fireEvent, within } from '@testing-library/react'
 import { renderWithProviders } from '../../helpers/test-app-provider'
 import { SettingsScreen } from '@/renderer/screens/settings'
 import { useMediaQuery } from '@/renderer/hooks/useMediaQuery'
@@ -33,6 +37,11 @@ vi.mock('@/renderer/hooks/useMediaQuery', () => ({
 }))
 
 describe('SettingsScreen', () => {
+  it('does not start PluginHost in the settings window', () => {
+    renderWithProviders(<SettingsScreen />)
+    fireEvent.click(screen.getByRole('button', { name: 'Plugins' }))
+    expect(mockPluginHost).not.toHaveBeenCalled()
+  })
   afterEach(() => {
     cleanup()
     vi.mocked(useMediaQuery).mockReturnValue(true) // reset to desktop
@@ -42,9 +51,9 @@ describe('SettingsScreen', () => {
     renderWithProviders(<SettingsScreen />)
 
     // The titlebar div has data-tauri-drag-region attribute
-    const titlebar = screen.getByText('Settings').closest(
-      '[data-tauri-drag-region]'
-    )
+    const titlebar = screen
+      .getByText('Settings')
+      .closest('[data-tauri-drag-region]')
     expect(titlebar).toBeInTheDocument()
   })
 
@@ -76,15 +85,36 @@ describe('SettingsScreen', () => {
     expect(screen.getByText('Language')).toBeInTheDocument()
   })
 
-  it('shows minimize and close buttons on Windows', () => {
+  // Req 1.1, 1.2: サイドバーの「プラグイン」を選択すると Plugins_Tab を表示する
+  it('shows the plugins section when the plugins item is selected', () => {
+    vi.mocked(useMediaQuery).mockReturnValue(true)
     renderWithProviders(<SettingsScreen />)
 
     expect(
-      screen.getByRole('button', { name: 'Minimize' })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Close' })
-    ).toBeInTheDocument()
+      screen.queryByRole('region', { name: 'Plugins' })
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(
+      within(screen.getByRole('navigation')).getByRole('button', {
+        name: 'Plugins',
+      })
+    )
+
+    expect(screen.getByRole('region', { name: 'Plugins' })).toBeInTheDocument()
+  })
+
+  it('includes the plugins section in the single-column layout', () => {
+    vi.mocked(useMediaQuery).mockReturnValue(false)
+    renderWithProviders(<SettingsScreen />)
+
+    expect(screen.getByRole('region', { name: 'Plugins' })).toBeInTheDocument()
+  })
+
+  it('shows minimize and close buttons on Windows', () => {
+    renderWithProviders(<SettingsScreen />)
+
+    expect(screen.getByRole('button', { name: 'Minimize' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument()
   })
 
   it('hides window control buttons on macOS', async () => {

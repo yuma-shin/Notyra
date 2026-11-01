@@ -27,7 +27,7 @@
         "enable": true,
         "scope": ["**"]
       },
-      "csp": "default-src 'self' asset: https://asset.localhost; connect-src 'self' http://ipc.localhost; style-src 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; script-src 'self'; font-src 'self'; img-src 'self' asset: https://asset.localhost http://asset.localhost data: blob:"
+      "csp": "default-src 'self' asset: https://asset.localhost; connect-src 'self' http://ipc.localhost; style-src 'self' 'unsafe-inline' notyra-plugin: http://notyra-plugin.localhost; style-src-elem 'self' 'unsafe-inline' notyra-plugin: http://notyra-plugin.localhost; style-src-attr 'unsafe-inline'; script-src 'self' notyra-plugin: http://notyra-plugin.localhost; font-src 'self' notyra-plugin: http://notyra-plugin.localhost; img-src 'self' asset: https://asset.localhost http://asset.localhost data: blob: notyra-plugin: http://notyra-plugin.localhost"
     }
   },
   "bundle": {

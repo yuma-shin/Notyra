@@ -6,6 +6,8 @@ import { FolderTree } from './FolderTree'
 import { NoteList } from './NoteList'
 import { EditorView } from './EditorView'
 import { StatusBar } from './StatusBar'
+import { SidePanel, useSidePanelViews } from './SidePanel'
+import { usePluginHost } from '@/renderer/contexts/PluginHostContext'
 import { useResizablePane } from '@/renderer/hooks/useResizablePane'
 import { useEditorStatus } from '@/renderer/hooks/useEditorStatus'
 import { useAppVersion } from '@/renderer/hooks/useAppVersion'
@@ -25,6 +27,10 @@ const DEFAULT_NOTE_LIST_WIDTH = 320
 const MIN_NOTE_LIST_WIDTH = 240
 const MAX_NOTE_LIST_WIDTH = 600
 
+const DEFAULT_SIDE_PANEL_WIDTH = 280
+const MIN_SIDE_PANEL_WIDTH = 200
+const MAX_SIDE_PANEL_WIDTH = 600
+
 export interface AppShellProps {
   workspace: UseNoteWorkspaceResult
   settings: AppSettings
@@ -41,6 +47,13 @@ export interface AppShellProps {
   canGoForward?: boolean
   onGoBack?: () => void
   onGoForward?: () => void
+  /**
+   * Side_Panel の開閉。渡したときだけタイトルバーにトグルを表示し、
+   * `settings.sidePanelOpen` が true ならエディタ領域の右に Side_Panel を表示する
+   */
+  onToggleSidePanel?: () => void
+  onSidePanelViewChange?: (viewId: string) => void
+  onSidePanelWidthCommit?: (width: number) => void
 }
 
 export function AppShell({
@@ -59,8 +72,30 @@ export function AppShell({
   canGoForward,
   onGoBack,
   onGoForward,
+  onToggleSidePanel,
+  onSidePanelViewChange,
+  onSidePanelWidthCommit,
 }: AppShellProps) {
   const { t } = useTranslation()
+  const pluginHost = usePluginHost()
+  const sidePanelViews = useSidePanelViews()
+  const showSidePanel = Boolean(onToggleSidePanel && settings.sidePanelOpen)
+
+  const sidePanelPane = useResizablePane({
+    initialWidth: settings.sidePanelWidth ?? DEFAULT_SIDE_PANEL_WIDTH,
+    minWidth: MIN_SIDE_PANEL_WIDTH,
+    maxWidth: MAX_SIDE_PANEL_WIDTH,
+    onWidthCommit: onSidePanelWidthCommit,
+    reverse: true,
+  })
+
+  const handleSidePanelRenderError = (pluginId: string, error: unknown) => {
+    if (pluginHost) {
+      pluginHost.reportError(pluginId, 'sidePanel', error)
+    } else {
+      console.error(`[notyra] side panel view of "${pluginId}":`, error)
+    }
+  }
 
   const sidebarPane = useResizablePane({
     initialWidth: settings.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
@@ -98,8 +133,10 @@ export function AppShell({
         onGoForward={onGoForward}
         onToggleNoteList={workspace.onToggleNoteList}
         onToggleSidebar={workspace.onToggleSidebar}
+        onToggleSidePanel={onToggleSidePanel}
         showNoteList={workspace.showNoteList}
         showSidebar={workspace.showSidebar}
+        showSidePanel={showSidePanel}
         tabBar={tabBar}
       />
       <div className="flex-1 flex overflow-hidden">
@@ -183,6 +220,7 @@ export function AppShell({
               onSelectionStatsChange={setSelectionStats}
               onToggleNoteList={workspace.onToggleNoteList}
               onToggleSidebar={workspace.onToggleSidebar}
+              readOnly={workspace.isNoteLocked}
               rootDir={activeRootPath}
               saveError={workspace.saveError}
               showNoteList={workspace.showNoteList}
@@ -199,6 +237,27 @@ export function AppShell({
               {t('editor.selectNoteHint')}
             </p>
           </div>
+        )}
+        {showSidePanel && (
+          <>
+            <button
+              aria-label={t('plugins.sidePanel.resize')}
+              className={`w-1 flex-shrink-0 cursor-col-resize transition-colors ${
+                sidePanelPane.isDragging
+                  ? 'bg-[color:var(--theme-accent)]'
+                  : 'bg-transparent hover:bg-[color:var(--theme-accent)]'
+              }`}
+              onMouseDown={sidePanelPane.handleProps.onMouseDown}
+              type="button"
+            />
+            <SidePanel
+              activeViewId={settings.sidePanelActiveView}
+              onRenderError={handleSidePanelRenderError}
+              onSelectView={viewId => onSidePanelViewChange?.(viewId)}
+              views={sidePanelViews}
+              width={sidePanelPane.width}
+            />
+          </>
         )}
       </div>
       <StatusBar

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use gray_matter::engine::YAML;
@@ -9,6 +9,7 @@ use tauri::{command, AppHandle, Emitter, State};
 use tauri_plugin_dialog::DialogExt;
 
 use crate::state::{AppState, WatcherHandle};
+use crate::plugins::notes_scope::resolve_within_roots;
 
 // ---------------------------------------------------------------------------
 // 共有型定義
@@ -145,7 +146,7 @@ async fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
 // ---------------------------------------------------------------------------
 
 /// ファイル名の禁止文字を置換する
-fn sanitize_filename(name: &str) -> String {
+pub(crate) fn sanitize_filename(name: &str) -> String {
     name.chars()
         .map(|c| match c {
             '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' => '-',
@@ -174,7 +175,12 @@ async fn read_header(path: &Path) -> std::io::Result<String> {
 
 /// ファイルからノートメタデータを抽出する
 async fn get_note_meta(root: &Path, file_path: &Path) -> Option<MarkdownNoteMeta> {
-    let header = read_header(file_path).await.ok()?;
+    get_note_meta_at(root, file_path, file_path).await
+}
+
+/// Keep the visible path for metadata while reading only the validated target.
+async fn get_note_meta_at(root: &Path, file_path: &Path, read_path: &Path) -> Option<MarkdownNoteMeta> {
+    let header = read_header(read_path).await.ok()?;
     let matter = Matter::<YAML>::new();
     let parsed = matter.parse::<Pod>(&header).ok()?;
 
@@ -223,6 +229,54 @@ fn collect_md_files(dir: &Path, out: &mut Vec<PathBuf>) {
             out.push(path);
         }
     }
+}
+
+/// Check every target before reading its directory or collecting its file.
+/// Track ancestors, rather than all visited directories, to allow valid aliases
+/// while cutting links back to an ancestor (including links to the root).
+fn collect_scoped_md_files(
+    visible: &Path,
+    candidate: &Path,
+    roots: &[PathBuf],
+    ancestors: &mut HashSet<PathBuf>,
+    out: &mut Vec<(PathBuf, PathBuf)>,
+) {
+    let Ok(resolved) = resolve_within_roots(candidate, roots) else {
+        return;
+    };
+    if resolved.is_dir() {
+        if !ancestors.insert(resolved.clone()) {
+            return;
+        }
+        if let Ok(entries) = std::fs::read_dir(&resolved) {
+            for entry in entries.flatten() {
+                collect_scoped_md_files(
+                    &visible.join(entry.file_name()), &entry.path(), roots, ancestors, out,
+                );
+            }
+        }
+        ancestors.remove(&resolved);
+    } else if visible.extension().and_then(|e| e.to_str()) == Some("md")
+        && resolved.extension().and_then(|e| e.to_str()) == Some("md")
+        && resolved.is_file()
+    {
+        out.push((visible.to_path_buf(), resolved));
+    }
+}
+
+async fn get_scoped_note_meta(
+    root: &Path,
+    visible: &Path,
+    candidate: &Path,
+    roots: &[PathBuf],
+) -> Option<MarkdownNoteMeta> {
+    // Recheck immediately before reading: a collected file or its parent may
+    // have become a link since the directory walk finished.
+    let resolved = resolve_within_roots(candidate, roots).ok()?;
+    if !resolved.is_file() || resolved.extension().and_then(|e| e.to_str()) != Some("md") {
+        return None;
+    }
+    get_note_meta_at(root, visible, &resolved).await
 }
 
 /// フォルダツリーを構築する
@@ -336,15 +390,22 @@ pub async fn check_root_exists(root_dir: String) -> bool {
 #[command]
 pub async fn scan_notes_and_build_folder_tree(root_dir: String) -> Result<ScanResult, String> {
     let root = Path::new(&root_dir).to_path_buf();
+    let notes = scan_notes(&root).await;
+    let tree = build_folder_tree_from_notes(&root, &notes);
 
+    Ok(ScanResult { notes, tree })
+}
+
+/// ルート配下の .md ファイルを走査し、メタデータを updatedAt 降順で返す。
+/// 通常 UI 用。Plugin の一覧には `scan_notes_scoped` を使う。
+pub(crate) async fn scan_notes(root: &Path) -> Vec<MarkdownNoteMeta> {
     // .md ファイルを収集
     let mut file_paths: Vec<PathBuf> = Vec::new();
-    collect_md_files(&root, &mut file_paths);
+    collect_md_files(root, &mut file_paths);
 
     // 並列でメタデータを取得
-    let root_clone = root.clone();
     let tasks: Vec<_> = file_paths.into_iter().map(|p| {
-        let r = root_clone.clone();
+        let r = root.to_path_buf();
         tokio::spawn(async move { get_note_meta(&r, &p).await })
     }).collect();
 
@@ -360,9 +421,64 @@ pub async fn scan_notes_and_build_folder_tree(root_dir: String) -> Result<ScanRe
         b.updated_at.as_deref().unwrap_or("").cmp(a.updated_at.as_deref().unwrap_or(""))
     });
 
-    let tree = build_folder_tree_from_notes(&root, &notes);
+    notes
+}
 
-    Ok(ScanResult { notes, tree })
+/// Plugin listing shares metadata parsing with the UI, but checks every file
+/// and directory against the same registered roots as notes.read().
+pub(crate) async fn scan_notes_scoped(root: &Path, roots: &[PathBuf]) -> Vec<MarkdownNoteMeta> {
+    let Ok(resolved_root) = resolve_within_roots(root, roots) else {
+        return Vec::new();
+    };
+    if !resolved_root.is_dir() {
+        return Vec::new();
+    }
+    let mut files = Vec::new();
+    collect_scoped_md_files(root, &resolved_root, roots, &mut HashSet::new(), &mut files);
+    let tasks: Vec<_> = files.into_iter().map(|(visible, candidate)| {
+        let root = root.to_path_buf();
+        let roots = roots.to_vec();
+        tokio::spawn(async move { get_scoped_note_meta(&root, &visible, &candidate, &roots).await })
+    }).collect();
+    let mut notes = Vec::new();
+    for task in tasks {
+        if let Ok(Some(meta)) = task.await { notes.push(meta); }
+    }
+    notes.sort_by(|a, b| b.updated_at.as_deref().unwrap_or("").cmp(a.updated_at.as_deref().unwrap_or("")));
+    notes
+}
+
+/// ノートの生テキストを本文と Front Matter（JSON オブジェクト）に分ける。
+/// Front Matter がない場合は空のオブジェクトを返す。
+pub(crate) fn parse_note_front_matter(
+    raw: &str,
+) -> Result<(String, serde_json::Map<String, serde_json::Value>), String> {
+    let matter = Matter::<YAML>::new();
+    let parsed = matter
+        .parse::<serde_json::Value>(raw)
+        .map_err(|e| format!("フロントマターの解析に失敗しました: {}", e))?;
+    let front_matter = match parsed.data {
+        None | Some(serde_json::Value::Null) => serde_json::Map::new(),
+        Some(serde_json::Value::Object(map)) => map,
+        Some(_) => return Err("フロントマターがオブジェクトではありません".to_string()),
+    };
+    // gray_matter rebuilds content from lines and drops trailing empty lines.
+    // Keep the original body bytes so a save/read round-trip preserves them.
+    let mut offset = 0;
+    let mut lines = raw.split_inclusive('\n');
+    let body = if lines.next().is_some_and(|line| line.trim_end_matches(['\r', '\n']) == "---") {
+        offset += raw.split_inclusive('\n').next().map_or(0, str::len);
+        let mut body = raw;
+        for line in lines {
+            offset += line.len();
+            if line.trim_end_matches(['\r', '\n']) == "---" {
+                body = &raw[offset..];
+                break;
+            }
+        }
+        body
+    } else { raw };
+    Ok((body.to_string(), front_matter))
 }
 
 // ---------------------------------------------------------------------------
@@ -420,45 +536,44 @@ pub async fn save_note(
     content: String,
     front_matter: Option<serde_json::Value>,
 ) -> Result<bool, String> {
-    let file_content = if let Some(fm) = front_matter {
-        // フロントマターを YAML に変換して結合
-        let yaml = serde_yaml_from_value(&fm);
-        format!("---\n{}---\n{}", yaml, content)
-    } else {
-        content
-    };
-
-    atomic_write(Path::new(&file_path), file_content.as_bytes())
+    write_note_file(Path::new(&file_path), &content, front_matter.as_ref())
         .await
         .map(|_| true)
 }
 
+/// 本文と Front Matter からノートファイルの内容を組み立てる（`save_note` と同じ形式）。
+pub(crate) fn compose_note_file(content: &str, front_matter: Option<&serde_json::Value>) -> String {
+    if let Some(fm) = front_matter {
+        // フロントマターを YAML に変換して結合
+        let yaml = serde_yaml_from_value(fm);
+        format!("---\n{}---\n{}", yaml, content)
+    } else {
+        content.to_string()
+    }
+}
+
+/// `save_note` の保存処理。`save_note` と Plugin 用の `plugin_notes_update` で共有する。
+pub(crate) async fn write_note_file(
+    path: &Path,
+    content: &str,
+    front_matter: Option<&serde_json::Value>,
+) -> Result<(), String> {
+    atomic_write(path, compose_note_file(content, front_matter).as_bytes()).await
+}
+
 fn serde_yaml_from_value(v: &serde_json::Value) -> String {
-    // 簡易 YAML シリアライズ（フロントマター用）
-    match v {
-        serde_json::Value::Object(map) => {
-            map.iter()
-                .map(|(k, v)| {
-                    let val = match v {
-                        serde_json::Value::String(s) => format!("\"{}\"", s.replace('"', "\\\"")),
-                        serde_json::Value::Array(arr) => {
-                            if arr.is_empty() {
-                                "[]".to_string()
-                            } else {
-                                let items = arr.iter()
-                                    .map(|i| format!("  - {}", i.as_str().unwrap_or("")))
-                                    .collect::<Vec<_>>()
-                                    .join("\n");
-                                format!("\n{}", items)
-                            }
-                        }
-                        other => other.to_string(),
-                    };
-                    format!("{}: {}\n", k, val)
-                })
-                .collect()
-        }
-        _ => String::new(),
+    // JSON scalar/flow values are valid YAML and escape quotes, backslashes,
+    // line breaks and control characters without changing their meaning.
+    match v.as_object() {
+        Some(map) => map.iter().map(|(key, value)| {
+            let key = if !key.is_empty() && key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                key.clone()
+            } else {
+                serde_json::to_string(key).expect("string serialization cannot fail")
+            };
+            format!("{}: {}\n", key, value)
+        }).collect(),
+        None => String::new(),
     }
 }
 
@@ -475,7 +590,29 @@ pub async fn create_note(
         PathBuf::from(&root_dir).join(&folder_path)
     };
 
-    tokio::fs::create_dir_all(&target_dir).await.map_err(|e| e.to_string())?;
+    let file_path = create_note_file(&target_dir, &base_name, &default_note_content(&title)).await?;
+
+    Ok(Some(file_path.to_string_lossy().replace('\\', "/").to_string()))
+}
+
+/// 新規ノートの既定の内容（`create_note` と同じ形式）
+pub(crate) fn default_note_content(title: &str) -> String {
+    let now = chrono_now();
+    format!(
+        "---\ntitle: \"{}\"\ncreatedAt: \"{}\"\nupdatedAt: \"{}\"\ntags: []\n---\n# {}\n\n",
+        title, now, now, title
+    )
+}
+
+/// `target_dir` に `<base_name>.md`（使用済みなら `<base_name>-N.md`）を作成し、
+/// 実際に保存したパスを返す。
+/// `create_note` と Plugin 用の `plugin_notes_create` で共有する。
+pub(crate) async fn create_note_file(
+    target_dir: &Path,
+    base_name: &str,
+    content: &str,
+) -> Result<PathBuf, String> {
+    tokio::fs::create_dir_all(target_dir).await.map_err(|e| e.to_string())?;
 
     // 重複ファイル名に連番を付加
     let mut file_path = target_dir.join(format!("{}.md", base_name));
@@ -485,24 +622,41 @@ pub async fn create_note(
         counter += 1;
     }
 
-    let now = chrono_now();
-    let content = format!(
-        "---\ntitle: \"{}\"\ncreatedAt: \"{}\"\nupdatedAt: \"{}\"\ntags: []\n---\n# {}\n\n",
-        title, now, now, title
-    );
-
     atomic_write(&file_path, content.as_bytes()).await?;
 
-    Ok(Some(file_path.to_string_lossy().replace('\\', "/").to_string()))
+    Ok(file_path)
 }
 
 #[command]
 pub async fn rename_note(old_path: String, new_title: String) -> Result<Option<String>, String> {
     let old = Path::new(&old_path);
-    let dir = old.parent().ok_or("parent dir not found")?;
-    let new_name = format!("{}.md", sanitize_filename(&new_title));
-    let new_path = dir.join(&new_name);
+    let new_path = renamed_note_path(old, &new_title)?;
+    let same_file = is_same_note_file(old, &new_path);
 
+    write_renamed_note(old, &new_path, &new_title).await?;
+
+    if !same_file {
+        tokio::fs::remove_file(old).await.map_err(|e| e.to_string())?;
+    }
+
+    Ok(Some(new_path.to_string_lossy().replace('\\', "/").to_string()))
+}
+
+/// 書き込みでファイルが置き換わる前に、区切り文字や大文字小文字の違いを解決する。
+pub(crate) fn is_same_note_file(a: &Path, b: &Path) -> bool {
+    a == b || matches!((std::fs::canonicalize(a), std::fs::canonicalize(b)), (Ok(x), Ok(y)) if x == y)
+}
+
+/// 名前変更後のノートのパス（同じフォルダの `<sanitize(new_title)>.md`）
+pub(crate) fn renamed_note_path(old: &Path, new_title: &str) -> Result<PathBuf, String> {
+    let dir = old.parent().ok_or("parent dir not found")?;
+    let new_name = format!("{}.md", sanitize_filename(new_title));
+    Ok(dir.join(&new_name))
+}
+
+/// `old` の内容の Front Matter の title と updatedAt を更新して `new_path` に書き込む。
+/// 旧ファイルの削除は呼び出し側が行う。`rename_note` と `plugin_notes_rename` で共有する。
+pub(crate) async fn write_renamed_note(old: &Path, new_path: &Path, new_title: &str) -> Result<(), String> {
     let raw = tokio::fs::read_to_string(old).await.map_err(|e| e.to_string())?;
     let matter = Matter::<YAML>::new();
     let parsed = matter.parse::<Pod>(&raw)
@@ -510,15 +664,9 @@ pub async fn rename_note(old_path: String, new_title: String) -> Result<Option<S
 
     let now = chrono_now();
     // フロントマターの title と updatedAt を更新
-    let new_content = update_front_matter(&raw, &parsed.content, &new_title, &now);
+    let new_content = update_front_matter(&raw, &parsed.content, new_title, &now);
 
-    atomic_write(&new_path, new_content.as_bytes()).await?;
-
-    if old_path != new_path.to_string_lossy() {
-        tokio::fs::remove_file(old).await.map_err(|e| e.to_string())?;
-    }
-
-    Ok(Some(new_path.to_string_lossy().replace('\\', "/").to_string()))
+    atomic_write(new_path, new_content.as_bytes()).await
 }
 
 fn update_front_matter(raw: &str, body: &str, title: &str, updated_at: &str) -> String {
@@ -531,7 +679,7 @@ fn update_front_matter(raw: &str, body: &str, title: &str, updated_at: &str) -> 
                 .lines()
                 .map(|line| {
                     if line.starts_with("title:") {
-                        format!("title: \"{}\"", title)
+                        format!("title: {}", serde_json::to_string(title).expect("string serialization cannot fail"))
                     } else if line.starts_with("updatedAt:") {
                         format!("updatedAt: \"{}\"", updated_at)
                     } else {
@@ -540,7 +688,7 @@ fn update_front_matter(raw: &str, body: &str, title: &str, updated_at: &str) -> 
                 })
                 .collect::<Vec<_>>()
                 .join("\n");
-            return format!("---\n{}---\n{}", new_fm, body);
+            return format!("---\n{}\n---\n{}", new_fm.trim(), body);
         }
     }
     // フロントマターがない場合は新規作成
@@ -571,14 +719,25 @@ pub async fn move_note(
         PathBuf::from(&root_dir).join(&target_folder)
     };
 
-    tokio::fs::create_dir_all(&target_dir).await.map_err(|e| e.to_string())?;
+    match move_note_file(src, &target_dir).await? {
+        Some(dest) => Ok(Some(dest.to_string_lossy().replace('\\', "/").to_string())),
+        // 同じ場所への移動はスキップ
+        None => Ok(Some(current_file_path)),
+    }
+}
+
+/// `src` を `target_dir` へ移動し、移動先のパスを返す。同名のノートがあれば
+/// `<stem>-N.md` の連番を付与する。同じ場所への移動は何もせず `None` を返す。
+/// `move_note` と Plugin 用の `plugin_notes_move` で共有する。
+pub(crate) async fn move_note_file(src: &Path, target_dir: &Path) -> Result<Option<PathBuf>, String> {
+    tokio::fs::create_dir_all(target_dir).await.map_err(|e| e.to_string())?;
 
     let file_name = src.file_name().ok_or("invalid file name")?;
     let mut dest = target_dir.join(file_name);
 
     // 同じ場所への移動はスキップ
     if src == dest.as_path() {
-        return Ok(Some(current_file_path));
+        return Ok(None);
     }
 
     // 重複名の解決
@@ -592,7 +751,7 @@ pub async fn move_note(
     tokio::fs::copy(src, &dest).await.map_err(|e| e.to_string())?;
     tokio::fs::remove_file(src).await.map_err(|e| e.to_string())?;
 
-    Ok(Some(dest.to_string_lossy().replace('\\', "/").to_string()))
+    Ok(Some(dest))
 }
 
 // ---------------------------------------------------------------------------
@@ -675,7 +834,7 @@ pub async fn unwatch_file(
 // ヘルパー
 // ---------------------------------------------------------------------------
 
-fn chrono_now() -> String {
+pub(crate) fn chrono_now() -> String {
     // ISO 8601 形式の現在時刻（UTC）
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -713,6 +872,26 @@ fn epoch_to_ymd_hms(epoch: u64) -> (u64, u64, u64, u64, u64, u64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn scoped_metadata_rechecks_a_collected_target_before_reading_it() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("notes");
+        std::fs::create_dir(&root).unwrap();
+        let file = root.join("note.md");
+        let outside = tmp.path().join("outside.md");
+        std::fs::write(&file, "allowed").unwrap();
+        std::fs::write(&outside, "PRIVATE_EXCERPT").unwrap();
+        let roots = vec![root.clone()];
+        let mut collected = Vec::new();
+        collect_scoped_md_files(&root, &root, &roots, &mut HashSet::new(), &mut collected);
+        assert_eq!(collected.len(), 1);
+        std::fs::remove_file(&file).unwrap();
+        std::os::unix::fs::symlink(&outside, &file).unwrap();
+        let (visible, candidate) = &collected[0];
+        assert!(get_scoped_note_meta(&root, visible, candidate, &roots).await.is_none());
+    }
 
     // -----------------------------------------------------------------------
     // atomic_write ユーティリティのテスト

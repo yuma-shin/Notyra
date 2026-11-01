@@ -62,9 +62,69 @@ export function validateTheme(data: unknown): boolean {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Plugin のカラーテーマ（Requirement 11.2、11.6）
+// ---------------------------------------------------------------------------
+
+/** Plugin のカラーテーマ一覧を返す関数（Load_Order 順） */
+export type PluginThemeSource = () => readonly ColorTheme[]
+
+const pluginThemeSources = new Set<{ get: PluginThemeSource }>()
+
+/**
+ * Plugin のカラーテーマの取得元を登録する。戻り値の関数で登録を解除する（冪等）。
+ *
+ * Plugin_Host_Window では PluginThemeRegistry、設定ウィンドウではテーマ JSON を
+ * データとして読み込んだ一覧を登録する。`applyColorTheme` と `listAllThemes` は
+ * 呼び出しのたびに取得元を参照するため、Plugin の読み込み・停止が即座に反映される。
+ */
+export function registerPluginThemeSource(
+  source: PluginThemeSource
+): () => void {
+  const entry = { get: source }
+  pluginThemeSources.add(entry)
+  return () => {
+    pluginThemeSources.delete(entry)
+  }
+}
+
+/** 登録済みの取得元から得た Plugin のカラーテーマ */
+export function listPluginThemes(): ColorTheme[] {
+  const themes: ColorTheme[] = []
+  for (const source of pluginThemeSources) {
+    try {
+      themes.push(...source.get())
+    } catch (error) {
+      console.error('[notyra] failed to list plugin themes:', error)
+    }
+  }
+  return themes
+}
+
+/** テーマ一覧を連結し、テーマ ID が重複するものは先に現れた方だけを残す */
+export function mergeThemes(
+  ...lists: ReadonlyArray<readonly ColorTheme[]>
+): ColorTheme[] {
+  const seen = new Set<string>()
+  const merged: ColorTheme[] = []
+  for (const list of lists) {
+    for (const theme of list) {
+      if (seen.has(theme.id)) continue
+      seen.add(theme.id)
+      merged.push(theme)
+    }
+  }
+  return merged
+}
+
+/** 組み込み → カスタム → Plugin の順のすべてのカラーテーマ（テーマ ID は一意） */
+export function listAllThemes(): ColorTheme[] {
+  return mergeThemes(builtinThemes, loadCustomThemes(), listPluginThemes())
+}
+
 /** Apply a color theme's CSS variables to the document root */
 export function applyColorTheme(themeId: string, isDark: boolean): void {
-  const allThemes = [...builtinThemes, ...loadCustomThemes()]
+  const allThemes = listAllThemes()
   const theme = allThemes.find(t => t.id === themeId) ?? builtinThemes[0]
   const fallback = builtinThemes[0]
   const fallbackVars = isDark ? fallback.dark : fallback.light
@@ -77,6 +137,7 @@ export function applyColorTheme(themeId: string, isDark: boolean): void {
 
 /** Get theme display name based on locale */
 export function getThemeName(theme: ColorTheme, lang: string): string {
-  if (lang === 'ja') return theme.nameJa
+  // Plugin のテーマは nameJa を省略できる（validateTheme は必須にしていない）
+  if (lang === 'ja') return theme.nameJa || theme.name
   return theme.name
 }

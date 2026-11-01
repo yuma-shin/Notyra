@@ -129,7 +129,8 @@ describe('削除確認ダイアログの応答性', () => {
     fireEvent.click(confirmButton)
 
     // deleteNote は呼ばれているが、まだ解決していない（バックグラウンドで進行中）
-    expect(mockDeleteNote).toHaveBeenCalledTimes(1)
+    // 保存キューを空にしてから削除を開始するが、削除完了は待たない。
+    await waitFor(() => expect(mockDeleteNote).toHaveBeenCalledTimes(1))
     expect(deleteResolved).toBe(false)
 
     // それでもダイアログは即座に閉じ始める

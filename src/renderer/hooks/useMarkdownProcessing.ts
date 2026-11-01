@@ -1,36 +1,49 @@
-import { useEffect, useState } from 'react'
-import { remark } from 'remark'
-import remarkGfm from 'remark-gfm'
-import remarkGithubAlerts from 'remark-github-alerts'
-import remarkRehype from 'remark-rehype'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeStringify from 'rehype-stringify'
-import { rehypeLocalImages } from '@/renderer/plugins/rehypeLocalImages'
-import { rehypeMermaid } from '@/renderer/plugins/rehypeMermaid'
-import { rehypeSourceLines } from '@/renderer/plugins/rehypeSourceLines'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { usePluginHost } from '@/renderer/contexts/PluginHostContext'
+import { buildMarkdownProcessor } from '@/renderer/lib/markdownPipeline'
+import type { MarkdownExtensionSnapshot } from '@/renderer/lib/plugins/host/registries'
+
+const EMPTY_MARKDOWN_SNAPSHOT: MarkdownExtensionSnapshot = Object.freeze({
+  remark: [],
+  rehype: [],
+})
+const subscribeNothing = () => () => {}
+const getEmptySnapshot = () => EMPTY_MARKDOWN_SNAPSHOT
 
 export function useMarkdownProcessing(content: string, noteDir?: string) {
   const [html, setHtml] = useState('')
 
+  // PluginHostProvider の外（設定画面・テスト）では拡張なしで処理する
+  const pluginHost = usePluginHost()
+  const registry = pluginHost?.registries.markdown ?? null
+  // 登録・解除でのみ変わる。除外（exclude）では変わらないため、
+  // Plugin の例外を理由に即時再生成しない（Requirement 14.7、14.9）
+  const extensions = useSyncExternalStore(
+    registry?.subscribe ?? subscribeNothing,
+    registry?.getSnapshot ?? getEmptySnapshot
+  )
+
+  // エラー報告先の変化（PluginHost の起動など）では再処理しない
+  const reportErrorRef = useRef(pluginHost?.reportError)
+  reportErrorRef.current = pluginHost?.reportError
+
   useEffect(() => {
+    // 再処理の契機として参照する
+    void extensions
     let cancelled = false
     const processMarkdown = async () => {
+      const pluginErrors = new Map<string, unknown>()
       try {
-        let pipeline = remark()
-          .use(remarkGfm)
-          .use(remarkGithubAlerts)
-          .use(remarkRehype, { allowDangerousHtml: true })
-
-        if (noteDir) {
-          pipeline = pipeline.use(rehypeLocalImages, { noteDir })
-        }
-
-        const result = await pipeline
-          .use(rehypeMermaid)
-          .use(rehypeHighlight)
-          .use(rehypeSourceLines)
-          .use(rehypeStringify, { allowDangerousHtml: true })
-          .process(content)
+        const processor = buildMarkdownProcessor({
+          noteDir,
+          target: 'preview',
+          pluginRemark: registry?.getActivePlugins('remark') ?? [],
+          pluginRehype: registry?.getActivePlugins('rehype') ?? [],
+          onPluginError: (pluginId, error) => {
+            if (!pluginErrors.has(pluginId)) pluginErrors.set(pluginId, error)
+          },
+        })
+        const result = await processor.process(content)
 
         let html = String(result)
 
@@ -59,8 +72,18 @@ export function useMarkdownProcessing(content: string, noteDir?: string) {
 
         if (!cancelled) setHtml(html)
       } catch (error) {
+        if (pluginErrors.size > 0) {
+          // Plugin 起因の例外: 該当 Plugin をセッション中除外し、次回の生成契機から
+          // 反映する。表示中のプレビューは直前の HTML のまま維持する（Requirement 14.8、14.9）
+          return
+        }
         console.error('Markdown processing error:', error)
         if (!cancelled) setHtml('<p>プレビューの生成に失敗しました</p>')
+      } finally {
+        for (const [pluginId, pluginError] of pluginErrors) {
+          registry?.exclude(pluginId)
+          reportErrorRef.current?.(pluginId, 'markdown', pluginError)
+        }
       }
     }
 
@@ -68,7 +91,7 @@ export function useMarkdownProcessing(content: string, noteDir?: string) {
     return () => {
       cancelled = true
     }
-  }, [content, noteDir])
+  }, [content, noteDir, registry, extensions])
 
   return html
 }

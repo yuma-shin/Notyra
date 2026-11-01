@@ -250,39 +250,41 @@ pub async fn delete_note_images(
     root_dir: String,
     note_base_name: String,
 ) -> Result<CleanupResult, String> {
-    let images_dir = PathBuf::from(&root_dir).join("images");
-    let sanitized = sanitize_note_basename(&note_base_name);
+    Ok(delete_images_for_note(Path::new(&root_dir), &note_base_name).await)
+}
 
-    let all_files = match tokio::fs::read_dir(&images_dir).await {
-        Ok(mut rd) => {
-            let mut files = Vec::new();
-            while let Ok(Some(entry)) = rd.next_entry().await {
-                if let Some(name) = entry.file_name().to_str() {
-                    files.push(name.to_string());
-                }
-            }
-            files
+/// `<root>/images` からノートに紐づく画像（`<sanitize(note_base_name)>_` で始まるファイル）を削除する。
+/// UI 用の削除。Plugin は下の列挙・削除処理をスコープ検証と組み合わせて使用する。
+pub(crate) async fn delete_images_for_note(root: &Path, note_base_name: &str) -> CleanupResult {
+    let paths = note_image_paths(&root.join("images"), note_base_name).await.unwrap_or_default();
+    delete_image_files(&paths).await
+}
+
+/// Enumerate associated images separately so scoped callers can validate the
+/// complete deletion plan before removing the note or any image.
+pub(crate) async fn note_image_paths(images_dir: &Path, note_base_name: &str) -> std::io::Result<Vec<PathBuf>> {
+    let prefix = format!("{}_", sanitize_note_basename(note_base_name));
+    let mut entries = tokio::fs::read_dir(images_dir).await?;
+    let mut paths = Vec::new();
+    while let Some(entry) = entries.next_entry().await? {
+        if entry.file_name().to_str().is_some_and(|name| name.starts_with(&prefix)) {
+            paths.push(entry.path());
         }
-        Err(_) => return Ok(CleanupResult { success: true, deleted_files: vec![], errors: vec![] }),
-    };
+    }
+    Ok(paths)
+}
 
-    let note_files: Vec<_> = all_files.iter()
-        .filter(|f| f.starts_with(&format!("{}_", sanitized)))
-        .cloned()
-        .collect();
-
+pub(crate) async fn delete_image_files(paths: &[PathBuf]) -> CleanupResult {
     let mut deleted = Vec::new();
     let mut errors = Vec::new();
-
-    for file in &note_files {
-        let path = images_dir.join(file);
-        match tokio::fs::remove_file(&path).await {
-            Ok(_) => deleted.push(file.clone()),
+    for path in paths {
+        let file = path.file_name().unwrap_or_default().to_string_lossy();
+        match tokio::fs::remove_file(path).await {
+            Ok(_) => deleted.push(file.into_owned()),
             Err(e) => errors.push(format!("Failed to delete {}: {}", file, e)),
         }
     }
-
-    Ok(CleanupResult { success: true, deleted_files: deleted, errors })
+    CleanupResult { success: true, deleted_files: deleted, errors }
 }
 
 /// 画像ファイルを読み込み、`data:{mime};base64,{data}` 形式の文字列を返す。

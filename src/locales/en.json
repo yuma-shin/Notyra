@@ -41,6 +41,7 @@
     "saving": "Saving...",
     "saved": "Saved",
     "selectNote": "Please select a note",
+    "noteDeleted": "This note has been deleted.",
     "selectNoteHint": "Select a note from the list on the left",
     "toolbar": {
       "heading": "Heading",
@@ -65,6 +66,7 @@
       "pdfExporting": "Exporting..."
     },
     "layoutMode": {
+      "label": "View mode",
       "editorOnly": "Editor Only",
       "splitView": "Split View",
       "previewOnly": "Preview Only"
@@ -192,7 +194,8 @@
     "navigation": "Settings navigation",
     "appearance": "Appearance",
     "font": "Font",
-    "language": "Language"
+    "language": "Language",
+    "plugins": "Plugins"
   },
   "sortDropdown": {
     "sortBy": "Sort by",
@@ -200,5 +203,249 @@
     "dateAsc": "Date (Oldest)",
     "titleAsc": "Title (A-Z)",
     "titleDesc": "Title (Z-A)"
+  },
+  "plugins": {
+    "title": "Plugins",
+    "description": "Extend Notyra's features and appearance with plugins",
+    "status": {
+      "loading": "Loading plugin information...",
+      "unavailable": "Plugins are not available in this environment",
+      "loadFailed": "Could not load plugin information: {{message}}"
+    },
+    "thirdPartyWarning": {
+      "title": "About third-party plugins",
+      "message": "Plugins contain code written by people other than the Notyra developers, and they run with the same privileges as Notyra itself. Declared permissions are checked only inside the Notyra API, and nothing technically prevents plugin code from bypassing them. Install only plugins you trust, at your own risk.",
+      "acknowledge": "I understand"
+    },
+    "installed": {
+      "title": "Installed",
+      "empty": "No plugins installed",
+      "version": "Version {{version}}",
+      "author": "By {{author}}",
+      "source": "Source",
+      "sourceGithub": "GitHub: {{owner}}/{{repo}}",
+      "sourceLocal": "Local folder: {{path}}",
+      "typeFeature": "Feature",
+      "typeTheme": "Theme",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "toggleEnabled": "Enable or disable {{name}}",
+      "settings": "Settings",
+      "uninstall": "Uninstall",
+      "update": "Update",
+      "updating": "Updating...",
+      "updateAvailable": "Version {{version}} is available",
+      "development": "In development",
+      "reload": "Reload",
+      "reloading": "Reloading...",
+      "pendingConsent": "Waiting for consent: the plugin requests additional permissions. Press Reload to review them again",
+      "activateFailed": "Disabled because it failed to start",
+      "incompatible": "Not compatible with this version of Notyra (supported: {{range}}, current: {{current}})",
+      "manifestUnreadable": "Cannot read package.json",
+      "sessionErrors": "Errors in this session",
+      "keybindingConflicts": "Keybinding conflicts",
+      "keybindingConflictBuiltin": "{{key}} ({{command}}) is inactive because it conflicts with a Notyra keybinding",
+      "keybindingConflictPlugin": "{{key}} ({{command}}) is inactive because it conflicts with a keybinding of plugin {{plugin}}"
+    },
+    "uninstallDialog": {
+      "title": "Uninstall plugin",
+      "message": "Uninstall \"{{name}}\"?\nThe plugin's files and settings will be deleted.",
+      "messageDev": "Unregister \"{{name}}\"?\nFiles in the local folder will not be changed.",
+      "confirm": "Uninstall"
+    },
+    "repoInstall": {
+      "title": "Install from repository",
+      "label": "GitHub repository",
+      "placeholder": "owner/repo or https://github.com/owner/repo",
+      "install": "Install",
+      "installing": "Installing...",
+      "installed": "Installed {{name}}"
+    },
+    "updates": {
+      "check": "Check for updates",
+      "checking": "Checking...",
+      "upToDate": "All plugins are up to date",
+      "available": "Updates available: {{count}}",
+      "updated": "Updated {{name}} to version {{version}}"
+    },
+    "registry": {
+      "title": "Browse plugins",
+      "searchPlaceholder": "Search plugins...",
+      "loading": "Loading plugin list...",
+      "empty": "No plugins are listed",
+      "searchEmpty": "No matching plugins",
+      "author": "By {{author}}",
+      "repository": "Repository",
+      "openRepository": "Open {{repo}}",
+      "install": "Install",
+      "installing": "Installing...",
+      "installed": "Installed",
+      "error": "Could not load the plugin list",
+      "retry": "Retry",
+      "unavailableHint": "The plugin list is currently unavailable. You can still install a plugin by entering its repository."
+    },
+    "developerMode": {
+      "title": "Developer mode",
+      "description": "Load plugins under development from a local folder",
+      "toggle": "Enable developer mode",
+      "loadFolder": "Load plugin from folder",
+      "loading": "Loading..."
+    },
+    "consent": {
+      "titleInstall": "Install \"{{name}}\"",
+      "titleUpdate": "Update \"{{name}}\"",
+      "titleDevLoad": "Load \"{{name}}\"",
+      "titleDevReload": "Reload \"{{name}}\"",
+      "author": "Author",
+      "authorUnknown": "Unknown",
+      "source": "Source",
+      "permissions": "This plugin requests the following permissions",
+      "addedPermissions": "The new version requests the following additional permissions",
+      "noPermissions": "This plugin does not request any permissions",
+      "purpose": "Purpose: {{purpose}}",
+      "privateNetwork": "Communicates only with local and private networks",
+      "destinations": "Destinations",
+      "addedDestinations": "Added destinations",
+      "publicWarningTitle": "External communication",
+      "publicWarning": "This plugin communicates with the following destinations on the internet. Your note contents and other data may be sent outside your computer.",
+      "consentNote": "By agreeing, you allow all of the permissions and destinations shown.",
+      "accept": "Agree and install",
+      "acceptUpdate": "Agree and update",
+      "acceptLoad": "Agree and load",
+      "cancel": "Cancel"
+    },
+    "permissions": {
+      "notes": {
+        "read": {
+          "label": "Read notes",
+          "description": "Reads the list of root folders, the list of notes, and note bodies and front matter"
+        },
+        "write": {
+          "label": "Write notes",
+          "description": "Creates notes, updates bodies and front matter, and renames, moves, and deletes notes (you are asked to confirm every deletion)"
+        }
+      },
+      "clipboard": {
+        "label": "Clipboard",
+        "description": "Reads and writes text on the clipboard"
+      },
+      "shell": {
+        "openExternal": {
+          "label": "Open in external applications",
+          "description": "Opens http, https, and mailto URLs in the system's default application"
+        }
+      },
+      "network": {
+        "label": "Network access",
+        "description": "Communicates over HTTP / HTTPS only with the declared destinations"
+      }
+    },
+    "destinationClass": {
+      "private": "Local / private",
+      "public": "External"
+    },
+    "toast": {
+      "close": "Close",
+      "pluginError": "{{name}}: {{message}}",
+      "pluginErrorWithSource": "{{name}} ({{source}}): {{message}}"
+    },
+    "errorSource": {
+      "load": "Loading",
+      "activate": "Activation",
+      "deactivate": "Deactivation",
+      "command": "Command",
+      "markdown": "Markdown processing",
+      "theme": "Theme",
+      "sidePanel": "Side panel",
+      "editorExtension": "Editor extension"
+    },
+    "sidePanel": {
+      "title": "Side panel",
+      "toggle": "Toggle Side Panel",
+      "tabs": "Side panel views",
+      "empty": "No views to show",
+      "emptyHint": "Views appear here when you install a plugin that adds one to the side panel",
+      "renderError": "An error occurred while showing this view: {{message}}",
+      "resize": "Resize side panel"
+    },
+    "settingsForm": {
+      "title": "{{name}} settings",
+      "empty": "This plugin has no settings",
+      "invalidString": "Enter text",
+      "invalidNumber": "Enter a number",
+      "invalidBoolean": "Choose on or off",
+      "invalidSelect": "Choose one of the options",
+      "saveFailed": "Could not save the setting: {{message}}"
+    },
+    "notesDelete": {
+      "title": "Note deletion by a plugin",
+      "message": "The plugin \"{{plugin}}\" wants to delete the note \"{{note}}\".\nThe note and its linked images will be permanently deleted. This cannot be undone.",
+      "confirm": "Delete"
+    },
+    "errors": {
+      "repoSpecEmpty": "Enter a repository",
+      "repoSpecFormat": "Use the format owner/repo or https://github.com/owner/repo",
+      "repoNotFound": "Repository not found",
+      "noRelease": "The repository has no release",
+      "noPackage": "The latest release does not include a package for this plugin",
+      "rateLimited": "GitHub API rate limit reached. Try again later",
+      "rateLimitedUntil": "GitHub API rate limit reached. Try again after {{resetAt}}",
+      "network": "Network request failed: {{message}}",
+      "tooLarge": "The plugin package exceeds the size limit",
+      "invalidZip": "Cannot extract the plugin package: {{message}}",
+      "manifestMissing": "The plugin package does not contain package.json",
+      "manifestInvalid": "package.json has errors ({{count}})",
+      "alreadyInstalled": "This plugin is already installed",
+      "alreadyInstalledWithId": "Plugin {{id}} is already installed",
+      "idMismatch": "Plugin ID mismatch (registry: {{expected}}, package: {{actual}})",
+      "incompatible": "This plugin is not compatible with the current Notyra (supported: {{range}}, current: {{current}})",
+      "notInstalled": "This plugin is not installed",
+      "developerModeDisabled": "Developer mode is off. Turn on developer mode and try again",
+      "io": "File read or write failed: {{message}}",
+      "permissionDenied": "Permission {{permission}} has not been granted",
+      "schemeNotAllowed": "Scheme {{scheme}} is not allowed",
+      "blocked": "Blocked a request to {{host}}:{{port}}",
+      "blockReason": {
+        "notDeclared": "The destination is not among the approved destinations",
+        "redirectNotDeclared": "The redirect target is not among the approved destinations",
+        "resolvedToPrivate": "A host approved as an external destination resolved to a private address",
+        "resolvedToNonPrivate": "localhost resolved to an address outside the private ranges"
+      },
+      "outOfScope": "The path is outside the registered root folders: {{path}}",
+      "notFound": "The note does not exist: {{path}}",
+      "nameConflict": "A note with the same name already exists: {{path}}",
+      "deleteRejected": "The user declined to delete the note",
+      "tooManyRedirects": "Too many redirects",
+      "responseTooLarge": "The response exceeds the size limit",
+      "timeout": "The operation did not finish in time",
+      "corruptState": "Plugins were not loaded because the plugin state file is corrupted. The corrupted file was moved aside: {{message}}",
+      "invalidArgument": "Invalid argument: {{message}}",
+      "pluginNotActive": "This operation is unavailable because the plugin is not running",
+      "themeInvalid": "Invalid theme definition: {{message}}",
+      "themeIdDuplicate": "Theme ID {{id}} is already in use",
+      "registryInvalid": "The plugin list has an invalid format",
+      "unknown": "An unexpected error occurred: {{message}}"
+    },
+    "manifestErrors": {
+      "structural": {
+        "invalidJson": "package.json cannot be parsed as JSON",
+        "missingNotyra": "The notyra field is missing",
+        "missingField": "{{field}}: required field is missing",
+        "typeMismatch": "{{field}}: wrong type (value: {{value}})"
+      },
+      "value": {
+        "unknownType": "{{field}}: unknown plugin type (value: {{value}})",
+        "unknownPermission": "{{field}}: unknown permission (value: {{value}})",
+        "networkWithoutDestinations": "{{field}}: the network permission requires at least one destination",
+        "invalidRange": "{{field}}: cannot parse the compatible version range (value: {{value}})",
+        "invalidId": "{{field}}: invalid plugin ID (value: {{value}})",
+        "invalidVersion": "{{field}}: version is not valid semver (value: {{value}})",
+        "invalidDestination": "{{field}}: invalid destination format (value: {{value}})",
+        "forbiddenForTheme": "{{field}}: not allowed for theme plugins",
+        "invalidSetting": "{{field}}: invalid setting declaration (value: {{value}})",
+        "duplicatePermission": "{{field}}: duplicate permission (value: {{value}})",
+        "invalidPath": "{{field}}: invalid file path (value: {{value}})"
+      }
+    }
   }
 }

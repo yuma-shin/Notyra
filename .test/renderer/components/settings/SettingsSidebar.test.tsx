@@ -11,6 +11,7 @@ vi.mock('react-i18next', () => ({
         'settings.appearance': 'Appearance',
         'settings.font': 'Font',
         'settings.language': 'Language',
+        'settings.plugins': 'Plugins',
       }
       return translations[key] ?? key
     },
@@ -22,13 +23,38 @@ describe('SettingsSidebar', () => {
     cleanup()
   })
 
-  it('renders all three section navigation items', () => {
+  it('renders all section navigation items', () => {
     const onSectionChange = vi.fn()
     render(<SettingsSidebar activeSection="appearance" onSectionChange={onSectionChange} />)
 
     expect(screen.getByText('Appearance')).toBeInTheDocument()
     expect(screen.getByText('Font')).toBeInTheDocument()
     expect(screen.getByText('Language')).toBeInTheDocument()
+    expect(screen.getByText('Plugins')).toBeInTheDocument()
+  })
+
+  // Req 1.1: 「プラグイン」は末尾（「言語」の下）にアイコン付きで表示される
+  it('renders the plugins item last, below language, with an icon', () => {
+    const onSectionChange = vi.fn()
+    render(<SettingsSidebar activeSection="appearance" onSectionChange={onSectionChange} />)
+
+    const buttons = screen.getAllByRole('button')
+    expect(buttons.map(b => b.textContent)).toEqual([
+      'Appearance',
+      'Font',
+      'Language',
+      'Plugins',
+    ])
+    expect(buttons[3].querySelector('svg')).not.toBeNull()
+  })
+
+  it('calls onSectionChange with plugins when the plugins item is clicked', () => {
+    const onSectionChange = vi.fn()
+    render(<SettingsSidebar activeSection="appearance" onSectionChange={onSectionChange} />)
+
+    fireEvent.click(screen.getByText('Plugins'))
+
+    expect(onSectionChange).toHaveBeenCalledWith('plugins' satisfies SettingsSection)
   })
 
   it('highlights the active section with aria-current', () => {

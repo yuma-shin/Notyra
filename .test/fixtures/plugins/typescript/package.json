@@ -1,0 +1,12 @@
+{
+  "name": "fixture-typescript",
+  "version": "1.0.0",
+  "type": "module",
+  "notyra": {
+    "displayName": "TypeScript fixture",
+    "type": "feature",
+    "notyraVersion": "*",
+    "main": "dist/index.js",
+    "permissions": []
+  }
+}

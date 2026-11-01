@@ -7,6 +7,7 @@ import {
   LuX,
   LuPanelLeft,
   LuList,
+  LuPanelRight,
   LuSettings,
 } from 'react-icons/lu'
 import { ICON_SIZE } from '@/renderer/lib/iconConstants'
@@ -26,6 +27,9 @@ interface CustomTitleBarProps {
   showNoteList?: boolean
   onToggleSidebar?: () => void
   onToggleNoteList?: () => void
+  /** Side_Panel の開閉状態。トグルはメインウィンドウでのみ渡す（Requirement 13.3、13.4） */
+  showSidePanel?: boolean
+  onToggleSidePanel?: () => void
   canGoBack?: boolean
   canGoForward?: boolean
   onGoBack?: () => void
@@ -38,6 +42,8 @@ export function CustomTitleBar({
   showNoteList,
   onToggleSidebar,
   onToggleNoteList,
+  showSidePanel,
+  onToggleSidePanel,
   canGoBack,
   canGoForward,
   onGoBack,
@@ -151,6 +157,25 @@ export function CustomTitleBar({
             >
               <LuList
                 className={showNoteList ? '' : 'text-muted-foreground'}
+                size={ICON_SIZE.TITLEBAR}
+              />
+            </Button>
+          </SimpleTooltip>
+        )}
+        {onToggleSidePanel && (
+          <SimpleTooltip content={t('plugins.sidePanel.toggle')}>
+            <Button
+              aria-label={t('plugins.sidePanel.toggle')}
+              aria-pressed={showSidePanel ?? false}
+              onClick={onToggleSidePanel}
+              size="icon"
+              style={{
+                color: showSidePanel ? 'var(--theme-accent)' : undefined,
+              }}
+              variant="ghost"
+            >
+              <LuPanelRight
+                className={showSidePanel ? '' : 'text-muted-foreground'}
                 size={ICON_SIZE.TITLEBAR}
               />
             </Button>

@@ -5,6 +5,7 @@ import {
   mapScrollPosition,
   measurePreviewScrollAnchors,
   measureScrollAnchors,
+  scrollHiddenEditorIntoView,
   type PreviewScrollAnchor,
   type ScrollAnchor,
   type ScrollPane,
@@ -107,6 +108,17 @@ export function useEditorScrollSync(
 
   const scrollSyncExtension = useMemo(
     () => [
+      EditorView.scrollHandler.of((view, range, options) => {
+        if (layoutMode !== 'split') return false
+        // Plugin navigation does not focus the editor or move its selection.
+        // Treat the explicit scroll request as the driver before CodeMirror
+        // measures and scrolls, so the preview cannot restore the old position.
+        lastSource.current = 'editor'
+        return scrollHiddenEditorIntoView(view, range.head, options, () => {
+          lastSource.current = 'editor'
+          invalidateEditor()
+        })
+      }),
       EditorView.domEventHandlers({ scroll: handleEditorScroll }),
       EditorView.updateListener.of(update => {
         // CodeMirror refines off-screen line heights as they enter the viewport.
@@ -119,7 +131,7 @@ export function useEditorScrollSync(
         if (update.geometryChanged || update.docChanged) invalidateEditor()
       }),
     ],
-    [handleEditorScroll, invalidateEditor]
+    [handleEditorScroll, invalidateEditor, layoutMode]
   )
 
   useEffect(() => {

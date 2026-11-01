@@ -3,11 +3,14 @@ import { useState, useRef } from 'react'
 import { LuCheck, LuUpload, LuTrash2 } from 'react-icons/lu'
 import { useTranslation } from 'react-i18next'
 import { useApp } from '../contexts/AppContext'
+import { usePluginColorThemes } from '../hooks/usePluginColorThemes'
+import { formatPluginThemeError } from '../lib/plugins/pluginThemeErrorMessage'
 import {
   builtinThemes,
   getThemeName,
   loadCustomThemes,
   addCustomTheme,
+  mergeThemes,
   removeCustomTheme,
   validateTheme,
   type ColorTheme,
@@ -25,9 +28,13 @@ export function ColorThemeSelector() {
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Plugin_Host_Window では PluginThemeRegistry、設定ウィンドウではテーマ JSON を読み込んだ一覧
+  const { themes: pluginThemes, errors: pluginThemeErrors } =
+    usePluginColorThemes()
+
   const isDark = document.documentElement.classList.contains('dark')
 
-  const allThemes = [...builtinThemes, ...customThemes]
+  const allThemes = mergeThemes(builtinThemes, customThemes, pluginThemes)
   const currentTheme = allThemes.find(
     th => th.id === (settings.colorTheme ?? 'gray')
   )
@@ -138,7 +145,10 @@ export function ColorThemeSelector() {
           <div className="p-1.5 flex flex-col gap-0.5 max-h-64 overflow-y-auto">
             {allThemes.map(theme => {
               const isSelected = (settings.colorTheme ?? 'gray') === theme.id
-              const isBuiltin = builtinThemes.some(b => b.id === theme.id)
+              // 削除できるのはカスタムテーマだけ（Plugin のテーマは Plugins_Tab で管理する）
+              const isCustom =
+                !builtinThemes.some(b => b.id === theme.id) &&
+                customThemes.some(c => c.id === theme.id)
               const swatches = isDark ? theme.swatchesDark : theme.swatches
               return (
                 <div
@@ -183,7 +193,7 @@ export function ColorThemeSelector() {
                     />
                   )}
                   {/* Delete button for custom themes */}
-                  {!isBuiltin && (
+                  {isCustom && (
                     <button
                       className="opacity-0 group-hover/row:opacity-100 p-0.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-muted-foreground shrink-0 transition-all"
                       onClick={e => handleDelete(theme.id, e)}
@@ -198,6 +208,18 @@ export function ColorThemeSelector() {
             })}
           </div>
           <div className="px-3 py-1.5 border-t border-border">
+            {pluginThemeErrors.length > 0 && (
+              <ul className="mb-1.5" role="alert">
+                {pluginThemeErrors.map(error => (
+                  <li
+                    className="text-[10px] text-destructive"
+                    key={error.pluginId}
+                  >
+                    {formatPluginThemeError(t, error)}
+                  </li>
+                ))}
+              </ul>
+            )}
             {importError && (
               <p className="text-[10px] text-destructive mb-1.5">
                 {importError}

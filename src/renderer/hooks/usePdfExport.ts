@@ -1,35 +1,44 @@
-import { useCallback, useState } from 'react'
-import { remark } from 'remark'
-import remarkGfm from 'remark-gfm'
-import remarkGithubAlerts from 'remark-github-alerts'
-import remarkRehype from 'remark-rehype'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeStringify from 'rehype-stringify'
-import { rehypeLocalImages } from '@/renderer/plugins/rehypeLocalImages'
-import { rehypeMermaid } from '@/renderer/plugins/rehypeMermaid'
+import { useCallback, useRef, useState } from 'react'
+import {
+  type PluginHostContextValue,
+  usePluginHost,
+} from '@/renderer/contexts/PluginHostContext'
+import { buildMarkdownProcessor } from '@/renderer/lib/markdownPipeline'
 import githubMarkdownLightCss from 'github-markdown-css/github-markdown-light.css?inline'
 import githubMarkdownDarkCss from 'github-markdown-css/github-markdown-dark.css?inline'
 import hljsLightCss from 'highlight.js/styles/github.min.css?inline'
 import hljsDarkCss from 'highlight.js/styles/github-dark.min.css?inline'
 
+/**
+ * エクスポート用の Markdown 処理。エクスポートを実行するウィンドウの
+ * MarkdownExtensionRegistry の拡張を適用する（Requirement 14.5）。
+ * Plugin 起因の例外は、該当 Plugin をセッション中除外してエラー報告し、
+ * エクスポートは失敗として扱う（次回のエクスポートから除外を反映する）。
+ */
 async function processMarkdownForPdf(
   content: string,
-  noteDir?: string
+  noteDir: string | undefined,
+  pluginHost: PluginHostContextValue | null
 ): Promise<string> {
-  let pipeline = remark()
-    .use(remarkGfm)
-    .use(remarkGithubAlerts)
-    .use(remarkRehype, { allowDangerousHtml: true })
-
-  if (noteDir) {
-    pipeline = pipeline.use(rehypeLocalImages, { noteDir })
+  const registry = pluginHost?.registries.markdown ?? null
+  const pluginErrors = new Map<string, unknown>()
+  let result: { toString(): string }
+  try {
+    result = await buildMarkdownProcessor({
+      noteDir,
+      target: 'export',
+      pluginRemark: registry?.getActivePlugins('remark') ?? [],
+      pluginRehype: registry?.getActivePlugins('rehype') ?? [],
+      onPluginError: (pluginId, error) => {
+        if (!pluginErrors.has(pluginId)) pluginErrors.set(pluginId, error)
+      },
+    }).process(content)
+  } finally {
+    for (const [pluginId, pluginError] of pluginErrors) {
+      registry?.exclude(pluginId)
+      pluginHost?.reportError(pluginId, 'markdown', pluginError)
+    }
   }
-
-  const result = await pipeline
-    .use(rehypeMermaid)
-    .use(rehypeHighlight)
-    .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(content)
 
   let html = String(result)
 
@@ -215,10 +224,15 @@ export type PdfExportResult = ExportResult
 async function buildExportHtml(
   markdownContent: string,
   noteDir: string | undefined,
-  title: string
+  title: string,
+  pluginHost: PluginHostContextValue | null
 ): Promise<string> {
   const isDark = document.documentElement.classList.contains('dark')
-  const processedHtml = await processMarkdownForPdf(markdownContent, noteDir)
+  const processedHtml = await processMarkdownForPdf(
+    markdownContent,
+    noteDir,
+    pluginHost
+  )
   const htmlWithMermaid = await renderMermaidInHtml(processedHtml, isDark)
   const htmlWithImages = await inlineLocalImages(htmlWithMermaid)
   return buildHtmlDocument(htmlWithImages, isDark, title)
@@ -228,6 +242,11 @@ export function usePdfExport() {
   const [isExporting, setIsExporting] = useState(false)
   const [isHtmlExporting, setIsHtmlExporting] = useState(false)
 
+  // エクスポートを実行するウィンドウの PluginHost（Provider の外では null = 拡張なし）
+  const pluginHost = usePluginHost()
+  const pluginHostRef = useRef(pluginHost)
+  pluginHostRef.current = pluginHost
+
   const exportPdf = useCallback(
     async (
       markdownContent: string,
@@ -236,7 +255,12 @@ export function usePdfExport() {
     ): Promise<ExportResult | undefined> => {
       setIsExporting(true)
       try {
-        const fullHtml = await buildExportHtml(markdownContent, noteDir, title)
+        const fullHtml = await buildExportHtml(
+          markdownContent,
+          noteDir,
+          title,
+          pluginHostRef.current
+        )
 
         // html2pdf.js + html2canvas は Tauri WebView2 でフリーズするため使用しない。
         // ヘッドレス Edge (msedge.exe --headless=new --print-to-pdf) でダイアログなしに PDF を生成する。
@@ -263,7 +287,12 @@ export function usePdfExport() {
     ): Promise<ExportResult | undefined> => {
       setIsHtmlExporting(true)
       try {
-        const fullHtml = await buildExportHtml(markdownContent, noteDir, title)
+        const fullHtml = await buildExportHtml(
+          markdownContent,
+          noteDir,
+          title,
+          pluginHostRef.current
+        )
         const { tauriApi } = await import('@/renderer/lib/tauriApi')
         return await tauriApi.export.html(fullHtml, title)
       } finally {

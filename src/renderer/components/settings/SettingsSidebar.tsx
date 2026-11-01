@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
-import { LuPalette, LuType, LuGlobe } from 'react-icons/lu'
+import { LuPalette, LuType, LuGlobe, LuPuzzle } from 'react-icons/lu'
 import { cn } from '../../lib/utils'
 
-export type SettingsSection = 'appearance' | 'font' | 'language'
+export type SettingsSection = 'appearance' | 'font' | 'language' | 'plugins'
 
 interface SettingsSidebarProps {
   activeSection: SettingsSection
@@ -17,6 +17,7 @@ const SECTIONS: Array<{
   { id: 'appearance', icon: LuPalette, labelKey: 'settings.appearance' },
   { id: 'font', icon: LuType, labelKey: 'settings.font' },
   { id: 'language', icon: LuGlobe, labelKey: 'settings.language' },
+  { id: 'plugins', icon: LuPuzzle, labelKey: 'settings.plugins' },
 ]
 
 export function SettingsSidebar({

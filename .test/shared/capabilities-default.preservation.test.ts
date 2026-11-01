@@ -164,6 +164,9 @@ describe('Preservation: Existing Window Labels and Permissions Retained', () => 
         'store:allow-set',
         'store:allow-get',
         'opener:default',
+        // plugin-system (Requirement 6.10): クリップボードのテキスト読み書きのみ許可
+        'clipboard-manager:allow-read-text',
+        'clipboard-manager:allow-write-text',
       ]
 
       for (const permission of expectedPermissions) {

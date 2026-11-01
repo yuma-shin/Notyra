@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EditorView } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
+import { EditorSelection, EditorState } from '@codemirror/state'
 import { useEditorScrollSync } from '@/renderer/hooks/useEditorScrollSync'
 import {
   measurePreviewScrollAnchors,
@@ -137,6 +137,39 @@ describe('split-view bidirectional scrolling', () => {
     flushFrame()
     expect(editor.scrollTop).toBe(500)
     expect(preview.scrollTop).toBe(1400)
+  })
+
+  it('lets plugin navigation drive the preview without editor focus or selection changes', () => {
+    const { editor, preview, result } = setup()
+    preview.scrollTop = 1400
+    fireEvent.wheel(preview)
+    act(() => result.current.handlePreviewScroll())
+    flushFrame()
+    expect(editor.scrollTop).toBe(750)
+    const state = EditorState.create({ extensions: result.current.scrollSyncExtension })
+    for (const handler of state.facet(EditorView.scrollHandler)) {
+      expect(handler({
+        scrollDOM: editor,
+        state: EditorState.create(),
+        get documentTop() { return -editor.scrollTop },
+        lineBlockAt: () => ({ top: 500, height: 20 }),
+        requestMeasure(request: { read(view: EditorView): unknown; write(target: unknown, view: EditorView): void }) {
+          const current = this as unknown as EditorView
+          request.write(request.read(current), current)
+        },
+        coordsAtPos: () => ({ top: 500 - editor.scrollTop, bottom: 520 - editor.scrollTop, left: 0, right: 1 }),
+      } as EditorView, EditorSelection.cursor(0), {
+        x: 'nearest', y: 'start', xMargin: 5, yMargin: 5,
+      })).toBe(true)
+    }
+    editor.scrollTop = 500
+    act(() => result.current.handleEditorScroll())
+    flushFrame()
+    expect(preview.scrollTop).toBe(1200)
+    act(() => resizeCallback())
+    flushFrame()
+    expect(preview.scrollTop).toBe(1200)
+    expect(editor.scrollTop).toBe(500)
   })
 
   it('aligns document endpoints and stops synchronizing outside split mode', () => {
