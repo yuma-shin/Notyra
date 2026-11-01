@@ -388,6 +388,7 @@ export class PluginHost {
   private readonly binding: HostBinding
 
   private readonly loaded = new Map<string, LoadedPlugin>()
+  private readonly stopRequests = new Map<string, string>()
   private latestState: PluginStateView | null = null
   private queue: Promise<void> = Promise.resolve()
   private readonly unsubscribers: Array<() => void> = []
@@ -450,8 +451,18 @@ export class PluginHost {
    * 実行時点で受け取っている最新の状態を使う。
    */
   reconcile(state: PluginStateView): Promise<void> {
-    this.latestState = state
+    this.acceptState(state)
     return this.enqueue(() => this.doReconcile())
+  }
+
+  private acceptState(state: PluginStateView): void {
+    const completed = state.completedStopRequest
+    if (
+      completed &&
+      this.stopRequests.get(completed.id) === completed.requestId
+    )
+      this.stopRequests.delete(completed.id)
+    this.latestState = state
   }
 
   /** 仮想モジュール `@notyra/plugin-api` から呼ばれる */
@@ -575,7 +586,7 @@ export class PluginHost {
     this.unsubscribers.push(
       this.backend.onStateChanged(state => {
         if (this.disposed) return
-        this.latestState = state
+        this.acceptState(state)
         if (this.ready) void this.enqueue(() => this.doReconcile())
       }),
       this.backend.onSettingsChanged(e => this.handleSettingsChanged(e)),
@@ -597,6 +608,9 @@ export class PluginHost {
 
   /** 停止してから（読み込んでいなくても）必ず ack を返す */
   private handleStopRequest(e: StopRequestPayload): void {
+    // Suppress queued reconciles immediately, until this operation publishes
+    // its final state (including rollback to the same generation on failure).
+    this.stopRequests.set(e.id, e.requestId)
     void this.enqueue(async () => {
       try {
         await this.stopPluginSafely(e.id)
@@ -643,7 +657,7 @@ export class PluginHost {
       state,
       this.deps.appVersion,
       this.windowKind
-    )
+    ).filter(plugin => !this.stopRequests.has(plugin.id))
     const { toStop, toLoad } = diffLoaded(
       desired,
       [...this.loaded.values()].map(e => ({ id: e.id, loadKey: e.loadKey }))
@@ -654,6 +668,7 @@ export class PluginHost {
     }
     for (const plugin of toLoad) {
       if (this.disposed) break
+      if (this.stopRequests.has(plugin.id)) continue
       try {
         await this.loadPlugin(plugin)
       } catch (error) {

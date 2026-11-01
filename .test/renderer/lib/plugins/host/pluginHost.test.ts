@@ -773,6 +773,95 @@ describe('PluginHost: stop', () => {
     expect(s.host.getLoadedPlugins()).toEqual([])
   })
 
+  it.each(['update', 'uninstall', 'rollback'] as const)('keeps an acknowledged plugin stopped until %s finishes in every window', async operation => {
+    const initial = state([plugin('a', featureJson('a')), plugin('b', featureJson('b'))])
+    const activate = vi.fn()
+    const fast = setup(initial, {
+      modules: { a: { activate }, b: { activate: () => {} } },
+    })
+    let finish!: () => void
+    const slow = setup(initial, {
+      modules: {
+        a: { activate: () => {}, deactivate: vi.fn().mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve })) },
+        b: { activate: () => {} },
+      },
+    })
+    await fast.host.start()
+    await slow.host.start()
+    const request = { id: 'a', requestId: 'operation-a' }
+    fast.emitStop(request)
+    slow.emitStop(request)
+    await fast.host.whenIdle()
+    expect(fast.backend.ackStop).toHaveBeenCalledWith(request.requestId)
+    expect(slow.backend.ackStop).not.toHaveBeenCalled()
+
+    // Another plugin publishes the old enabled generation while a window stops.
+    const intermediate = state([initial.plugins[0], { ...initial.plugins[1], enabled: false }])
+    fast.emitState(intermediate)
+    slow.emitState(intermediate)
+    await fast.host.whenIdle()
+    expect(fast.host.getLoadedPlugins()).toEqual([])
+    expect(activate).toHaveBeenCalledTimes(1)
+    finish()
+    await slow.host.whenIdle()
+
+    const completed: PluginStateView = {
+      ...state(operation === 'uninstall' ? [] : [
+        { ...initial.plugins[0], generation: operation === 'update' ? 1 : 0 },
+      ]),
+      completedStopRequest: request,
+    }
+    fast.emitState(completed)
+    slow.emitState(completed)
+    await fast.host.whenIdle()
+    await slow.host.whenIdle()
+    expect(activate).toHaveBeenCalledTimes(operation === 'uninstall' ? 1 : 2)
+    expect(fast.host.getLoadedPlugins().map(p => p.loadKey)).toEqual(
+      operation === 'uninstall' ? [] : [`a@1.0.0#${operation === 'update' ? 1 : 0}`]
+    )
+    await fast.host.dispose()
+    await slow.host.dispose()
+  })
+
+  it('does not load a stop target from a reconcile already awaiting another plugin', async () => {
+    let finish!: () => void
+    const activate = vi.fn()
+    const a = plugin('a', featureJson('a'))
+    const b = plugin('b', featureJson('b'))
+    const s = setup(state([{ ...a, enabled: false }, b]), {
+      modules: {
+        a: { activate },
+        b: { activate: () => {}, deactivate: () => new Promise<void>(resolve => { finish = resolve }) },
+      },
+    })
+    await s.host.start()
+    s.emitState(state([a, { ...b, enabled: false }]))
+    await Promise.resolve()
+    s.emitStop({ id: 'a', requestId: 'r1' })
+    finish()
+    await s.host.whenIdle()
+    expect(activate).not.toHaveBeenCalled()
+    expect(s.backend.ackStop).toHaveBeenCalledWith('r1')
+    await s.host.dispose()
+  })
+
+  it('ignores completion notifications for an earlier stop request', async () => {
+    const initial = state([plugin('a', featureJson('a'))])
+    const activate = vi.fn()
+    const s = setup(initial, { modules: { a: { activate } } })
+    await s.host.start()
+    s.emitStop({ id: 'a', requestId: 'r1' })
+    await s.host.whenIdle()
+    s.emitStop({ id: 'a', requestId: 'r2' })
+    await s.host.whenIdle()
+    s.emitState({ ...initial, completedStopRequest: { id: 'a', requestId: 'r1' } })
+    await s.host.whenIdle()
+    expect(activate).toHaveBeenCalledTimes(1)
+    await s.host.reconcile({ ...initial, completedStopRequest: { id: 'a', requestId: 'r2' } })
+    expect(activate).toHaveBeenCalledTimes(2)
+    await s.host.dispose()
+  })
+
   it('reloads the plugin when the generation changes', async () => {
     const activate = vi.fn()
     const deactivate = vi.fn()

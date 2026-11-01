@@ -150,6 +150,49 @@ it('does not acknowledge a failed flush, and abort releases the editor without l
   expect(save).toHaveBeenLastCalledWith('/notes/a.md', 'keep this')
 })
 
+it.each([false, true])('never retries an older failed save after a newer save was queued (newer fails: %s)', async newerFails => {
+  const { session, save } = setup()
+  let fail!: (error: Error) => void
+  save.mockImplementationOnce(() => new Promise((_resolve, reject) => { fail = reject }))
+  if (newerFails) save.mockRejectedValueOnce(new Error('second save failed'))
+  session.schedule('A')
+  const first = expect(session.flush()).rejects.toThrow('first save failed')
+  await vi.advanceTimersByTimeAsync(0)
+  session.schedule('B')
+  const second = session.flush()
+  const checkedSecond = newerFails
+    ? expect(second).rejects.toThrow('second save failed')
+    : second
+  fail(new Error('first save failed'))
+  await first
+  await checkedSecond
+  await session.flush()
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(save.mock.calls).toEqual([
+    ['/notes/a.md', 'A'], ['/notes/a.md', 'B'],
+    ...(newerFails ? [['/notes/a.md', 'B']] : []),
+  ])
+})
+
+it('retains a failed snapshot when the newer queued save belongs to a different note', async () => {
+  const { session, save } = setup()
+  let fail!: (error: Error) => void
+  save.mockImplementationOnce(() => new Promise((_resolve, reject) => { fail = reject }))
+  session.schedule('A')
+  const first = expect(session.flush()).rejects.toThrow('save failed')
+  await vi.advanceTimersByTimeAsync(0)
+  session.bind('/notes/b.md')
+  session.schedule('B')
+  const second = session.flush()
+  fail(new Error('save failed'))
+  await first
+  await second
+  await session.flush()
+  expect(save.mock.calls).toEqual([
+    ['/notes/a.md', 'A'], ['/notes/b.md', 'B'], ['/notes/a.md', 'A'],
+  ])
+})
+
 it('keeps stale content locked if commit reload fails, and allows retry at the new path', async () => {
   const { session, load, reload, write } = setup()
   await session.mutation(event('prepare', 'rename'))

@@ -187,6 +187,8 @@ export interface PluginStateView extends Omit<PluginStateFile, 'plugins'> {
   plugins: InstalledPluginView[]
   /** 起動時に検出した問題（state.json の破損など）。なければ省略 */
   startupError?: PluginErrorPayload
+  /** 停止を伴う管理操作が完了した通知。通常の状態取得・通知では省略 */
+  completedStopRequest?: StopRequestPayload
 }
 
 // ---------------------------------------------------------------------------

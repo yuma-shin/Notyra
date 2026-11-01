@@ -27,7 +27,7 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
 use crate::commands::plugin_notes::require_permission;
-use crate::plugins::barrier::{StopOutcome, DEFAULT_STOP_TIMEOUT};
+use crate::plugins::barrier::{StopOutcome, StopRequestPayload, DEFAULT_STOP_TIMEOUT};
 use crate::plugins::destination::{classify, parse_destination, DestClass};
 use crate::plugins::diagnostics::{KeybindingConflict, PluginErrorEntry, PluginErrorSource};
 use crate::plugins::package::{self, is_valid_staging_id, validate_repo_spec, FetchedPackage};
@@ -84,6 +84,9 @@ pub struct PluginStateView {
     /// 起動時に検出した問題（state.json の破損など）。なければ出力しない
     #[serde(skip_serializing_if = "Option::is_none")]
     pub startup_error: Option<PluginError>,
+    /// 停止を伴う管理操作の最終状態にだけ付ける。失敗時も再読み込みを許可する。
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub completed_stop_request: Option<StopRequestPayload>,
 }
 
 /// インストール・更新・開発フォルダ登録・再同意で記録する内容。
@@ -251,16 +254,18 @@ pub async fn plugin_apply_update(
         }
     };
 
-    if enabled {
-        stop_everywhere(&app, &state, &id).await;
-    }
+    let stop_request = if enabled {
+        Some(stop_everywhere(&app, &state, &id).await)
+    } else {
+        None
+    };
 
     let result = apply_update_files(store, &id, &staging, &record, now_millis());
     if result.is_err() {
         discard_staging_dir(&staging);
     }
     // 失敗時も旧バージョンを読み込み直させるため、現在の状態を必ず通知する
-    let view = publish_state(&app, store, store.snapshot());
+    let view = publish_state_after_stop(&app, store, store.snapshot(), stop_request);
     result.map(|_| view)
 }
 
@@ -293,10 +298,16 @@ pub async fn plugin_uninstall(
     let _ops = state.plugin_ops.lock().await;
     let plugin = store.snapshot().find(&id).cloned().ok_or(PluginError::NotInstalled)?;
 
-    let (next, cleanup) = uninstall_after_stop(store, &plugin, stop_everywhere(&app, &state, &id)).await;
-    let next = next?;
-    state.plugin_diagnostics.clear_errors_for(&id);
-    let view = publish_state(&app, store, next);
+    let mut stop_request = None;
+    let (next, cleanup) = uninstall_after_stop(store, &plugin, async {
+        stop_request = Some(stop_everywhere(&app, &state, &id).await);
+    }).await;
+    if next.is_ok() {
+        state.plugin_diagnostics.clear_errors_for(&id);
+    }
+    // A failed state write must also release the stopped hosts for retry.
+    let view = publish_state_after_stop(&app, store, store.snapshot(), stop_request);
+    next?;
     cleanup.map(|_| view)
 }
 
@@ -384,18 +395,18 @@ pub async fn plugin_reload_dev(
         return Err(developer_mode_disabled());
     }
 
-    stop_everywhere(&app, &state, &id).await;
+    let stop_request = Some(stop_everywhere(&app, &state, &id).await);
 
     let package_json = match read_manifest(Path::new(&path)) {
         Ok(text) => text,
         Err(e) => {
             // 停止したウィンドウに現在の状態で読み込み直させる
-            publish_state(&app, store, store.snapshot());
+            publish_state_after_stop(&app, store, store.snapshot(), stop_request);
             return Err(e);
         }
     };
     let result = reload_dev_state(store, &id, &package_json);
-    publish_state(&app, store, store.snapshot());
+    publish_state_after_stop(&app, store, store.snapshot(), stop_request);
     result?;
     Ok(DevReload { package_json })
 }
@@ -608,7 +619,17 @@ pub async fn plugin_open_external(
 
 /// 状態からビューを作り、`plugins:state-changed` を emit して返す
 fn publish_state(app: &AppHandle, store: &PluginStore, snapshot: PluginStateFile) -> PluginStateView {
-    let view = build_view(store, snapshot);
+    publish_state_after_stop(app, store, snapshot, None)
+}
+
+fn publish_state_after_stop(
+    app: &AppHandle,
+    store: &PluginStore,
+    snapshot: PluginStateFile,
+    completed_stop_request: Option<StopRequestPayload>,
+) -> PluginStateView {
+    let mut view = build_view(store, snapshot);
+    view.completed_stop_request = completed_stop_request;
     if let Err(e) = app.emit(STATE_CHANGED_EVENT, &view) {
         eprintln!("[notyra] failed to emit {STATE_CHANGED_EVENT}: {e}");
     }
@@ -617,12 +638,12 @@ fn publish_state(app: &AppHandle, store: &PluginStore, snapshot: PluginStateFile
 
 /// 開いているすべての Plugin_Host_Window で Plugin_Stop を待つ。
 /// タイムアウトしても処理は続行する（設計: 全 ack または15秒経過で完了）。
-async fn stop_everywhere(app: &AppHandle, state: &AppState, id: &str) {
-    if let StopOutcome::TimedOut { pending } =
-        state.stop_barrier.request_stop(app, id, DEFAULT_STOP_TIMEOUT).await
-    {
+async fn stop_everywhere(app: &AppHandle, state: &AppState, id: &str) -> StopRequestPayload {
+    let (request, outcome) = state.stop_barrier.request_stop(app, id, DEFAULT_STOP_TIMEOUT).await;
+    if let StopOutcome::TimedOut { pending } = outcome {
         eprintln!("[notyra] plugin stop for {id} timed out; pending windows: {pending:?}");
     }
+    request
 }
 
 pub(crate) fn build_view(store: &PluginStore, snapshot: PluginStateFile) -> PluginStateView {
@@ -642,6 +663,7 @@ pub(crate) fn build_view(store: &PluginStore, snapshot: PluginStateFile) -> Plug
         developer_mode: snapshot.developer_mode,
         plugins,
         startup_error: store.startup_error().cloned(),
+        completed_stop_request: None,
     }
 }
 

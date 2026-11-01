@@ -34,6 +34,10 @@ interface PendingReconcile {
 export class NoteSaveSession {
   private path: string | null = null
   private pending: { path: string; body: string } | null = null
+  private readonly latestSnapshots = new Map<
+    string,
+    { path: string; body: string }
+  >()
   private timer: ReturnType<typeof setTimeout> | undefined
   private writes: Promise<void> = Promise.resolve()
   private activeWrites = 0
@@ -75,6 +79,7 @@ export class NoteSaveSession {
       void this.flush().catch(() => {})
     }
     this.pending = { path: this.path, body }
+    this.latestSnapshots.set(this.path, this.pending)
     this.generation++
     clearTimeout(this.timer)
     this.timer = setTimeout(() => {
@@ -97,6 +102,8 @@ export class NoteSaveSession {
         .then(async () => {
           const raw = await this.options.save(pending.path, pending.body)
           if (raw !== undefined) this.knownContents.set(pending.path, raw)
+          if (this.latestSnapshots.get(pending.path) === pending)
+            this.latestSnapshots.delete(pending.path)
         })
       this.writes = write
       try {
@@ -104,7 +111,9 @@ export class NoteSaveSession {
       } catch (error) {
         // Keep the failed snapshot available for retry/prepare, rather than
         // acknowledging a plugin mutation after an unsuccessful local save.
-        this.pending ??= pending
+        // A newer snapshot may already have been dequeued by another flush.
+        if (this.latestSnapshots.get(pending.path) === pending)
+          this.pending ??= pending
         this.options.error(error)
         throw error
       } finally {

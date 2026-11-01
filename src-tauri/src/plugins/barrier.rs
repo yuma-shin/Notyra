@@ -76,11 +76,8 @@ impl StopBarrier {
         app: &AppHandle<R>,
         plugin_id: &str,
         timeout: Duration,
-    ) -> StopOutcome {
+    ) -> (StopRequestPayload, StopOutcome) {
         let targets = open_host_labels(app);
-        if targets.is_empty() {
-            return StopOutcome::Completed;
-        }
 
         // ack の取りこぼしを防ぐため、emit より前に待機対象を登録する
         let request_id = self.begin(targets);
@@ -88,11 +85,12 @@ impl StopBarrier {
             id: plugin_id.to_string(),
             request_id: request_id.clone(),
         };
-        if let Err(e) = app.emit(STOP_REQUEST_EVENT, payload) {
+        if let Err(e) = app.emit(STOP_REQUEST_EVENT, &payload) {
             eprintln!("[notyra] failed to emit {STOP_REQUEST_EVENT}: {e}");
         }
 
-        self.wait(&request_id, timeout, || open_host_labels(app)).await
+        let outcome = self.wait(&request_id, timeout, || open_host_labels(app)).await;
+        (payload, outcome)
     }
 
     /// 待機対象のウィンドウからの応答を記録する。未知の requestId やラベルは無視する。
