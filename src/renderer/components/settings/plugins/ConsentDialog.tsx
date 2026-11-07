@@ -252,6 +252,7 @@ export function useConsentDialog(): {
 } {
   const [request, setRequest] = useState<ConsentRequest | null>(null)
   const resolverRef = useRef<((accepted: boolean) => void) | null>(null)
+  const mountedRef = useRef(true)
 
   const settle = useCallback((accepted: boolean) => {
     const resolve = resolverRef.current
@@ -261,6 +262,8 @@ export function useConsentDialog(): {
   }, [])
 
   const requestConsent = useCallback((next: ConsentRequest) => {
+    // A download may finish after the user has left this settings section.
+    if (!mountedRef.current) return Promise.resolve(false)
     const previous = resolverRef.current
     resolverRef.current = null
     previous?.(false)
@@ -270,14 +273,15 @@ export function useConsentDialog(): {
     })
   }, [])
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
       const resolve = resolverRef.current
       resolverRef.current = null
       resolve?.(false)
-    },
-    []
-  )
+    }
+  }, [])
 
   const dialog = (
     <ConsentDialog

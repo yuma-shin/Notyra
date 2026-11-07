@@ -36,6 +36,8 @@ import {
 import { RegistryList } from './plugins/RegistryList'
 import { RepoInstallForm } from './plugins/RepoInstallForm'
 import { ThirdPartyWarningBanner } from './plugins/ThirdPartyWarningBanner'
+import { WebsiteInstallCard } from './plugins/WebsiteInstallCard'
+import type { PluginInstallRequest } from '@/shared/plugin/installLink'
 
 type PluginsBackend = typeof tauriApi.plugins
 
@@ -111,7 +113,13 @@ type Notice =
  * 各操作は PluginManager に委譲し、Consent_Dialog は `useConsentDialog` で表示する。
  * Third_Party_Warning が未確認の間は、インストール系の操作を無効化する（Requirement 1.5）。
  */
-export function PluginsSection() {
+export function PluginsSection({
+  installRequest,
+  onDismissInstallRequest,
+}: {
+  installRequest?: PluginInstallRequest | null
+  onDismissInstallRequest?: (requestId: number) => Promise<void>
+} = {}) {
   const { t } = useTranslation()
   const { settings, updateSettings } = useApp()
   const { requestConsent, dialog } = useConsentDialog()
@@ -130,6 +138,7 @@ export function PluginsSection() {
   const [checking, setChecking] = useState(false)
   const [updateNotice, setUpdateNotice] = useState<string | null>(null)
   const [registryNotice, setRegistryNotice] = useState<Notice | null>(null)
+  const [websiteInstalling, setWebsiteInstalling] = useState(false)
   const [busy, setBusy] = useState<ReadonlyMap<string, PluginBusyAction>>(
     () => new Map()
   )
@@ -473,7 +482,7 @@ export function PluginsSection() {
 
   const ready = load.status === 'ready' && state !== null && appVersion !== null
   const acknowledged = state?.thirdPartyWarningAcknowledged === true
-  const installDisabled = !acknowledged || manager === null
+  const installDisabled = !acknowledged || manager === null || websiteInstalling
 
   return (
     <section
@@ -533,6 +542,40 @@ export function PluginsSection() {
 
             {!acknowledged && (
               <ThirdPartyWarningBanner onAcknowledge={handleAcknowledge} />
+            )}
+
+            {installRequest && onDismissInstallRequest && (
+              <WebsiteInstallCard
+                disabled={installDisabled || busy.size > 0}
+                installed={installedIds.has(installRequest.pluginId)}
+                key={installRequest.requestId}
+                onDismiss={() =>
+                  onDismissInstallRequest(installRequest.requestId)
+                }
+                onInstall={async () => {
+                  if (!manager) return
+                  setWebsiteInstalling(true)
+                  try {
+                    const outcome = await manager.installFromRepo(
+                      installRequest.repo,
+                      installRequest.pluginId
+                    )
+                    if (outcome.status === 'failed') {
+                      // Keep errors beside the request, even with a long installed-plugin list.
+                      throw new Error(
+                        formatPluginManagerError(t, outcome.error)
+                      )
+                    }
+                    if (outcome.status === 'installed') {
+                      applyState(outcome.state)
+                      await onDismissInstallRequest(installRequest.requestId)
+                    }
+                  } finally {
+                    setWebsiteInstalling(false)
+                  }
+                }}
+                request={installRequest}
+              />
             )}
 
             <div className="flex flex-col gap-2">

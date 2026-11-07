@@ -8,6 +8,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import type { PluginInstallRequest } from '@/shared/plugin/installLink'
 import type { NoteMutation } from '@/shared/noteMutation'
 
 import type {
@@ -624,6 +625,14 @@ const platform: string =
 // ---------------------------------------------------------------------------
 
 export const tauriApi = {
+  installLinks: {
+    getPending: (): Promise<PluginInstallRequest | null> =>
+      invoke('get_pending_plugin_install'),
+    dismiss: (requestId: number): Promise<void> =>
+      invoke('dismiss_pending_plugin_install', { requestId }),
+    onChanged: (callback: () => void): (() => void) =>
+      subscribe('plugins:install-link-changed', callback),
+  },
   markdown,
   image,
   export: exportApi,

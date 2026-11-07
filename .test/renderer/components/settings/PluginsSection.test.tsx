@@ -119,6 +119,52 @@ describe('PluginsSection', () => {
   })
 
   // Requirement 1.4, 1.5, 1.6, 1.7
+  it('keeps website requests behind the warning and passes the selected theme ID to the installer', async () => {
+    mocks.state = makeState({ thirdPartyWarningAcknowledged: false, plugins: [] })
+    const dismiss = vi.fn(async () => {})
+    mocks.api.fetchRelease = vi.fn(async () => { throw new Error('offline') })
+    renderWithProviders(<PluginsSection installRequest={{ requestId: 7, repo: 'yuma-shin/notyra-plugins', pluginId: 'notyra-theme-blue' }} onDismissInstallRequest={dismiss} />)
+    const review = await screen.findByRole('button', { name: 'Review installation' })
+    expect(review).toBeDisabled()
+    expect(mocks.api.fetchRelease).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'I understand' }))
+    await vi.waitFor(() => expect(review).toBeEnabled())
+    fireEvent.click(review)
+    await vi.waitFor(() => expect(mocks.api.fetchRelease).toHaveBeenCalledWith('yuma-shin', 'notyra-plugins', 'notyra-theme-blue'))
+    expect(dismiss).not.toHaveBeenCalled()
+    const cancel = within(screen.getByTestId('website-install-card')).getByRole('button', { name: 'Cancel' })
+    await vi.waitFor(() => expect(cancel).toBeEnabled())
+    fireEvent.click(cancel)
+    await vi.waitFor(() => expect(dismiss).toHaveBeenCalledWith(7))
+  })
+
+  it('requires consent for a website request, retains a cancelled request, then acknowledges success', async () => {
+    mocks.state = makeState({ plugins: [] })
+    const plugin = featurePlugin('web-plugin', 'Website Plugin')
+    mocks.api.fetchRelease = vi.fn(async () => ({ stagingId: 'website', packageJson: plugin.packageJson }))
+    mocks.api.discardStaging = vi.fn(async () => {})
+    mocks.api.commitInstall = vi.fn(async () => {
+      mocks.state = makeState({ plugins: [plugin] })
+      return mocks.state
+    })
+    const dismiss = vi.fn(async () => {})
+    renderWithProviders(<PluginsSection installRequest={{ requestId: 8, repo: 'owner/web-plugin', pluginId: 'web-plugin' }} onDismissInstallRequest={dismiss} />)
+    const review = await screen.findByRole('button', { name: 'Review installation' })
+    expect(mocks.api.fetchRelease).not.toHaveBeenCalled()
+    fireEvent.click(review)
+    await screen.findByRole('button', { name: 'Agree and install' })
+    expect(mocks.api.commitInstall).not.toHaveBeenCalled()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
+    await vi.waitFor(() => expect(review).toBeEnabled())
+    expect(mocks.api.discardStaging).toHaveBeenCalledWith('website')
+    expect(dismiss).not.toHaveBeenCalled()
+    fireEvent.click(review)
+    fireEvent.click(await screen.findByRole('button', { name: 'Agree and install' }))
+    await vi.waitFor(() => expect(dismiss).toHaveBeenCalledWith(8))
+    expect(mocks.api.commitInstall).toHaveBeenCalledOnce()
+    expect(mocks.api.commitInstall).toHaveBeenCalledWith('website', expect.objectContaining({ id: 'web-plugin', consentedPermissions: [] }))
+  })
+
   it('警告未確認の間はインストール操作を無効化し、了解後に有効化する', async () => {
     mocks.state = makeState({ thirdPartyWarningAcknowledged: false })
     await renderSection()

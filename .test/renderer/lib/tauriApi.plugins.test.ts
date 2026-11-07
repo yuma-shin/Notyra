@@ -15,6 +15,18 @@ beforeEach(() => {
   mocked.listen.mockReset()
 })
 
+it('reads and dismisses queued website requests without treating a URL as installation consent', async () => {
+  mocked.invoke.mockResolvedValue(null)
+  mocked.listen.mockResolvedValue(vi.fn())
+  await tauriApi.installLinks.getPending()
+  expect(mocked.invoke).toHaveBeenLastCalledWith('get_pending_plugin_install')
+  await tauriApi.installLinks.dismiss(12)
+  expect(mocked.invoke).toHaveBeenLastCalledWith('dismiss_pending_plugin_install', { requestId: 12 })
+  const dispose = tauriApi.installLinks.onChanged(vi.fn())
+  expect(mocked.listen.mock.calls[0][0]).toBe('plugins:install-link-changed')
+  dispose()
+})
+
 it('forwards plugin commands and current note roots with the correct argument names', async () => {
   mocked.invoke.mockResolvedValue(undefined)
   await tauriApi.plugins.fetchRelease('owner', 'repo')

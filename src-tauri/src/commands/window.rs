@@ -1,9 +1,13 @@
+use tauri::{command, AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 #[cfg(target_os = "macos")]
 use tauri::{LogicalPosition, TitleBarStyle};
-use tauri::{command, AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
 #[command]
 pub async fn open_settings_window(app: AppHandle) -> Result<bool, String> {
+    show_settings_window(&app)
+}
+
+pub fn show_settings_window(app: &AppHandle) -> Result<bool, String> {
     let label = "settings";
 
     // シングルトン: 既存ウィンドウがあればフォーカスのみ
@@ -24,7 +28,7 @@ pub async fn open_settings_window(app: AppHandle) -> Result<bool, String> {
     };
 
     #[allow(unused_mut)]
-    let mut builder = WebviewWindowBuilder::new(&app, label, url)
+    let mut builder = WebviewWindowBuilder::new(app, label, url)
         .title("Notyra — Settings")
         .inner_size(700.0, 600.0)
         .min_inner_size(500.0, 400.0)
@@ -83,9 +87,7 @@ pub async fn open_note_window(
         )
     } else {
         // 本番ビルド: タウリプロトコルを使用
-        WebviewUrl::App(
-            format!("index.html#/editor?note={}&root={}", encoded, encoded_root).into(),
-        )
+        WebviewUrl::App(format!("index.html#/editor?note={}&root={}", encoded, encoded_root).into())
     };
 
     #[allow(unused_mut)]
@@ -106,8 +108,5 @@ pub async fn open_note_window(
         builder = builder.decorations(false);
     }
 
-    builder
-        .build()
-        .map(|_| true)
-        .map_err(|e| e.to_string())
+    builder.build().map(|_| true).map_err(|e| e.to_string())
 }
