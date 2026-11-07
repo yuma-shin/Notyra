@@ -73,7 +73,7 @@ describe('Bug Condition Exploration: Traffic Light Position Not Set on macOS Ove
 
     // Extract the open_settings_window function body
     const settingsFnMatch = rustContent.match(
-      /pub async fn open_settings_window[\s\S]*?^}/m
+      /pub fn show_settings_window[\s\S]*?^}/m
     )
     expect(settingsFnMatch).not.toBeNull()
     const settingsFnBody = settingsFnMatch![0]

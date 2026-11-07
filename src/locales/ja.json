@@ -446,6 +446,13 @@
         "duplicatePermission": "{{field}}: 権限が重複しています（値: {{value}}）",
         "invalidPath": "{{field}}: ファイルパスが不正です（値: {{value}}）"
       }
+    },
+    "websiteInstall": {
+      "title": "Webサイトからのインストール",
+      "description": "配布元を確認して、インストール内容の確認へ進んでください。要求される権限は次の画面に表示されます。",
+      "plugin": "プラグイン",
+      "review": "インストール内容を確認",
+      "loadFailed": "Webサイトからのインストール要求を読み込めませんでした。"
     }
   }
 }

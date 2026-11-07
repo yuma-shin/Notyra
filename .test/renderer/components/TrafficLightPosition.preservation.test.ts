@@ -150,7 +150,7 @@ describe('Preservation Property: Windows/Linux code paths unmodified', () => {
 
     // Extract open_settings_window function
     const settingsFnMatch = rustContent.match(
-      /pub async fn open_settings_window[\s\S]*?^}/m
+      /pub fn show_settings_window[\s\S]*?^}/m
     )
     expect(settingsFnMatch).not.toBeNull()
     const settingsFnBody = settingsFnMatch![0]
@@ -170,7 +170,7 @@ describe('Preservation Property: Windows/Linux code paths unmodified', () => {
     const rustContent = fs.readFileSync(WINDOW_RS, 'utf-8')
 
     const settingsFnMatch = rustContent.match(
-      /pub async fn open_settings_window[\s\S]*?^}/m
+      /pub fn show_settings_window[\s\S]*?^}/m
     )
     expect(settingsFnMatch).not.toBeNull()
     const settingsFnBody = settingsFnMatch![0]
@@ -214,7 +214,7 @@ describe('Preservation Property: Window sizes and center behavior preserved', ()
     const rustContent = fs.readFileSync(WINDOW_RS, 'utf-8')
 
     const settingsFnMatch = rustContent.match(
-      /pub async fn open_settings_window[\s\S]*?^}/m
+      /pub fn show_settings_window[\s\S]*?^}/m
     )
     expect(settingsFnMatch).not.toBeNull()
     const settingsFnBody = settingsFnMatch![0]
@@ -259,7 +259,7 @@ describe('Preservation Property: Window sizes and center behavior preserved', ()
     }
 
     const windowSpecs: WindowSizeSpec[] = [
-      { fnName: 'open_settings_window', innerSize: [700.0, 600.0], minInnerSize: [500.0, 400.0] },
+      { fnName: 'show_settings_window', innerSize: [700.0, 600.0], minInnerSize: [500.0, 400.0] },
       { fnName: 'open_note_window', innerSize: [1200.0, 800.0], minInnerSize: [600.0, 400.0] },
     ]
 
@@ -270,7 +270,7 @@ describe('Preservation Property: Window sizes and center behavior preserved', ()
           const rustContent = fs.readFileSync(WINDOW_RS, 'utf-8')
 
           const fnRegex = new RegExp(
-            `pub async fn ${spec.fnName}[\\s\\S]*?^}`,
+            `pub (?:async )?fn ${spec.fnName}[\\s\\S]*?^}`,
             'm'
           )
           const fnMatch = rustContent.match(fnRegex)
@@ -327,7 +327,7 @@ describe('Preservation Property: macOS-specific properties preserved', () => {
 
     // Settings window macOS block
     const settingsFnMatch = rustContent.match(
-      /pub async fn open_settings_window[\s\S]*?^}/m
+      /pub fn show_settings_window[\s\S]*?^}/m
     )
     expect(settingsFnMatch).not.toBeNull()
     expect(settingsFnMatch![0]).toContain('title_bar_style(TitleBarStyle::Overlay)')
@@ -354,7 +354,7 @@ describe('Preservation Property: macOS-specific properties preserved', () => {
 
     // Settings window routes to settings page
     const settingsFnMatch = rustContent.match(
-      /pub async fn open_settings_window[\s\S]*?^}/m
+      /pub fn show_settings_window[\s\S]*?^}/m
     )
     expect(settingsFnMatch).not.toBeNull()
     expect(settingsFnMatch![0]).toContain('#/settings')

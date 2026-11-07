@@ -14,6 +14,7 @@ import { PluginsSection } from '../components/settings/PluginsSection'
 import { Button } from '../components/ui/button'
 import { ICON_SIZE } from '@/renderer/lib/iconConstants'
 import { tauriApi as App } from '@/renderer/lib/tauriApi'
+import { usePluginInstallRequest } from '../hooks/usePluginInstallRequest'
 
 // ---------------------------------------------------------------------------
 // SettingsTitlebar
@@ -84,11 +85,13 @@ function SettingsTitlebar() {
 // ---------------------------------------------------------------------------
 
 export function SettingsScreen() {
+  const { t } = useTranslation()
   // Plugin のカラーテーマをデータとして読み込み、このウィンドウにも適用する（コードは実行しない）
   usePluginThemeSync(null)
   const isDesktop = useMediaQuery('(min-width: 640px)')
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('appearance')
+  const installLink = usePluginInstallRequest(() => setActiveSection('plugins'))
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Req 8.4: 初回マウント時に最初のフォーカス可能な要素にフォーカスを設定
@@ -110,7 +113,12 @@ export function SettingsScreen() {
       case 'language':
         return <LanguageSection />
       case 'plugins':
-        return <PluginsSection />
+        return (
+          <PluginsSection
+            installRequest={installLink.request}
+            onDismissInstallRequest={installLink.dismiss}
+          />
+        )
     }
   }
 
@@ -122,7 +130,10 @@ export function SettingsScreen() {
       <div className="border-t border-border my-4" />
       <LanguageSection />
       <div className="border-t border-border my-4" />
-      <PluginsSection />
+      <PluginsSection
+        installRequest={installLink.request}
+        onDismissInstallRequest={installLink.dismiss}
+      />
     </>
   )
 
@@ -132,6 +143,11 @@ export function SettingsScreen() {
       ref={containerRef}
     >
       <SettingsTitlebar />
+      {installLink.error && (
+        <p role="alert" className="p-3 text-xs text-destructive">
+          {t('plugins.websiteInstall.loadFailed')}
+        </p>
+      )}
       {isDesktop ? (
         <div className="flex flex-1 min-h-0">
           <div className="w-48 shrink-0 border-r border-border p-3 overflow-y-auto">

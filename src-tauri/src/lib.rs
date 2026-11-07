@@ -1,26 +1,38 @@
 mod commands;
+mod install_links;
 mod plugins;
 mod state;
 
-use std::collections::HashMap;
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use tauri::Manager;
 
 pub use state::AppState;
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // The deep-link feature forwards URLs before this callback. Keep settings in front.
+            let label = if args
+                .iter()
+                .any(|arg| install_links::parse_install_link(arg).is_some())
+            {
+                "settings"
+            } else {
+                "main"
+            };
+            if let Some(window) = app.get_webview_window(label) {
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_deep_link::init())
+        .manage(install_links::InstallInbox::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            // フォーカスをメインウィンドウに戻す
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.set_focus();
-            }
-        }))
         // Plugin のコードと資産の配信（Windows: http://notyra-plugin.localhost/、
         // macOS / Linux: notyra-plugin://localhost/）
         .register_asynchronous_uri_scheme_protocol(
@@ -59,9 +71,12 @@ pub fn run() {
                 note_sync: plugins::note_sync::NoteSync::default(),
             });
 
+            install_links::setup(app.handle())?;
+
             // アプリアイコンをウィンドウに設定（dev モードでも正しいアイコンが表示されるよう埋め込む）
             if let Some(main_window) = app.get_webview_window("main") {
-                let icon_bytes = include_bytes!("../../src/resources/build/icons/dark/png/128x128.png");
+                let icon_bytes =
+                    include_bytes!("../../src/resources/build/icons/dark/png/128x128.png");
                 if let Ok(icon) = tauri::image::Image::from_bytes(icon_bytes) {
                     let _ = main_window.set_icon(icon);
                 }
@@ -80,6 +95,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            install_links::get_pending_plugin_install,
+            install_links::dismiss_pending_plugin_install,
             // Markdown コマンド
             commands::markdown::select_root_folder,
             commands::markdown::check_root_exists,

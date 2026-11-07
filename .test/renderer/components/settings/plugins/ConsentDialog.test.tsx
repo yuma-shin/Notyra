@@ -235,6 +235,13 @@ describe('useConsentDialog', () => {
     await expect(promise).resolves.toBe(true)
   })
 
+  it('rejects a consent request that arrives after leaving the section, so its staging can be discarded', async () => {
+    const h = setup()
+    const requestConsent = h.api.requestConsent
+    h.view.unmount()
+    await expect(requestConsent(base)).resolves.toBe(false)
+  })
+
   it('新しい要求で先の要求は false、アンマウントで未解決は false', async () => {
     const h = setup()
     let first!: Promise<boolean>

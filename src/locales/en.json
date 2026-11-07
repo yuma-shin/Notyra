@@ -446,6 +446,13 @@
         "duplicatePermission": "{{field}}: duplicate permission (value: {{value}})",
         "invalidPath": "{{field}}: invalid file path (value: {{value}})"
       }
+    },
+    "websiteInstall": {
+      "title": "Install from a website",
+      "description": "Review the source, then continue to review the plugin and its requested permissions.",
+      "plugin": "Plugin",
+      "review": "Review installation",
+      "loadFailed": "Could not load the website installation request."
     }
   }
 }
