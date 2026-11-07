@@ -546,10 +546,9 @@ export function PluginsSection({
 
             {installRequest && onDismissInstallRequest && (
               <WebsiteInstallCard
-                key={installRequest.requestId}
-                request={installRequest}
                 disabled={installDisabled || busy.size > 0}
                 installed={installedIds.has(installRequest.pluginId)}
+                key={installRequest.requestId}
                 onDismiss={() =>
                   onDismissInstallRequest(installRequest.requestId)
                 }
@@ -575,6 +574,7 @@ export function PluginsSection({
                     setWebsiteInstalling(false)
                   }
                 }}
+                request={installRequest}
               />
             )}
 

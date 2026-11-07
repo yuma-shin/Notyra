@@ -59,19 +59,19 @@ export function WebsiteInstallCard({
       )}
       <div className="flex justify-end gap-2">
         <Button
-          size="sm"
-          variant="secondary"
           disabled={pending}
           onClick={() => void run(onDismiss)}
+          size="sm"
+          variant="secondary"
         >
           {t('common.cancel')}
         </Button>
         {!installed && (
           <Button
-            size="sm"
-            disabled={disabled || pending}
             aria-busy={pending}
+            disabled={disabled || pending}
             onClick={() => void run(onInstall)}
+            size="sm"
           >
             {pending
               ? t('plugins.repoInstall.installing')

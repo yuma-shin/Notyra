@@ -144,7 +144,7 @@ export function SettingsScreen() {
     >
       <SettingsTitlebar />
       {installLink.error && (
-        <p role="alert" className="p-3 text-xs text-destructive">
+        <p className="p-3 text-xs text-destructive" role="alert">
           {t('plugins.websiteInstall.loadFailed')}
         </p>
       )}
