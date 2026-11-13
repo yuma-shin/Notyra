@@ -8,7 +8,7 @@
     "email": "yuma@y-shin.net"
   },
   "license": "MIT",
-  "packageManager": "pnpm@12.17.0",
+  "packageManager": "pnpm@12.18.0",
   "scripts": {
     "icons": "node scripts/generate-icons.mjs",
     "dev": "tauri dev",
@@ -50,12 +50,12 @@
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.12.0",
     "html2pdf.js": "^0.14.0",
-    "i18next": "^26.7.1",
+    "i18next": "^26.7.2",
     "mermaid": "^12.3.0",
     "path-browserify": "^1.0.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-i18next": "^17.1.12",
+    "react-i18next": "^17.1.13",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.5",
     "rehype-highlight": "^7.0.2",
@@ -70,8 +70,8 @@
     "unist-util-visit": "^5.2.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.5",
-    "@tailwindcss/vite": "^4.3.4",
+    "@biomejs/biome": "^2.6.6",
+    "@tailwindcss/vite": "^4.3.5",
     "@tauri-apps/cli": "^2.12.4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -85,10 +85,10 @@
     "@vitejs/plugin-react": "^6.2.1",
     "@vitest/coverage-v8": "^5.1.0",
     "fast-check": "^4.10.2",
-    "jsdom": "^30.1.3",
-    "tailwindcss": "^4.3.4",
+    "jsdom": "^31.0.0",
+    "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
-    "vite": "^8.3.5",
+    "vite": "^8.3.6",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.1.0"
   }
